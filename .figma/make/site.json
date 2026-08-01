@@ -1,0 +1,10 @@
+{
+  "description": "Connects Kolkata creators with brands and peers for paid, unpaid, or barter collaborations, showcasing gigs, events, and Instagram follower highlights.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

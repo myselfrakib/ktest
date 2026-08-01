@@ -1,0 +1,3217 @@
+import { useState } from 'react'
+
+const GIGS = [
+  {
+    id: 1,
+    creatorName: 'Priya Sengupta',
+    handle: '@priya.creates',
+    avatar: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format',
+    followers: '124K',
+    niche: 'Lifestyle & Fashion',
+    title: 'Brand Collab for Ethnic Fashion Launch',
+    type: 'Paid',
+    budget: '₹8,000 – ₹15,000',
+    tags: ['Fashion', 'Reel', 'Story'],
+    location: 'Kolkata, WB',
+    verified: true,
+    applicants: 12,
+    description: 'We are launching a new ethnic fashion line and looking for a lifestyle creator based in Kolkata to help us create 2 Reels and 3 Stories. You will receive the outfits as gifted products in addition to the paid fee. Shoot can be done at a location of your choice in Kolkata.',
+    deliverables: ['2 Instagram Reels', '3 Instagram Stories', '1 Feed Post'],
+    deadline: 'Aug 20, 2026',
+    brand: 'Rang Bahar Textiles',
+    brandLogo: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=60&h=60&fit=crop&auto=format',
+  },
+  {
+    id: 2,
+    creatorName: 'Arjun Das',
+    handle: '@arjun.lens',
+    avatar: 'https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=80&h=80&fit=crop&auto=format',
+    followers: '56K',
+    niche: 'Photography',
+    title: 'Co-shoot: Street Photography Series',
+    type: 'Barter',
+    budget: 'Print + Credits',
+    tags: ['Photography', 'Collab', 'Street'],
+    location: 'North Kolkata',
+    verified: true,
+    applicants: 5,
+    description: 'Looking for a fellow photographer to co-shoot a street photography series across North Kolkata — Shyambazar, Kumartuli, and College Street. The series will be exhibited at a local gallery and published online. Barter basis: you get high-quality prints and full credit.',
+    deliverables: ['20+ edited shots', 'Gallery exhibition credit', 'Online publication'],
+    deadline: 'Sep 5, 2026',
+    brand: null,
+    brandLogo: null,
+  },
+  {
+    id: 3,
+    creatorName: 'Tanisha Roy',
+    handle: '@tanisha.eats',
+    avatar: 'https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=80&h=80&fit=crop&auto=format',
+    followers: '89K',
+    niche: 'Food & Travel',
+    title: 'Restaurant Review Collab – Park Street',
+    type: 'Non-Paid',
+    budget: 'Complimentary Meal',
+    tags: ['Food', 'Review', 'Reel'],
+    location: 'Park Street, KOL',
+    verified: false,
+    applicants: 20,
+    description: 'A new multi-cuisine restaurant on Park Street is inviting food creators for a complimentary dining experience in exchange for an honest review. You will receive a full meal for 2 and full creative freedom on the content format. No script, no forced positivity.',
+    deliverables: ['1 Instagram Reel or YouTube Short', '2 Stories with tag'],
+    deadline: 'Aug 15, 2026',
+    brand: 'The Calcutta Table',
+    brandLogo: null,
+  },
+  {
+    id: 4,
+    creatorName: 'Souvik Chatterjee',
+    handle: '@souvik.motion',
+    avatar: 'https://images.unsplash.com/photo-1622782262029-1c8f5762be36?w=80&h=80&fit=crop&auto=format',
+    followers: '210K',
+    niche: 'Video & Editing',
+    title: 'Looking for Videographer – Music Label',
+    type: 'Paid',
+    budget: '₹20,000 – ₹35,000',
+    tags: ['Video', 'Music', 'Production'],
+    location: 'Salt Lake, KOL',
+    verified: true,
+    applicants: 8,
+    description: 'An indie music label based in Salt Lake is looking for an experienced videographer for a 2-day music video shoot. The track is an upcoming Bengali indie fusion single. Equipment provided. Need someone with prior music video or short film experience.',
+    deliverables: ['2-day shoot commitment', 'Raw footage handover', '1 BTS Reel'],
+    deadline: 'Aug 30, 2026',
+    brand: 'Raag Records',
+    brandLogo: null,
+  },
+  {
+    id: 5,
+    creatorName: 'Anika Bose',
+    handle: '@anika.wellness',
+    avatar: 'https://images.unsplash.com/photo-1764740128390-4196892b3f61?w=80&h=80&fit=crop&auto=format',
+    followers: '43K',
+    niche: 'Health & Wellness',
+    title: 'Fitness Brand Ambassador – 3 months',
+    type: 'Barter',
+    budget: 'Product + ₹5,000',
+    tags: ['Fitness', 'Health', 'Reels'],
+    location: 'New Town, KOL',
+    verified: true,
+    applicants: 14,
+    description: 'A Kolkata-based fitness supplement brand is looking for a wellness creator to be their brand ambassador for 3 months. You will receive monthly product hampers + ₹5,000/month. We want authentic content — workout reels, morning routines, and honest reviews.',
+    deliverables: ['4 Reels/month', '8 Stories/month', '1 dedicated feed post/month'],
+    deadline: 'Aug 12, 2026',
+    brand: 'StrengthBox India',
+    brandLogo: null,
+  },
+]
+
+const EVENTS = [
+  {
+    id: 1,
+    title: 'Kreator Meetup #3',
+    subtitle: 'Network. Collaborate. Create.',
+    date: 'Aug 10, 2026',
+    day: '10',
+    month: 'AUG',
+    time: '5:30 PM',
+    venue: 'Goethe Institut, Max Mueller Bhavan',
+    location: 'Park Street, Kolkata',
+    attendees: 84,
+    tag: 'Networking',
+    color: '#3b5bdb',
+    image: 'https://images.unsplash.com/photo-1648440108249-30567222448a?w=400&h=200&fit=crop&auto=format',
+  },
+  {
+    id: 2,
+    title: 'Brand × Creator Summit',
+    subtitle: 'Meet the brands hiring now',
+    date: 'Aug 24, 2026',
+    day: '24',
+    month: 'AUG',
+    time: '11:00 AM',
+    venue: 'The Park Hotel',
+    location: 'Camac Street, Kolkata',
+    attendees: 210,
+    tag: 'Summit',
+    color: '#f76707',
+    image: 'https://images.unsplash.com/photo-1661061968438-97ab151ac32e?w=400&h=200&fit=crop&auto=format',
+  },
+]
+
+const CREATORS = [
+  {
+    id: 1,
+    name: 'Priya Sengupta',
+    handle: '@priya.creates',
+    avatar: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=150&h=150&fit=crop&auto=format',
+    followers: '124K',
+    engagement: '4.8%',
+    niche: 'Lifestyle & Fashion',
+    verified: true,
+    bio: 'Creating real, aesthetic content from the heart of Kolkata 🌸 Open to brand collabs & events.',
+    recentPost: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=200&h=200&fit=crop&auto=format',
+  },
+  {
+    id: 2,
+    name: 'Arjun Das',
+    handle: '@arjun.lens',
+    avatar: 'https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=150&h=150&fit=crop&auto=format',
+    followers: '56K',
+    engagement: '5.2%',
+    niche: 'Photography',
+    verified: true,
+    bio: 'Visual storyteller capturing the soul of Kolkata. Street, portraits, & cinematic stills 📸',
+    recentPost: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=200&h=200&fit=crop&auto=format',
+  },
+  {
+    id: 3,
+    name: 'Tanisha Roy',
+    handle: '@tanisha.eats',
+    avatar: 'https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=150&h=150&fit=crop&auto=format',
+    followers: '89K',
+    engagement: '6.1%',
+    niche: 'Food & Travel',
+    verified: false,
+    bio: 'Exploring Kolkata’s culinary secrets one plate at a time. From street food to fine dining 🍽️',
+    recentPost: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&h=200&fit=crop&auto=format',
+  },
+  {
+    id: 4,
+    name: 'Souvik Chatterjee',
+    handle: '@souvik.motion',
+    avatar: 'https://images.unsplash.com/photo-1622782262029-1c8f5762be36?w=150&h=150&fit=crop&auto=format',
+    followers: '210K',
+    engagement: '3.9%',
+    niche: 'Video & Editing',
+    verified: true,
+    bio: 'Director & Editor. Bringing stories to life with dynamic edits and high-fidelity visuals 🎥',
+    recentPost: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=200&h=200&fit=crop&auto=format',
+  },
+  {
+    id: 5,
+    name: 'Anika Bose',
+    handle: '@anika.wellness',
+    avatar: 'https://images.unsplash.com/photo-1764740128390-4196892b3f61?w=150&h=150&fit=crop&auto=format',
+    followers: '43K',
+    engagement: '5.5%',
+    niche: 'Health & Wellness',
+    verified: true,
+    bio: 'Yoga practitioner & holistic wellness advocate. Helping you find balance in the chaos 🧘‍♀️',
+    recentPost: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=200&h=200&fit=crop&auto=format',
+  },
+  {
+    id: 6,
+    name: 'Rohan Sen',
+    handle: '@rohan.tunes',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&auto=format',
+    followers: '78K',
+    engagement: '4.2%',
+    niche: 'Music & Art',
+    verified: false,
+    bio: 'Independent singer-songwriter from Kolkata. Sharing acoustic sessions and original melodies 🎸',
+    recentPost: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=200&h=200&fit=crop&auto=format',
+  }
+]
+
+const BRANDS = [
+  {
+    id: 1,
+    name: 'Rang Bahar Textiles',
+    logo: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=100&h=100&fit=crop&auto=format',
+    industry: 'Ethnic Fashion',
+    campaignsCount: 2,
+    location: 'Kolkata, WB',
+    verified: true,
+    bio: 'Celebrating the vibrant heritage of Indian textiles with modern cuts and sustainable fabrics.',
+  },
+  {
+    id: 2,
+    name: 'The Calcutta Table',
+    logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100&h=100&fit=crop&auto=format',
+    industry: 'Food & Beverage',
+    campaignsCount: 1,
+    location: 'Park Street, KOL',
+    verified: true,
+    bio: 'Artisanal dining experiences mixing traditional Bengali flavors with contemporary global cuisine.',
+  },
+  {
+    id: 3,
+    name: 'Raag Records',
+    logo: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=100&h=100&fit=crop&auto=format',
+    industry: 'Music Label',
+    campaignsCount: 1,
+    location: 'Salt Lake, KOL',
+    verified: true,
+    bio: 'Connecting indie musicians with global audiences. Championing sound and expression.',
+  },
+  {
+    id: 4,
+    name: 'StrengthBox India',
+    logo: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=100&h=100&fit=crop&auto=format',
+    industry: 'Fitness & Health',
+    campaignsCount: 1,
+    location: 'New Town, KOL',
+    verified: false,
+    bio: 'Premium fitness nutrition and wellness products formulated for high-performance lifestyles.',
+  },
+]
+
+const FILTERS = ['All Gigs', 'Paid', 'Barter', 'Non-Paid', 'Collab']
+const NICHES = ['All', 'Fashion', 'Food', 'Photography', 'Video', 'Wellness']
+
+const TYPE_COLORS: Record<string, string> = {
+  Paid: 'bg-emerald-100 text-emerald-700',
+  Barter: 'bg-violet-100 text-violet-700',
+  'Non-Paid': 'bg-amber-100 text-amber-700',
+}
+
+type Gig = typeof GIGS[0]
+type Creator = typeof CREATORS[0]
+type Brand = typeof BRANDS[0]
+type Event = typeof EVENTS[0]
+
+const NOTIFICATIONS = [
+  {
+    id: 1,
+    type: 'collab',
+    title: 'New Collab Pitch received',
+    message: 'Arjun Das pitched for your "Brand Collab for Ethnic Fashion Launch" gig.',
+    time: '2 hours ago',
+    unread: true,
+    avatar: 'https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=80&h=80&fit=crop&auto=format',
+    actionText: 'View Pitch',
+    category: 'activity',
+  },
+  {
+    id: 2,
+    type: 'event',
+    title: 'RSVP Confirmed 🎉',
+    message: 'Your registration for "Kreator Meetup #3" has been approved.',
+    time: '5 hours ago',
+    unread: true,
+    avatar: 'https://images.unsplash.com/photo-1648440108249-30567222448a?w=80&h=80&fit=crop&auto=format',
+    actionText: 'Add to Calendar',
+    category: 'activity',
+  },
+  {
+    id: 3,
+    type: 'brand',
+    title: 'Campaign Invitation 💼',
+    message: 'Rang Bahar Textiles invited you to apply for their upcoming "Winter Silk Campaign".',
+    time: '1 day ago',
+    unread: false,
+    avatar: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format',
+    actionText: 'Apply Now',
+    category: 'activity',
+  },
+  {
+    id: 4,
+    type: 'system',
+    title: 'Account Verified Check ✅',
+    message: 'Congratulations! Your profile has been verified as a Top Kolkata Creator.',
+    time: '3 days ago',
+    unread: false,
+    avatar: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format',
+    actionText: 'View Badges',
+    category: 'system',
+  },
+  {
+    id: 5,
+    type: 'collab',
+    title: 'New Review Posted ⭐',
+    message: 'Anika Bose left you a 5-star review: "Priya is extremely professional and creative!"',
+    time: '4 days ago',
+    unread: false,
+    avatar: 'https://images.unsplash.com/photo-1764740128390-4196892b3f61?w=80&h=80&fit=crop&auto=format',
+    actionText: 'View Review',
+    category: 'activity',
+  },
+  {
+    id: 6,
+    type: 'system',
+    title: 'Security Alert 🔒',
+    message: 'Your account was accessed from a new device in Salt Lake, Kolkata.',
+    time: '1 week ago',
+    unread: false,
+    avatar: '',
+    actionText: 'Review Security',
+    category: 'system',
+  }
+]
+
+type AppNotification = typeof NOTIFICATIONS[0]
+
+const INITIAL_CHATS = [
+  {
+    id: 1,
+    name: 'Arjun Das',
+    avatar: 'https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=80&h=80&fit=crop&auto=format',
+    handle: '@arjun.lens',
+    niche: 'Photography',
+    online: true,
+    verified: true,
+    unreadCount: 1,
+    messages: [
+      { id: 1, text: 'Hey Priya, loved your ethnic styling reel!', sender: 'them', time: '10:30 AM' },
+      { id: 2, text: 'Thanks Arjun! The locations you suggested were perfect.', sender: 'me', time: '10:32 AM' },
+      { id: 3, text: 'Awesome. Let\'s collab on the North Kolkata street photography series soon. Are you free this weekend?', sender: 'them', time: '2:15 PM' },
+    ]
+  },
+  {
+    id: 2,
+    name: 'Rang Bahar Textiles',
+    avatar: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format',
+    handle: 'Brand Account',
+    niche: 'Ethnic Fashion Brand',
+    online: false,
+    verified: true,
+    unreadCount: 0,
+    messages: [
+      { id: 1, text: 'Hello Priya, we saw your portfolio and would love to collaborate on our upcoming Ethnic Fashion Launch.', sender: 'them', time: 'Yesterday' },
+      { id: 2, text: 'Hello! I would love to know more about the deliverables and timeline.', sender: 'me', time: 'Yesterday' },
+      { id: 3, text: 'We have sent you the official invite. Please review the budget details in your gigs portal.', sender: 'them', time: 'Yesterday' },
+    ]
+  },
+  {
+    id: 3,
+    name: 'Tanisha Roy',
+    avatar: 'https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=80&h=80&fit=crop&auto=format',
+    handle: '@tanisha.eats',
+    niche: 'Food & Travel',
+    online: true,
+    verified: false,
+    unreadCount: 0,
+    messages: [
+      { id: 1, text: 'Hey! Are you coming to the Goethe Institut meetup this Friday?', sender: 'them', time: '2 days ago' },
+      { id: 2, text: 'Yes, definitely! RSVP\'d yesterday.', sender: 'me', time: '2 days ago' },
+      { id: 3, text: 'Great, see you there! Let\'s grab some coffee after.', sender: 'them', time: '2 days ago' },
+    ]
+  },
+  {
+    id: 4,
+    name: 'Souvik Chatterjee',
+    avatar: 'https://images.unsplash.com/photo-1622782262029-1c8f5762be36?w=80&h=80&fit=crop&auto=format',
+    handle: '@souvik.motion',
+    niche: 'Video & Editing',
+    online: false,
+    verified: true,
+    unreadCount: 0,
+    messages: [
+      { id: 1, text: 'Hey, did you get the raw files from the music label video shoot?', sender: 'them', time: '3 days ago' },
+      { id: 2, text: 'Yes, downloaded them. I will start the edits today.', sender: 'me', time: '3 days ago' },
+      { id: 3, text: 'Perfect, let me know if you need any BTS footage.', sender: 'them', time: '3 days ago' },
+    ]
+  }
+]
+
+type ChatThread = typeof INITIAL_CHATS[0]
+type ChatMessage = typeof INITIAL_CHATS[0]['messages'][0]
+
+// ── Icons ──────────────────────────────────────────────────────────────────
+
+function BookmarkIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#3b5bdb' : 'none'} stroke={filled ? '#3b5bdb' : '#94a3b8'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function InstagramIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" />
+    </svg>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  )
+}
+
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  )
+}
+
+function FilterIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="11" y1="18" x2="13" y2="18" />
+    </svg>
+  )
+}
+
+function MapPinIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+    </svg>
+  )
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  )
+}
+
+function UsersIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
+function ArrowLeftIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  )
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  )
+}
+
+function CompassIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+    </svg>
+  )
+}
+
+// ── Apply Page ─────────────────────────────────────────────────────────────
+
+function ApplyPage({ gig, onBack }: { gig: Gig; onBack: () => void }) {
+  const [step, setStep] = useState<'detail' | 'form' | 'success'>('detail')
+  const [pitch, setPitch] = useState('')
+  const [rate, setRate] = useState('')
+  const [instaHandle, setInstaHandle] = useState('')
+  const [portfolio, setPortfolio] = useState('')
+  const [availability, setAvailability] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [submitting, setSubmitting] = useState(false)
+
+  const validate = () => {
+    const e: Record<string, string> = {}
+    if (!pitch.trim()) e.pitch = 'Please write a short pitch'
+    if (!instaHandle.trim()) e.instaHandle = 'Instagram handle is required'
+    return e
+  }
+
+  const handleSubmit = () => {
+    const e = validate()
+    if (Object.keys(e).length) { setErrors(e); return }
+    setSubmitting(true)
+    setTimeout(() => { setSubmitting(false); setStep('success') }, 1400)
+  }
+
+  if (step === 'success') {
+    return (
+      <div className="flex flex-col items-center justify-center flex-1 px-6 py-16 text-center">
+        <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+          <CheckCircleIcon />
+        </div>
+        <h2 className="font-display text-2xl font-black text-slate-900 mb-2">Application Sent! 🎉</h2>
+        <p className="text-slate-500 text-sm mb-2 leading-relaxed">
+          Your pitch has been sent to <span className="font-bold text-slate-700">{gig.creatorName}</span>.
+        </p>
+        <p className="text-slate-400 text-xs mb-8">You'll get a notification when they respond, usually within 48 hours.</p>
+        <div className="w-full bg-[#e8edff] rounded-2xl p-4 mb-6 text-left">
+          <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-2">Your Application</div>
+          <div className="text-sm font-semibold text-slate-800 mb-1">{gig.title}</div>
+          <div className="flex items-center gap-1 text-xs text-slate-500">
+            <img src={gig.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
+            <span>{gig.creatorName}</span>
+          </div>
+        </div>
+        <button
+          onClick={onBack}
+          className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200"
+        >
+          Back to Gigs
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-4 bg-[#f0f4ff] flex items-center gap-3 sticky top-0 z-10">
+        <button onClick={step === 'form' ? () => setStep('detail') : onBack} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-700">
+          <ArrowLeftIcon />
+        </button>
+        <div>
+          <div className="text-[11px] text-slate-400 font-medium">{step === 'form' ? 'Your Application' : 'Gig Details'}</div>
+          <div className="text-sm font-bold text-slate-900 leading-tight max-w-[240px] truncate">{gig.title}</div>
+        </div>
+      </div>
+
+      {step === 'detail' && (
+        <>
+          {/* Creator card */}
+          <div className="mx-5 mb-4 bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative">
+                <img src={gig.avatar} alt={gig.creatorName} className="w-14 h-14 rounded-full object-cover border-2 border-[#e8edff]" />
+                {gig.verified && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center">
+                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="font-bold text-slate-900 text-sm">{gig.creatorName}</div>
+                <div className="text-xs text-slate-400 font-medium">{gig.handle}</div>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-2 py-0.5 rounded-full">
+                    <InstagramIcon /> {gig.followers} followers
+                  </span>
+                  <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">{gig.niche}</span>
+                </div>
+              </div>
+              <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+            </div>
+            <div className="border-t border-slate-100 pt-3">
+              <h2 className="font-bold text-slate-900 text-base leading-snug mb-1">{gig.title}</h2>
+              <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                <MapPinIcon /><span>{gig.location}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* About */}
+          <div className="mx-5 mb-4 bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+            <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-2">About this Gig</div>
+            <p className="text-sm text-slate-600 leading-relaxed">{gig.description}</p>
+          </div>
+
+          {/* Deliverables */}
+          <div className="mx-5 mb-4 bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+            <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-3">What You'll Deliver</div>
+            <div className="flex flex-col gap-2">
+              {gig.deliverables.map((d, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5l2 2 4-4" stroke="#3b5bdb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-slate-700 font-medium">{d}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div className="mx-5 mb-5 grid grid-cols-3 gap-3">
+            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
+              <div className="text-base font-black text-slate-900 mb-0.5">{gig.budget}</div>
+              <div className="text-[10px] text-slate-400 font-medium">Offer</div>
+            </div>
+            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
+              <div className="flex items-center justify-center gap-1 mb-0.5">
+                <CalendarIcon />
+                <span className="text-[11px] font-black text-slate-900">{gig.deadline}</span>
+              </div>
+              <div className="text-[10px] text-slate-400 font-medium">Deadline</div>
+            </div>
+            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
+              <div className="text-base font-black text-slate-900 mb-0.5">{gig.applicants}</div>
+              <div className="text-[10px] text-slate-400 font-medium">Applied</div>
+            </div>
+          </div>
+
+          {/* Brand */}
+          {gig.brand && (
+            <div className="mx-5 mb-5 bg-[#e8edff] rounded-2xl px-4 py-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[#3b5bdb]/20 flex items-center justify-center text-[#3b5bdb] text-xs font-black">
+                {gig.brand[0]}
+              </div>
+              <div>
+                <div className="text-[10px] text-[#3b5bdb] font-bold uppercase tracking-wider">Brand / Client</div>
+                <div className="text-sm font-bold text-slate-800">{gig.brand}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Tags */}
+          <div className="mx-5 mb-6 flex flex-wrap gap-2">
+            {gig.tags.map(t => (
+              <span key={t} className="text-xs font-semibold bg-white border border-slate-200 text-slate-500 px-3 py-1 rounded-full">{t}</span>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="mx-5 mb-8">
+            <button
+              onClick={() => setStep('form')}
+              className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base"
+            >
+              Apply for this Gig ↗
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === 'form' && (
+        <>
+          <div className="px-5 pt-2 pb-6 flex flex-col gap-4">
+
+            {/* Pitch */}
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1.5 block">Your Pitch <span className="text-[#e4405f]">*</span></label>
+              <textarea
+                rows={4}
+                value={pitch}
+                onChange={e => { setPitch(e.target.value); setErrors(p => ({ ...p, pitch: '' })) }}
+                placeholder="Tell them why you're the perfect fit. Be specific, be yourself."
+                className={`w-full bg-white border ${errors.pitch ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition resize-none`}
+              />
+              {errors.pitch && <p className="text-xs text-red-500 mt-1 font-medium">{errors.pitch}</p>}
+            </div>
+
+            {/* Instagram */}
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1.5 block">Instagram Handle <span className="text-[#e4405f]">*</span></label>
+              <div className={`flex items-center gap-2 bg-white border ${errors.instaHandle ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
+                <span className="text-[#e4405f]"><InstagramIcon /></span>
+                <input
+                  type="text"
+                  value={instaHandle}
+                  onChange={e => { setInstaHandle(e.target.value); setErrors(p => ({ ...p, instaHandle: '' })) }}
+                  placeholder="@yourhandle"
+                  className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
+                />
+              </div>
+              {errors.instaHandle && <p className="text-xs text-red-500 mt-1 font-medium">{errors.instaHandle}</p>}
+            </div>
+
+            {/* Rate */}
+            {gig.type === 'Paid' && (
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-1.5 block">Your Expected Rate</label>
+                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition">
+                  <span className="text-slate-400 text-sm font-bold">₹</span>
+                  <input
+                    type="text"
+                    value={rate}
+                    onChange={e => setRate(e.target.value)}
+                    placeholder={`e.g. 12,000`}
+                    className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">Budget range: {gig.budget}</p>
+              </div>
+            )}
+
+            {/* Portfolio */}
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1.5 block">Portfolio / Past Work Link</label>
+              <input
+                type="url"
+                value={portfolio}
+                onChange={e => setPortfolio(e.target.value)}
+                placeholder="Drive, Linktree, Website, etc."
+                className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition"
+              />
+            </div>
+
+            {/* Availability */}
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-1.5 block">Availability</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['Immediately', 'Within a week', 'Flexible', 'Need to discuss'].map(a => (
+                  <button
+                    key={a}
+                    onClick={() => setAvailability(a)}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition ${
+                      availability === a
+                        ? 'bg-[#3b5bdb] text-white border-[#3b5bdb] shadow-sm'
+                        : 'bg-white text-slate-500 border-slate-200'
+                    }`}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Terms notice */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex gap-2.5">
+              <span className="text-amber-500 mt-0.5 flex-shrink-0">⚠️</span>
+              <p className="text-xs text-amber-700 leading-relaxed font-medium">
+                By applying you agree to the terms of Kreator Kolkata. All payments and agreements are directly between you and the collaborator.
+              </p>
+            </div>
+
+            {/* Submit */}
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base flex items-center justify-center gap-2 disabled:opacity-70 transition"
+            >
+              {submitting ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
+                  </svg>
+                  Sending…
+                </>
+              ) : 'Send Application 🚀'}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Home Page ──────────────────────────────────────────────────────────────
+
+function HomePage({
+  savedGigs,
+  toggleSave,
+  onApply,
+  onBellClick,
+  unreadCount,
+  onCreatorClick,
+}: {
+  savedGigs: Set<number>
+  toggleSave: (id: number) => void
+  onApply: (gig: Gig) => void
+  onBellClick: () => void
+  unreadCount: number
+  onCreatorClick: (name: string) => void
+}) {
+  const [activeFilter, setActiveFilter] = useState('All Gigs')
+  const [activeNiche, setActiveNiche] = useState('All')
+
+  const filteredGigs = GIGS.filter(g => {
+    const matchType = activeFilter === 'All Gigs' || activeFilter === 'Collab' || g.type === activeFilter
+    const matchNiche = activeNiche === 'All' || g.niche.includes(activeNiche) || g.tags.includes(activeNiche)
+    return matchType && matchNiche
+  })
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-4">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-0.5">
+              <MapPinIcon /><span>Kolkata, West Bengal</span>
+            </div>
+            <h1 className="font-display text-[22px] font-black text-slate-900 leading-tight tracking-tight">
+              Kreator <span className="text-[#3b5bdb]">Kolkata</span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onBellClick}
+              className="relative w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-600 border border-slate-100 transition active:scale-95"
+            >
+              <BellIcon />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#f76707] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            <img
+              src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover border-2 border-[#3b5bdb]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="px-5 mb-5">
+        <div className="flex gap-2">
+          <div className="flex-1 flex items-center gap-2.5 bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-100">
+            <span className="text-slate-400"><SearchIcon /></span>
+            <input type="text" placeholder="Search gigs, creators, brands…" className="flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent font-medium" />
+          </div>
+          <button className="w-12 h-12 rounded-2xl bg-[#3b5bdb] flex items-center justify-center text-white shadow-md shadow-blue-200">
+            <FilterIcon />
+          </button>
+        </div>
+      </div>
+
+      {/* Events */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between px-5 mb-3">
+          <h2 className="text-base font-bold text-slate-900">Upcoming Events 🎉</h2>
+          <button className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
+        </div>
+        <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
+          {EVENTS.map(event => (
+            <div key={event.id} className="min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0" style={{ background: event.color }}>
+              <img src={event.image} alt={event.title} className="w-full h-[110px] object-cover opacity-30" />
+              <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                <div className="flex items-start justify-between">
+                  <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/30">{event.tag}</span>
+                  <div className="text-right">
+                    <div className="text-white font-display font-black text-2xl leading-none">{event.day}</div>
+                    <div className="text-white/80 text-[10px] font-bold tracking-widest">{event.month}</div>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-base leading-tight mb-0.5">{event.title}</h3>
+                  <p className="text-white/75 text-xs mb-2">{event.subtitle}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-white/80 text-[11px]">
+                      <CalendarIcon /><span>{event.time} · {event.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
+                      <UsersIcon /><span className="text-white text-[10px] font-bold">{event.attendees}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="px-5 mb-3">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold text-slate-900">Browse Gigs 🚀</h2>
+          <span className="text-xs text-slate-500 font-medium">{filteredGigs.length} found</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
+          {FILTERS.map(f => (
+            <button key={f} onClick={() => setActiveFilter(f)} className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeFilter === f ? 'bg-[#3b5bdb] text-white shadow-md shadow-blue-200' : 'bg-white text-slate-500 border border-slate-200'}`}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {NICHES.map(n => (
+            <button key={n} onClick={() => setActiveNiche(n)} className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${activeNiche === n ? 'bg-[#f76707] text-white' : 'bg-[#e8edff] text-[#3b5bdb]'}`}>
+              {n}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Gig Cards */}
+      <div className="px-5 flex flex-col gap-3">
+        {filteredGigs.map((gig, i) => (
+          <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] ${i === 0 ? 'border-2 border-[#3b5bdb]/30' : ''}`}>
+            {i === 0 && (
+              <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center gap-2">
+                <span className="text-white text-[11px] font-bold tracking-wide">⚡ Featured Gig</span>
+              </div>
+            )}
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div 
+                  onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
+                  className="flex items-center gap-3 cursor-pointer hover:opacity-85"
+                >
+                  <div className="relative">
+                    <img src={gig.avatar} alt={gig.creatorName} className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]" />
+                    {gig.verified && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center">
+                        <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-slate-900">{gig.creatorName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-slate-400 font-medium">{gig.handle}</span>
+                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full">
+                        <InstagramIcon />{gig.followers}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
+                  className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center"
+                >
+                  <BookmarkIcon filled={savedGigs.has(gig.id)} />
+                </button>
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">{gig.title}</h3>
+              <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+                {gig.tags.map(t => (
+                  <span key={t} className="text-[10px] text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{t}</span>
+                ))}
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[11px] text-slate-400 font-medium mb-0.5">Budget / Offer</div>
+                  <div className="text-sm font-bold text-slate-800">{gig.budget}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-[10px] text-slate-400 font-medium">{gig.applicants} applied</div>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{gig.location}</span></div>
+                  </div>
+                  <button
+                    onClick={e => { e.stopPropagation(); onApply(gig) }}
+                    className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
+                  >
+                    Apply ↗
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Post Gig Page ──────────────────────────────────────────────────────────
+
+const NICHE_OPTIONS = ['Fashion & Lifestyle', 'Food & Travel', 'Photography', 'Video & Editing', 'Health & Wellness', 'Music & Audio', 'Art & Design', 'Tech & Gaming', 'Education', 'Other']
+const TAG_OPTIONS = ['Reel', 'Story', 'Feed Post', 'YouTube', 'Collab', 'Street', 'Review', 'Production', 'BTS', 'Podcast']
+const LOCATION_OPTIONS = ['North Kolkata', 'South Kolkata', 'Salt Lake', 'New Town', 'Park Street', 'Howrah', 'Remote / Anywhere']
+
+function PostGigPage({ onBack, onPosted }: { onBack: () => void; onPosted: () => void }) {
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [submitting, setSubmitting] = useState(false)
+
+  // Step 1
+  const [title, setTitle] = useState('')
+  const [gigType, setGigType] = useState('')
+  const [niche, setNiche] = useState('')
+  const [description, setDescription] = useState('')
+
+  // Step 2
+  const [budget, setBudget] = useState('')
+  const [budgetNote, setBudgetNote] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [location, setLocation] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [deliverable, setDeliverable] = useState('')
+  const [deliverables, setDeliverables] = useState<string[]>([])
+
+  // Step 3
+  const [brand, setBrand] = useState('')
+  const [contactMode, setContactMode] = useState('')
+  const [minFollowers, setMinFollowers] = useState('')
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const toggleTag = (t: string) =>
+    setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
+
+  const addDeliverable = () => {
+    if (deliverable.trim()) {
+      setDeliverables(p => [...p, deliverable.trim()])
+      setDeliverable('')
+    }
+  }
+
+  const validateStep1 = () => {
+    const e: Record<string, string> = {}
+    if (!title.trim()) e.title = 'Gig title is required'
+    if (!gigType) e.gigType = 'Select a gig type'
+    if (!niche) e.niche = 'Select a niche'
+    if (!description.trim()) e.description = 'Add a description'
+    return e
+  }
+
+  const validateStep2 = () => {
+    const e: Record<string, string> = {}
+    if (!budget.trim()) e.budget = 'Add an offer or budget'
+    if (!location) e.location = 'Select a location'
+    return e
+  }
+
+  const handleNext = () => {
+    if (step === 1) {
+      const e = validateStep1()
+      if (Object.keys(e).length) { setErrors(e); return }
+      setErrors({})
+      setStep(2)
+    } else if (step === 2) {
+      const e = validateStep2()
+      if (Object.keys(e).length) { setErrors(e); return }
+      setErrors({})
+      setStep(3)
+    }
+  }
+
+  const handlePost = () => {
+    setSubmitting(true)
+    setTimeout(() => { setSubmitting(false); onPosted() }, 1600)
+  }
+
+  const progress = step === 1 ? 33 : step === 2 ? 66 : 100
+
+  return (
+    <div className="flex flex-col flex-1 min-h-screen">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-4 bg-[#f0f4ff] sticky top-0 z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <button onClick={step === 1 ? onBack : () => setStep(s => (s - 1) as 1 | 2 | 3)} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-700 flex-shrink-0">
+            <ArrowLeftIcon />
+          </button>
+          <div className="flex-1">
+            <div className="text-[11px] text-slate-400 font-medium">Step {step} of 3</div>
+            <div className="text-sm font-bold text-slate-900">
+              {step === 1 ? 'Gig Basics' : step === 2 ? 'Details & Budget' : 'Requirements & Publish'}
+            </div>
+          </div>
+          <span className="text-xs font-bold text-[#3b5bdb]">{progress}%</span>
+        </div>
+        {/* Progress bar */}
+        <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-full bg-[#3b5bdb] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-5 pt-4 pb-36">
+
+        {/* ── STEP 1 ── */}
+        {step === 1 && (
+          <div className="flex flex-col gap-5">
+            <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+              <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-4">What's the Gig?</div>
+
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Gig Title <span className="text-[#e4405f]">*</span></label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={e => { setTitle(e.target.value); setErrors(p => ({ ...p, title: '' })) }}
+                    placeholder="e.g. Brand Collab for Ethnic Fashion Launch"
+                    className={`w-full bg-slate-50 border ${errors.title ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition`}
+                  />
+                  {errors.title && <p className="text-xs text-red-500 mt-1 font-medium">{errors.title}</p>}
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-2 block">Gig Type <span className="text-[#e4405f]">*</span></label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { val: 'Paid', emoji: '💰', desc: 'You pay' },
+                      { val: 'Barter', emoji: '🔄', desc: 'Exchange' },
+                      { val: 'Non-Paid', emoji: '🤝', desc: 'Free collab' },
+                    ].map(({ val, emoji, desc }) => (
+                      <button
+                        key={val}
+                        onClick={() => { setGigType(val); setErrors(p => ({ ...p, gigType: '' })) }}
+                        className={`flex flex-col items-center py-3 px-2 rounded-2xl border-2 transition ${gigType === val ? 'border-[#3b5bdb] bg-[#e8edff]' : 'border-slate-200 bg-slate-50'}`}
+                      >
+                        <span className="text-xl mb-1">{emoji}</span>
+                        <span className={`text-xs font-bold ${gigType === val ? 'text-[#3b5bdb]' : 'text-slate-600'}`}>{val}</span>
+                        <span className="text-[10px] text-slate-400 font-medium">{desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {errors.gigType && <p className="text-xs text-red-500 mt-1 font-medium">{errors.gigType}</p>}
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-2 block">Niche / Category <span className="text-[#e4405f]">*</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {NICHE_OPTIONS.map(n => (
+                      <button
+                        key={n}
+                        onClick={() => { setNiche(n); setErrors(p => ({ ...p, niche: '' })) }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${niche === n ? 'bg-[#3b5bdb] text-white border-[#3b5bdb]' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.niche && <p className="text-xs text-red-500 mt-1 font-medium">{errors.niche}</p>}
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Description <span className="text-[#e4405f]">*</span></label>
+                  <textarea
+                    rows={4}
+                    value={description}
+                    onChange={e => { setDescription(e.target.value); setErrors(p => ({ ...p, description: '' })) }}
+                    placeholder="Describe the collaboration — what you're looking for, how it'll work, what the creator gets…"
+                    className={`w-full bg-slate-50 border ${errors.description ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition resize-none`}
+                  />
+                  <div className="flex justify-between mt-1">
+                    {errors.description ? <p className="text-xs text-red-500 font-medium">{errors.description}</p> : <span />}
+                    <span className="text-[10px] text-slate-400">{description.length}/500</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 2 ── */}
+        {step === 2 && (
+          <div className="flex flex-col gap-5">
+            <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+              <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-4">Budget & Offer</div>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">
+                    {gigType === 'Paid' ? 'Budget Range' : gigType === 'Barter' ? 'What you offer' : 'What they get'} <span className="text-[#e4405f]">*</span>
+                  </label>
+                  <div className={`flex items-center gap-2 bg-slate-50 border ${errors.budget ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
+                    {gigType === 'Paid' && <span className="text-slate-400 text-sm font-bold">₹</span>}
+                    <input
+                      type="text"
+                      value={budget}
+                      onChange={e => { setBudget(e.target.value); setErrors(p => ({ ...p, budget: '' })) }}
+                      placeholder={gigType === 'Paid' ? '8,000 – 15,000' : gigType === 'Barter' ? 'e.g. Products + Credits' : 'e.g. Complimentary meal for 2'}
+                      className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
+                    />
+                  </div>
+                  {errors.budget && <p className="text-xs text-red-500 mt-1 font-medium">{errors.budget}</p>}
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Additional Note <span className="text-slate-400 font-normal">(optional)</span></label>
+                  <input
+                    type="text"
+                    value={budgetNote}
+                    onChange={e => setBudgetNote(e.target.value)}
+                    placeholder="e.g. Negotiable for right fit"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+              <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-4">Deliverables</div>
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={deliverable}
+                    onChange={e => setDeliverable(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addDeliverable()}
+                    placeholder="e.g. 2 Instagram Reels"
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition"
+                  />
+                  <button onClick={addDeliverable} className="w-10 h-10 rounded-2xl bg-[#3b5bdb] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">+</button>
+                </div>
+                {deliverables.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {deliverables.map((d, i) => (
+                      <div key={i} className="flex items-center gap-2.5 bg-[#e8edff] rounded-xl px-3 py-2">
+                        <div className="w-4 h-4 rounded-full bg-[#3b5bdb] flex items-center justify-center flex-shrink-0">
+                          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </div>
+                        <span className="flex-1 text-xs font-semibold text-slate-700">{d}</span>
+                        <button onClick={() => setDeliverables(p => p.filter((_, j) => j !== i))} className="text-slate-400 text-sm leading-none">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+              <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-4">Logistics</div>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Application Deadline</label>
+                  <input
+                    type="date"
+                    value={deadline}
+                    onChange={e => setDeadline(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-700 outline-none focus:border-[#3b5bdb] transition"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-2 block">Location <span className="text-[#e4405f]">*</span></label>
+                  <div className="flex flex-wrap gap-2">
+                    {LOCATION_OPTIONS.map(l => (
+                      <button key={l} onClick={() => { setLocation(l); setErrors(p => ({ ...p, location: '' })) }} className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${location === l ? 'bg-[#3b5bdb] text-white border-[#3b5bdb]' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>{l}</button>
+                    ))}
+                  </div>
+                  {errors.location && <p className="text-xs text-red-500 mt-1 font-medium">{errors.location}</p>}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-2 block">Content Tags</label>
+                  <div className="flex flex-wrap gap-2">
+                    {TAG_OPTIONS.map(t => (
+                      <button key={t} onClick={() => toggleTag(t)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${selectedTags.includes(t) ? 'bg-[#f76707] text-white border-[#f76707]' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>{t}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 3 ── */}
+        {step === 3 && (
+          <div className="flex flex-col gap-5">
+            {/* Preview card */}
+            <div className="bg-[#3b5bdb] rounded-3xl p-5 shadow-lg">
+              <div className="text-[10px] text-white/60 font-bold uppercase tracking-wider mb-2">Preview</div>
+              <h3 className="text-white font-bold text-base mb-2 leading-snug">{title || 'Your Gig Title'}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                {gigType && <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${gigType === 'Paid' ? 'bg-emerald-100 text-emerald-700' : gigType === 'Barter' ? 'bg-violet-100 text-violet-700' : 'bg-amber-100 text-amber-700'}`}>{gigType}</span>}
+                {niche && <span className="text-[10px] text-white/70 bg-white/15 px-2.5 py-0.5 rounded-full font-medium">{niche}</span>}
+                {selectedTags.slice(0, 2).map(t => <span key={t} className="text-[10px] text-white/70 bg-white/15 px-2.5 py-0.5 rounded-full font-medium">{t}</span>)}
+              </div>
+              {budget && (
+                <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
+                  <span className="text-white font-bold text-sm">{gigType === 'Paid' ? `₹${budget}` : budget}</span>
+                  {location && <span className="flex items-center gap-1 text-white/60 text-xs font-medium"><MapPinIcon />{location}</span>}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+              <div className="text-[11px] text-[#3b5bdb] font-bold uppercase tracking-wider mb-4">Creator Requirements</div>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Minimum Instagram Followers</label>
+                  <div className="flex gap-2">
+                    {['Any', '1K+', '5K+', '10K+', '50K+', '100K+'].map(f => (
+                      <button key={f} onClick={() => setMinFollowers(f)} className={`flex-1 py-2 rounded-xl text-[11px] font-bold border transition ${minFollowers === f ? 'bg-[#3b5bdb] text-white border-[#3b5bdb]' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>{f}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Preferred Contact</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['In-App Chat', 'Instagram DM', 'WhatsApp'].map(c => (
+                      <button key={c} onClick={() => setContactMode(c)} className={`py-2.5 px-2 rounded-xl text-[11px] font-bold border transition text-center ${contactMode === c ? 'bg-[#3b5bdb] text-white border-[#3b5bdb]' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Brand / Company Name <span className="text-slate-400 font-normal">(optional)</span></label>
+                  <input
+                    type="text"
+                    value={brand}
+                    onChange={e => setBrand(e.target.value)}
+                    placeholder="e.g. Rang Bahar Textiles"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#e8edff] border border-[#c5d3ff] rounded-2xl px-4 py-3 flex gap-2.5">
+              <span className="mt-0.5 flex-shrink-0">ℹ️</span>
+              <p className="text-xs text-[#3b5bdb] leading-relaxed font-medium">
+                Your gig will be reviewed and go live within a few minutes. You can edit or remove it anytime from your profile.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sticky bottom CTA */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 px-5 py-4 z-20 shadow-xl">
+        {step < 3 ? (
+          <button onClick={handleNext} className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base">
+            Continue →
+          </button>
+        ) : (
+          <button onClick={handlePost} disabled={submitting} className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base flex items-center justify-center gap-2 disabled:opacity-70 transition">
+            {submitting ? (
+              <>
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
+                </svg>
+                Publishing…
+              </>
+            ) : 'Post this Gig 🚀'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Gig Posted Success ─────────────────────────────────────────────────────
+
+function GigPostedSuccess({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 px-6 py-16 text-center min-h-screen">
+      <div className="relative mb-6">
+        <div className="w-28 h-28 rounded-full bg-[#e8edff] flex items-center justify-center">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 2L11 13" /><path d="M22 2L15 22 11 13 2 9l20-7z" />
+          </svg>
+        </div>
+        <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-[#f76707] flex items-center justify-center text-white text-base shadow-lg">🎉</div>
+      </div>
+      <h2 className="font-display text-2xl font-black text-slate-900 mb-2">Gig is Live!</h2>
+      <p className="text-slate-500 text-sm mb-2 leading-relaxed max-w-[280px]">
+        Your gig is now visible to creators across Kolkata. Sit back and watch the applications roll in.
+      </p>
+      <p className="text-slate-400 text-xs mb-8">You'll be notified for every new applicant.</p>
+
+      <div className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm border border-slate-100 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[#e8edff] flex items-center justify-center text-[#3b5bdb] text-lg">💼</div>
+        <div className="flex-1 text-left">
+          <div className="text-xs font-bold text-slate-500 mb-0.5">My Gigs</div>
+          <div className="text-sm text-slate-700 font-semibold">View &amp; manage your posted gigs</div>
+        </div>
+        <span className="text-slate-400">→</span>
+      </div>
+      <div className="w-full bg-white rounded-2xl p-4 mb-8 shadow-sm border border-slate-100 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-lg">📣</div>
+        <div className="flex-1 text-left">
+          <div className="text-xs font-bold text-slate-500 mb-0.5">Share</div>
+          <div className="text-sm text-slate-700 font-semibold">Share your gig on Instagram</div>
+        </div>
+        <span className="text-slate-400">→</span>
+      </div>
+
+      <button onClick={onBack} className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200">
+        Back to Home
+      </button>
+    </div>
+  )
+}
+
+// ── Profile Page ───────────────────────────────────────────────────────────
+
+const MY_POSTED_GIGS = [
+  {
+    id: 101,
+    title: 'Brand Collab for Ethnic Fashion Launch',
+    type: 'Paid',
+    budget: '₹8,000 – ₹15,000',
+    applicants: 12,
+    status: 'Active',
+    daysLeft: 9,
+  },
+  {
+    id: 102,
+    title: 'Looking for Lifestyle Photographer',
+    type: 'Barter',
+    budget: 'Products + Credit',
+    applicants: 4,
+    status: 'Active',
+    daysLeft: 3,
+  },
+]
+
+const SAVED_GIGS_DATA = [GIGS[1], GIGS[4]]
+
+const PORTFOLIO_ITEMS = [
+  { id: 1, img: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=200&h=200&fit=crop&auto=format', likes: '2.1K' },
+  { id: 2, img: 'https://images.unsplash.com/photo-1648440108249-30567222448a?w=200&h=200&fit=crop&auto=format', likes: '3.8K' },
+  { id: 3, img: 'https://images.unsplash.com/photo-1661061968438-97ab151ac32e?w=200&h=200&fit=crop&auto=format', likes: '1.5K' },
+  { id: 4, img: 'https://images.unsplash.com/photo-1650477574222-ea46446ef5b2?w=200&h=200&fit=crop&auto=format', likes: '4.2K' },
+  { id: 5, img: 'https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=200&h=200&fit=crop&auto=format', likes: '980' },
+  { id: 6, img: 'https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=200&h=200&fit=crop&auto=format', likes: '2.7K' },
+]
+
+const REVIEWS = [
+  { name: 'Rang Bahar Textiles', avatar: '🧵', text: 'Priya was professional, creative, and delivered ahead of deadline. Highly recommend!', rating: 5, date: 'Jul 2026' },
+  { name: 'Souvik Chatterjee', avatar: '🎬', text: 'Great energy and super easy to work with. The reels got amazing engagement.', rating: 5, date: 'Jun 2026' },
+  { name: 'The Calcutta Table', avatar: '🍽️', text: 'Really authentic content. Our restaurant saw a 30% spike in footfall that week.', rating: 4, date: 'May 2026' },
+]
+
+function StarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill={filled ? '#f76707' : 'none'} stroke={filled ? '#f76707' : '#cbd5e1'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  )
+}
+
+function EditIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  )
+}
+
+function ShareIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
+  )
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  )
+}
+
+function ProfilePage({ onPostGig }: { onPostGig: () => void }) {
+  const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews'>('portfolio')
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
+
+      {/* Hero banner */}
+      <div className="relative">
+        <div className="h-36 w-full" style={{ background: 'linear-gradient(135deg, #3b5bdb 0%, #7048e8 60%, #f76707 100%)' }}>
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
+        </div>
+        {/* Settings + Share row */}
+        <div className="absolute top-10 left-0 right-0 flex items-center justify-between px-5">
+          <button className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+          <button className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 text-white">
+            <ShareIcon />
+          </button>
+        </div>
+
+        {/* Avatar */}
+        <div className="absolute -bottom-12 left-5">
+          <div className="relative">
+            <img
+              src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format"
+              alt="Priya Sengupta"
+              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+            />
+            <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit profile button */}
+      <div className="flex justify-end px-5 pt-3 pb-0">
+        <button className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm">
+          <EditIcon /> Edit Profile
+        </button>
+      </div>
+
+      {/* Name & bio */}
+      <div className="px-5 pt-10 pb-4">
+        <div className="flex items-center gap-2 mb-0.5">
+          <h2 className="font-display text-2xl font-black text-slate-900">Priya Sengupta</h2>
+          <span className="text-[#3b5bdb] text-sm">✓</span>
+        </div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm text-slate-500 font-medium">@priya.creates</span>
+          <span className="w-1 h-1 rounded-full bg-slate-300" />
+          <span className="text-xs font-semibold text-[#f76707] bg-amber-50 px-2 py-0.5 rounded-full">Lifestyle & Fashion</span>
+        </div>
+        <p className="text-sm text-slate-600 leading-relaxed mb-3">
+          Creating real, aesthetic content from the heart of Kolkata 🌸 Open to brand collabs, co-shoots & community events.
+        </p>
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-3">
+          <MapPinIcon /><span>Kolkata, West Bengal · Joined Jan 2026</span>
+        </div>
+
+        {/* Instagram row */}
+        <div className="flex items-center gap-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-2.5 mb-4">
+          <span className="text-[#e4405f]">
+            <InstagramIcon />
+          </span>
+          <span className="text-xs font-bold text-slate-700">@priya.creates</span>
+          <span className="ml-auto text-xs font-black text-[#e4405f]">124K followers</span>
+        </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { label: 'Collabs', value: '18' },
+            { label: 'Gigs Posted', value: '6' },
+            { label: 'Avg. ER', value: '4.8%' },
+            { label: 'Rating', value: '4.9 ★' },
+          ].map(s => (
+            <div key={s.label} className="bg-white rounded-2xl py-3 px-2 text-center shadow-sm border border-slate-100">
+              <div className="text-base font-black text-slate-900 leading-none mb-1">{s.value}</div>
+              <div className="text-[9px] text-slate-400 font-semibold leading-tight">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Post Gig CTA */}
+      <div className="px-5 mb-5">
+        <button
+          onClick={onPostGig}
+          className="w-full flex items-center gap-3 bg-[#3b5bdb] text-white rounded-2xl px-4 py-3.5 shadow-md shadow-blue-200"
+        >
+          <span className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg">＋</span>
+          <div className="flex-1 text-left">
+            <div className="text-sm font-bold">Post a New Gig</div>
+            <div className="text-[11px] text-white/70">Find creators or brands to collab with</div>
+          </div>
+          <ChevronRightIcon />
+        </button>
+      </div>
+
+      {/* Section tabs */}
+      <div className="px-5 mb-4">
+        <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100 gap-1">
+          {([
+            { id: 'portfolio', label: 'Portfolio' },
+            { id: 'gigs', label: 'My Gigs' },
+            { id: 'saved', label: 'Saved' },
+            { id: 'reviews', label: 'Reviews' },
+          ] as const).map(s => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSection(s.id)}
+              className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition ${activeSection === s.id ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-400'}`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Portfolio grid */}
+      {activeSection === 'portfolio' && (
+        <div className="px-5">
+          <div className="grid grid-cols-3 gap-2">
+            {PORTFOLIO_ITEMS.map(item => (
+              <div key={item.id} className="relative rounded-2xl overflow-hidden aspect-square bg-slate-100 group cursor-pointer">
+                <img src={item.img} alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-active:opacity-100 transition flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">❤️ {item.likes}</span>
+                </div>
+                <div className="absolute bottom-1.5 right-1.5 bg-black/50 rounded-full px-1.5 py-0.5">
+                  <span className="text-white text-[9px] font-bold">❤️ {item.likes}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-4 mb-2">
+            <button className="text-xs font-bold text-[#3b5bdb]">View all on Instagram →</button>
+          </div>
+        </div>
+      )}
+
+      {/* My Gigs */}
+      {activeSection === 'gigs' && (
+        <div className="px-5 flex flex-col gap-3">
+          {MY_POSTED_GIGS.map(g => (
+            <div key={g.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 pr-3">
+                  <h4 className="text-sm font-bold text-slate-900 leading-snug mb-1">{g.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[g.type]}`}>{g.type}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">{g.budget}</span>
+                  </div>
+                </div>
+                <div className={`px-2.5 py-1 rounded-xl text-[10px] font-bold flex-shrink-0 ${g.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                  {g.status}
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                    <UsersIcon /><span>{g.applicants} applied</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-slate-400 font-medium">
+                    <CalendarIcon /><span>{g.daysLeft}d left</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="text-xs font-bold text-slate-500 border border-slate-200 px-3 py-1.5 rounded-xl">Edit</button>
+                  <button className="text-xs font-bold text-[#3b5bdb] bg-[#e8edff] px-3 py-1.5 rounded-xl">View ({g.applicants})</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          <button onClick={onPostGig} className="w-full border-2 border-dashed border-[#3b5bdb]/30 rounded-2xl py-4 text-sm font-bold text-[#3b5bdb]/60 text-center">
+            + Post a New Gig
+          </button>
+        </div>
+      )}
+
+      {/* Saved Gigs */}
+      {activeSection === 'saved' && (
+        <div className="px-5 flex flex-col gap-3">
+          {SAVED_GIGS_DATA.map(gig => (
+            <div key={gig.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
+              <img src={gig.avatar} alt={gig.creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-[#e8edff] flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-slate-900 truncate">{gig.title}</div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+                  <span className="text-[10px] text-slate-400 font-medium truncate">{gig.budget}</span>
+                </div>
+                <div className="flex items-center gap-1 mt-0.5 text-[10px] text-[#e4405f] font-bold">
+                  <InstagramIcon />{gig.followers}
+                </div>
+              </div>
+              <button className="flex-shrink-0">
+                <BookmarkIcon filled={true} />
+              </button>
+            </div>
+          ))}
+          {SAVED_GIGS_DATA.length === 0 && (
+            <div className="text-center py-10 text-slate-400 text-sm font-medium">No saved gigs yet</div>
+          )}
+        </div>
+      )}
+
+      {/* Reviews */}
+      {activeSection === 'reviews' && (
+        <div className="px-5 flex flex-col gap-3">
+          <div className="bg-[#3b5bdb] rounded-2xl p-4 flex items-center gap-4 shadow-md">
+            <div className="text-center">
+              <div className="text-4xl font-black text-white leading-none">4.9</div>
+              <div className="flex gap-0.5 justify-center mt-1">
+                {[1,2,3,4,5].map(i => <StarIcon key={i} filled={i <= 5} />)}
+              </div>
+              <div className="text-white/60 text-[10px] font-medium mt-1">3 reviews</div>
+            </div>
+            <div className="flex-1">
+              {[5,4,3,2,1].map(star => (
+                <div key={star} className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] text-white/60 w-2">{star}</span>
+                  <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-white rounded-full"
+                      style={{ width: star === 5 ? '80%' : star === 4 ? '20%' : '0%' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {REVIEWS.map((r, i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-9 h-9 rounded-full bg-[#e8edff] flex items-center justify-center text-lg flex-shrink-0">{r.avatar}</div>
+                <div className="flex-1">
+                  <div className="text-sm font-bold text-slate-900">{r.name}</div>
+                  <div className="text-[10px] text-slate-400 font-medium">{r.date}</div>
+                </div>
+                <div className="flex gap-0.5">
+                  {[1,2,3,4,5].map(i => <StarIcon key={i} filled={i <= r.rating} />)}
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">{r.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Settings links */}
+      <div className="px-5 mt-6 mb-2">
+        <div className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-3">Account</div>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100">
+          {[
+            { icon: '🔔', label: 'Notifications', sub: 'Manage alerts' },
+            { icon: '🔒', label: 'Privacy & Safety', sub: 'Who can contact you' },
+            { icon: '💳', label: 'Payment Settings', sub: 'UPI, bank account' },
+            { icon: '🌐', label: 'Connected Accounts', sub: 'Instagram, YouTube' },
+            { icon: '🚪', label: 'Log Out', sub: '', danger: true },
+          ].map((item, i) => (
+            <button key={i} className="w-full flex items-center gap-3 px-4 py-3.5 text-left">
+              <span className="text-lg leading-none w-6 text-center flex-shrink-0">{item.icon}</span>
+              <div className="flex-1">
+                <div className={`text-sm font-semibold ${item.danger ? 'text-red-500' : 'text-slate-800'}`}>{item.label}</div>
+                {item.sub && <div className="text-[10px] text-slate-400 font-medium">{item.sub}</div>}
+              </div>
+              {!item.danger && <span className="text-slate-300"><ChevronRightIcon /></span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  )
+}
+
+// ── Explore Page ────────────────────────────────────────────────────────────
+
+function ExplorePage({
+  savedGigs,
+  toggleSave,
+  onApply,
+  followedBrands,
+  toggleFollowBrand,
+  rsvpEvents,
+  toggleRsvpEvent,
+  onBellClick,
+  unreadCount,
+  onCreatorClick,
+}: {
+  savedGigs: Set<number>
+  toggleSave: (id: number) => void
+  onApply: (gig: Gig) => void
+  followedBrands: Set<number>
+  toggleFollowBrand: (id: number) => void
+  rsvpEvents: Set<number>
+  toggleRsvpEvent: (id: number) => void
+  onBellClick: () => void
+  unreadCount: number
+  onCreatorClick: (name: string) => void
+}) {
+  const [activeFilter, setActiveFilter] = useState<'all' | 'creators' | 'brands' | 'gigs' | 'events'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const query = searchQuery.toLowerCase().trim()
+  const filteredCreators = CREATORS.filter(c => 
+    c.name.toLowerCase().includes(query) || 
+    c.handle.toLowerCase().includes(query) || 
+    c.niche.toLowerCase().includes(query) ||
+    c.bio.toLowerCase().includes(query)
+  )
+  const filteredBrands = BRANDS.filter(b => 
+    b.name.toLowerCase().includes(query) || 
+    b.industry.toLowerCase().includes(query) || 
+    b.bio.toLowerCase().includes(query) ||
+    b.location.toLowerCase().includes(query)
+  )
+  const filteredGigs = GIGS.filter(g => 
+    g.title.toLowerCase().includes(query) || 
+    g.creatorName.toLowerCase().includes(query) || 
+    g.niche.toLowerCase().includes(query) || 
+    g.tags.some(t => t.toLowerCase().includes(query))
+  )
+  const filteredEvents = EVENTS.filter(e => 
+    e.title.toLowerCase().includes(query) || 
+    e.subtitle.toLowerCase().includes(query) || 
+    e.venue.toLowerCase().includes(query) ||
+    e.tag.toLowerCase().includes(query)
+  )
+
+  const isSearching = query.length > 0
+
+  const renderSearchResults = () => {
+    const hasCreators = filteredCreators.length > 0
+    const hasBrands = filteredBrands.length > 0
+    const hasGigs = filteredGigs.length > 0
+    const hasEvents = filteredEvents.length > 0
+    const hasAnyResults = hasCreators || hasBrands || hasGigs || hasEvents
+
+    if (!hasAnyResults) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 px-5 text-center">
+          <span className="text-4xl mb-3">🔍</span>
+          <h3 className="text-sm font-bold text-slate-900 mb-1">No matches found</h3>
+          <p className="text-xs text-slate-400 max-w-[240px]">We couldn't find anything matching "{searchQuery}" in Kolkata.</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-col gap-6">
+        {hasCreators && (
+          <div>
+            <h3 className="px-5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Creators ({filteredCreators.length})</h3>
+            <div className="grid grid-cols-2 gap-3 px-5">
+              {filteredCreators.map(creator => (
+                <div 
+                  key={creator.id} 
+                  onClick={() => onCreatorClick(creator.name)}
+                  className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden transition-transform active:scale-[0.98] cursor-pointer hover:border-slate-200"
+                >
+                  <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
+                  <div className="relative mt-1 mb-2 z-10">
+                    <img src={creator.avatar} alt={creator.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
+                    {creator.verified && (
+                      <span className="absolute bottom-0 right-0 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                        <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
+                  <div className="text-[9px] text-slate-400 font-medium mb-1">{creator.handle}</div>
+                  <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 mb-1">
+                    <InstagramIcon />{creator.followers}
+                  </span>
+                  <div className="text-[9px] text-slate-500 font-semibold truncate max-w-full mb-3">{creator.niche}</div>
+                  <button className="w-full mt-auto bg-[#3b5bdb]/10 text-[#3b5bdb] text-[9px] font-bold py-1.5 rounded-lg transition">
+                    Collab
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hasBrands && (
+          <div>
+            <h3 className="px-5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Brands ({filteredBrands.length})</h3>
+            <div className="flex flex-col gap-3 px-5">
+              {filteredBrands.map(brand => {
+                const isFollowing = followedBrands.has(brand.id)
+                return (
+                  <div key={brand.id} className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3">
+                    <img src={brand.logo} alt={brand.name} className="w-11 h-11 rounded-xl object-cover border border-slate-100 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs font-bold text-slate-900 truncate">{brand.name}</span>
+                        <button 
+                          onClick={() => toggleFollowBrand(brand.id)} 
+                          className={`text-[9px] font-bold px-2 py-0.5 rounded-lg transition ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm'}`}
+                        >
+                          {isFollowing ? 'Following' : 'Follow'}
+                        </button>
+                      </div>
+                      <div className="text-[9px] text-slate-400 font-bold uppercase">{brand.industry}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {hasGigs && (
+          <div>
+            <h3 className="px-5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Gigs ({filteredGigs.length})</h3>
+            <div className="flex flex-col gap-3 px-5">
+              {filteredGigs.map(gig => (
+                <div key={gig.id} onClick={() => onApply(gig)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer flex justify-between items-center">
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-bold text-slate-900 truncate mb-1">{gig.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <span 
+                        onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
+                        className="text-[10px] text-slate-500 hover:text-[#3b5bdb] hover:underline"
+                      >
+                        {gig.creatorName}
+                      </span>
+                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">{gig.budget}</span>
+                    </div>
+                  </div>
+                  <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3">
+                    Apply
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hasEvents && (
+          <div>
+            <h3 className="px-5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Events ({filteredEvents.length})</h3>
+            <div className="flex flex-col gap-3 px-5">
+              {filteredEvents.map(event => {
+                const isRsvp = rsvpEvents.has(event.id)
+                return (
+                  <div key={event.id} className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 mb-0.5">{event.title}</h4>
+                      <p className="text-[10px] text-slate-400">{event.date} · {event.venue}</p>
+                    </div>
+                    <button 
+                      onClick={() => toggleRsvpEvent(event.id)}
+                      className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition ${isRsvp ? 'bg-emerald-50 text-emerald-600' : 'bg-[#3b5bdb] text-white'}`}
+                    >
+                      {isRsvp ? 'Attending' : 'RSVP'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-4">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-0.5">
+              <MapPinIcon /><span>Kolkata, West Bengal</span>
+            </div>
+            <h1 className="font-display text-[22px] font-black text-slate-900 leading-tight tracking-tight">
+              Explore <span className="text-[#3b5bdb]">Kolkata</span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onBellClick}
+              className="relative w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-600 border border-slate-100 transition active:scale-95"
+            >
+              <BellIcon />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#f76707] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            <img
+              src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover border-2 border-[#3b5bdb]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="px-5 mb-5">
+        <div className="flex gap-2">
+          <div className="flex-1 flex items-center gap-2.5 bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-100">
+            <span className="text-slate-400"><SearchIcon /></span>
+            <input 
+              type="text" 
+              placeholder={`Search ${activeFilter === 'all' ? 'creators, brands, gigs...' : activeFilter}...`} 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent font-medium" 
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Filter pills */}
+      <div className="px-5 mb-5">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {[
+            { id: 'all', label: '✨ All' },
+            { id: 'creators', label: '👤 Creators' },
+            { id: 'brands', label: '🏢 Brands' },
+            { id: 'gigs', label: '💼 Gigs' },
+            { id: 'events', label: '📅 Events' }
+          ].map(tab => (
+            <button 
+              key={tab.id} 
+              onClick={() => { setActiveFilter(tab.id as any); }} 
+              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${activeFilter === tab.id ? 'bg-[#3b5bdb] text-white shadow-md shadow-blue-200' : 'bg-white text-slate-500 border border-slate-200'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content Area */}
+      {activeFilter === 'all' && !isSearching && (
+        <div className="flex flex-col gap-2">
+          {/* Featured Creators Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between px-5 mb-3">
+              <h2 className="text-base font-bold text-slate-900">Featured Creators 🌟</h2>
+              <button onClick={() => setActiveFilter('creators')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
+            </div>
+            <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
+              {CREATORS.slice(0, 4).map(creator => (
+                <div key={creator.id} className="min-w-[150px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden flex-shrink-0">
+                  <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
+                  <div className="relative mt-1 mb-2 z-10">
+                    <img src={creator.avatar} alt={creator.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100" />
+                    {creator.verified && (
+                      <span className="absolute bottom-0 right-0 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                        <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
+                  <div className="text-[9px] text-slate-400 font-medium mb-2">{creator.handle}</div>
+                  <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2.5 py-0.5 rounded-full flex items-center gap-0.5">
+                    <InstagramIcon />{creator.followers}
+                  </span>
+                  <span className="text-[9px] text-slate-500 font-semibold mt-1 truncate max-w-full">{creator.niche}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Brands Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between px-5 mb-3">
+              <h2 className="text-base font-bold text-slate-900">Top Brands 🏢</h2>
+              <button onClick={() => setActiveFilter('brands')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
+            </div>
+            <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
+              {BRANDS.map(brand => {
+                const isFollowing = followedBrands.has(brand.id)
+                return (
+                  <div key={brand.id} className="min-w-[200px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col flex-shrink-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-xl object-cover border border-slate-100 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-bold text-slate-900 truncate">{brand.name}</span>
+                          {brand.verified && (
+                            <span className="w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center flex-shrink-0">
+                              <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[9px] text-slate-400 font-bold uppercase">{brand.industry}</div>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-500 line-clamp-2 min-h-[30px] leading-relaxed mb-3">{brand.bio}</p>
+                    <button 
+                      onClick={() => toggleFollowBrand(brand.id)} 
+                      className={`w-full text-[9px] font-bold py-1.5 rounded-lg transition mt-auto ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
+                    >
+                      {isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Trending Gigs Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between px-5 mb-3">
+              <h2 className="text-base font-bold text-slate-900">Trending Gigs 💼</h2>
+              <button onClick={() => setActiveFilter('gigs')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
+            </div>
+            <div className="flex flex-col gap-3 px-5">
+              {GIGS.slice(0, 2).map((gig, i) => (
+                <div key={gig.id} onClick={() => onApply(gig)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98]">
+                  <div className="flex items-center justify-between mb-3">
+                    <div 
+                      onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
+                      className="flex items-center gap-3 cursor-pointer hover:opacity-85"
+                    >
+                      <div className="relative">
+                        <img src={gig.avatar} alt={gig.creatorName} className="w-10 h-10 rounded-full object-cover border border-slate-100" />
+                        {gig.verified && (
+                          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                            <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-slate-900">{gig.creatorName}</span>
+                        <div className="text-[10px] text-slate-400 font-medium">{gig.handle}</div>
+                      </div>
+                    </div>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 mb-2 truncate">{gig.title}</h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800">{gig.budget}</span>
+                    <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm">
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Featured Events Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between px-5 mb-3">
+              <h2 className="text-base font-bold text-slate-900">Featured Events 📅</h2>
+              <button onClick={() => setActiveFilter('events')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
+            </div>
+            <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
+              {EVENTS.map(event => {
+                const isRsvp = rsvpEvents.has(event.id)
+                return (
+                  <div key={event.id} className="min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0" style={{ background: event.color }}>
+                    <img src={event.image} alt={event.title} className="w-full h-[110px] object-cover opacity-30" />
+                    <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                      <div className="flex items-start justify-between">
+                        <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/30">{event.tag}</span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleRsvpEvent(event.id); }}
+                          className="bg-white text-slate-800 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md active:scale-95 transition"
+                        >
+                          {isRsvp ? 'Attending' : 'RSVP'}
+                        </button>
+                      </div>
+                      <div>
+                        <h3 className="text-white font-bold text-sm leading-tight mb-0.5">{event.title}</h3>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1 text-white/80 text-[10px]">
+                            <CalendarIcon /><span>{event.date} · {event.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Specific categories and Search results */}
+      {isSearching && renderSearchResults()}
+
+      {!isSearching && activeFilter === 'creators' && (
+        <div className="grid grid-cols-2 gap-3 px-5">
+          {filteredCreators.map(creator => (
+            <div key={creator.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden transition-transform active:scale-[0.98]">
+              <div className="absolute top-0 inset-x-0 h-12 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
+              <div className="relative mt-2 mb-2 z-10">
+                <img src={creator.avatar} alt={creator.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100" />
+                {creator.verified && (
+                  <span className="absolute bottom-0 right-0 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                  </span>
+                )}
+              </div>
+              <div className="text-xs font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
+              <div className="text-[10px] text-slate-400 font-medium mb-2">{creator.handle}</div>
+              <div className="flex gap-1.5 items-center mb-3">
+                <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                  <InstagramIcon />{creator.followers}
+                </span>
+                <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  {creator.engagement} ER
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 line-clamp-2 min-h-[28px] leading-relaxed mb-4 px-1">{creator.bio}</div>
+              <button className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[10px] font-bold py-2 rounded-xl transition">
+                Collab Pitch
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isSearching && activeFilter === 'brands' && (
+        <div className="flex flex-col gap-3 px-5">
+          {filteredBrands.map(brand => {
+            const isFollowing = followedBrands.has(brand.id)
+            return (
+              <div key={brand.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 transition-transform active:scale-[0.99] flex gap-3">
+                <img src={brand.logo} alt={brand.name} className="w-14 h-14 rounded-2xl object-cover border border-slate-100 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-sm font-bold text-slate-900 truncate">{brand.name}</span>
+                      {brand.verified && (
+                        <span className="w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center flex-shrink-0">
+                          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                        </span>
+                      )}
+                    </div>
+                    <button 
+                      onClick={() => toggleFollowBrand(brand.id)} 
+                      className={`text-[10px] font-bold px-3 py-1 rounded-xl transition ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
+                    >
+                      {isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{brand.industry}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-300" />
+                    <span className="text-[10px] text-slate-500 font-medium flex items-center gap-0.5"><MapPinIcon />{brand.location}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed mb-3">{brand.bio}</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                      💼 {brand.campaignsCount} active campaigns
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {!isSearching && activeFilter === 'gigs' && (
+        <div className="flex flex-col gap-3 px-5">
+          {filteredGigs.map((gig, i) => (
+            <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] ${i === 0 ? 'border-2 border-[#3b5bdb]/30' : ''}`}>
+              {i === 0 && (
+                <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center gap-2">
+                  <span className="text-white text-[11px] font-bold tracking-wide">⚡ Featured Gig</span>
+                </div>
+              )}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div 
+                    onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
+                    className="flex items-center gap-3 cursor-pointer hover:opacity-85"
+                  >
+                    <div className="relative">
+                      <img src={gig.avatar} alt={gig.creatorName} className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]" />
+                      {gig.verified && (
+                        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-slate-900">{gig.creatorName}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-400 font-medium">{gig.handle}</span>
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full">
+                          <InstagramIcon />{gig.followers}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
+                    className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center"
+                  >
+                    <BookmarkIcon filled={savedGigs.has(gig.id)} />
+                  </button>
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">{gig.title}</h3>
+                <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+                  {gig.tags.map(t => (
+                    <span key={t} className="text-[10px] text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{t}</span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] text-slate-400 font-medium mb-0.5">Budget / Offer</div>
+                    <div className="text-sm font-bold text-slate-800">{gig.budget}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-[10px] text-slate-400 font-medium">{gig.applicants} applied</div>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{gig.location}</span></div>
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); onApply(gig) }}
+                      className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
+                    >
+                      Apply ↗
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isSearching && activeFilter === 'events' && (
+        <div className="flex flex-col gap-4 px-5">
+          {filteredEvents.map(event => {
+            const isRsvp = rsvpEvents.has(event.id)
+            return (
+              <div key={event.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col relative transition-transform active:scale-[0.99]">
+                <div className="relative h-[120px]">
+                  <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <span className="absolute top-3 left-3 bg-[#3b5bdb] text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    {event.tag}
+                  </span>
+                  <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                    <div>
+                      <h3 className="text-white font-bold text-base leading-tight">{event.title}</h3>
+                      <p className="text-white/80 text-xs">{event.subtitle}</p>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl px-3 py-1 text-center min-w-[50px] flex flex-col justify-center">
+                      <span className="text-white font-display font-black text-lg leading-none">{event.day}</span>
+                      <span className="text-white/80 text-[9px] font-bold uppercase tracking-wider">{event.month}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 flex items-center justify-between bg-white">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                      <CalendarIcon /><span>{event.time}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                      <MapPinIcon /><span>{event.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium mt-1">
+                      <UsersIcon /><span>{event.attendees + (isRsvp ? 1 : 0)} attending</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleRsvpEvent(event.id)}
+                    className={`text-xs font-bold px-4 py-2.5 rounded-xl transition ${isRsvp ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
+                  >
+                    {isRsvp ? '✓ Attending' : 'RSVP Now'}
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Notifications Page ──────────────────────────────────────────────────────
+
+function NotificationsPage({
+  onBack,
+  unreadNotifications,
+  setUnreadNotifications,
+}: {
+  onBack: () => void
+  unreadNotifications: Set<number>
+  setUnreadNotifications: React.Dispatch<React.SetStateAction<Set<number>>>
+}) {
+  const [activeTab, setActiveTab] = useState<'all' | 'activity' | 'system'>('all')
+
+  const handleMarkAllRead = () => {
+    setUnreadNotifications(new Set())
+  }
+
+  const handleToggleRead = (id: number) => {
+    setUnreadNotifications(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const filteredNotifications = NOTIFICATIONS.filter(n => {
+    if (activeTab === 'all') return true
+    return n.category === activeTab
+  })
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-10 bg-slate-50 flex flex-col min-h-screen">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={onBack} 
+            className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition"
+          >
+            <ArrowLeftIcon />
+          </button>
+          <h1 className="font-display text-[20px] font-black text-slate-900 leading-tight">
+            Notifications
+          </h1>
+        </div>
+        {unreadNotifications.size > 0 && (
+          <button 
+            onClick={handleMarkAllRead}
+            className="text-xs font-bold text-[#3b5bdb] hover:underline"
+          >
+            Mark all read
+          </button>
+        )}
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="px-5 py-4 bg-white border-b border-slate-100 flex gap-2">
+        {([
+          { id: 'all', label: 'All' },
+          { id: 'activity', label: 'Activity' },
+          { id: 'system', label: 'System' }
+        ] as const).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${activeTab === tab.id ? 'bg-[#3b5bdb] text-white shadow-sm' : 'bg-slate-100 text-slate-500'}`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Notifications List */}
+      <div className="flex-1 px-4 py-4 flex flex-col gap-3">
+        {filteredNotifications.map(notification => {
+          const isUnread = unreadNotifications.has(notification.id)
+          
+          const renderNotificationIcon = () => {
+            if (notification.avatar) {
+              return (
+                <img 
+                  src={notification.avatar} 
+                  alt={notification.title} 
+                  className="w-11 h-11 rounded-full object-cover border border-slate-100" 
+                />
+              )
+            }
+            return (
+              <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center text-lg">
+                {notification.type === 'system' ? '🔒' : '🔔'}
+              </div>
+            )
+          }
+
+          return (
+            <div 
+              key={notification.id}
+              onClick={() => handleToggleRead(notification.id)}
+              className={`p-4 rounded-3xl bg-white border transition-all duration-200 cursor-pointer flex gap-3 relative ${isUnread ? 'border-l-4 border-l-[#3b5bdb] border-slate-100 shadow-sm' : 'border-slate-100'}`}
+            >
+              <div className="flex-shrink-0 relative">
+                {renderNotificationIcon()}
+                {isUnread && (
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#f76707] rounded-full border-2 border-white" />
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-xs font-bold text-slate-800 truncate">{notification.title}</span>
+                  <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">{notification.time}</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed mb-2.5">
+                  {notification.message}
+                </p>
+
+                <div className="flex gap-2">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleToggleRead(notification.id); }}
+                    className="text-[10px] font-bold text-[#3b5bdb] bg-[#3b5bdb]/10 px-3 py-1.5 rounded-xl hover:bg-[#3b5bdb]/20 transition"
+                  >
+                    {notification.actionText}
+                  </button>
+                  {isUnread && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleToggleRead(notification.id); }}
+                      className="text-[10px] font-medium text-slate-400 hover:text-slate-600 px-2 py-1.5 transition"
+                    >
+                      Mark read
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+
+        {filteredNotifications.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <span className="text-4xl mb-3">🔔</span>
+            <h3 className="text-sm font-bold text-slate-900 mb-1">No notifications</h3>
+            <p className="text-xs text-slate-400 max-w-[200px]">You are all caught up for now!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Chat Page ───────────────────────────────────────────────────────────────
+
+function ChatPage({
+  chats,
+  setChats,
+  activeChatId,
+  setActiveChatId,
+  handleOpenChat,
+}: {
+  chats: ChatThread[]
+  setChats: React.Dispatch<React.SetStateAction<ChatThread[]>>
+  activeChatId: number | null
+  setActiveChatId: (id: number | null) => void
+  handleOpenChat: (id: number) => void
+}) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [inputText, setInputText] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+
+  const activeChat = chats.find(c => c.id === activeChatId)
+
+  const filteredChats = chats.filter(c => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.niche.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const getAutoReplyMessage = (name: string, userMsg: string): string => {
+    const text = userMsg.toLowerCase()
+    if (name.includes('Arjun')) {
+      if (text.includes('weekend') || text.includes('saturday') || text.includes('sunday')) {
+        return "Saturday afternoon works perfectly for me! Let's meet near Kumartuli around 3 PM? 📸"
+      }
+      if (text.includes('hi') || text.includes('hello') || text.includes('hey')) {
+        return "Hey Priya! Glad we connected. I was just looking at some street shoots we could do. Are you free this weekend?"
+      }
+      return "That sounds like a plan! Let's catch up and lock in the shoot details. 🚀"
+    }
+    if (name.includes('Bahar')) {
+      return "Perfect! Our project manager will send over the agreement draft. Let us know if you have any questions about the deliverables. 💼"
+    }
+    if (name.includes('Tanisha')) {
+      return "Yay! Can't wait. Let's try that new cafe on Park Street, I heard their brews are amazing! ☕"
+    }
+    return "Thanks for the message! Let's coordinate and get this moving. 👍"
+  }
+
+  const handleSendMessage = () => {
+    if (!inputText.trim() || !activeChatId) return
+
+    const userMessageText = inputText.trim()
+    const now = new Date()
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    setChats(prev => prev.map(c => {
+      if (c.id === activeChatId) {
+        return {
+          ...c,
+          messages: [
+            ...c.messages,
+            { id: Date.now(), text: userMessageText, sender: 'me', time: timeStr }
+          ]
+        }
+      }
+      return c
+    }))
+
+    setInputText('')
+
+    setIsTyping(true)
+    setTimeout(() => {
+      setIsTyping(false)
+      const replyText = getAutoReplyMessage(activeChat?.name || '', userMessageText)
+      
+      setChats(prev => prev.map(c => {
+        if (c.id === activeChatId) {
+          return {
+            ...c,
+            messages: [
+              ...c.messages,
+              { id: Date.now() + 1, text: replyText, sender: 'them', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+            ]
+          }
+        }
+        return c
+      }))
+    }, 1500)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSendMessage()
+    }
+  }
+
+  if (activeChat) {
+    return (
+      <div className="flex-1 bg-slate-50 flex flex-col h-screen relative">
+        {/* Chat Header */}
+        <div className="px-4 pt-12 pb-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+          <div className="flex items-center gap-3 min-w-0">
+            <button 
+              onClick={() => setActiveChatId(null)}
+              className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition"
+            >
+              <ArrowLeftIcon />
+            </button>
+            <div className="relative flex-shrink-0">
+              <img src={activeChat.avatar} alt={activeChat.name} className="w-10 h-10 rounded-full object-cover border border-slate-100" />
+              {activeChat.online && (
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-bold text-slate-900 truncate">{activeChat.name}</span>
+                {activeChat.verified && (
+                  <span className="w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-slate-400 font-semibold">{activeChat.online ? 'Online' : 'Offline'}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition">
+              📞
+            </button>
+            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition">
+              📹
+            </button>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3.5 pb-24 scrollbar-hide">
+          {activeChat.messages.map(msg => {
+            const isMe = msg.sender === 'me'
+            return (
+              <div key={msg.id} className={`flex flex-col max-w-[75%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
+                <div className={`px-4 py-2.5 rounded-3xl text-sm leading-relaxed ${isMe ? 'bg-[#3b5bdb] text-white rounded-tr-sm shadow-sm' : 'bg-white text-slate-800 border border-slate-100 rounded-tl-sm shadow-sm'}`}>
+                  {msg.text}
+                </div>
+                <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">{msg.time}</span>
+              </div>
+            )
+          })}
+
+          {isTyping && (
+            <div className="flex flex-col items-start self-start max-w-[75%]">
+              <div className="px-4 py-3 rounded-3xl bg-white border border-slate-100 rounded-tl-sm flex gap-1 items-center shadow-sm">
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">{activeChat.name} is typing...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Input Bar */}
+        <div className="absolute bottom-0 inset-x-0 bg-white border-t border-slate-100 px-4 py-3 flex items-center gap-2 z-10 shadow-lg">
+          <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-lg text-slate-500 hover:bg-slate-100 transition">
+            ＋
+          </button>
+          <input 
+            type="text"
+            placeholder="Type a message..."
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1 bg-slate-50 rounded-2xl px-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none border border-slate-100 font-medium"
+          />
+          <button 
+            onClick={handleSendMessage}
+            disabled={!inputText.trim()}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition ${inputText.trim() ? 'bg-[#3b5bdb] active:scale-95' : 'bg-slate-200 cursor-not-allowed shadow-none'}`}
+          >
+            ➔
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-slate-50 flex flex-col min-h-screen">
+      {/* Header */}
+      <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+        <div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-0.5">
+            <MapPinIcon /><span>Kolkata, WB</span>
+          </div>
+          <h1 className="font-display text-[22px] font-black text-slate-900 leading-tight tracking-tight">
+            Chats <span className="text-[#3b5bdb]">Messages</span>
+          </h1>
+        </div>
+        <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition border border-slate-100">
+          📝
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="px-4 py-3 bg-white border-b border-slate-100 mb-2">
+        <div className="flex items-center gap-2.5 bg-slate-50 rounded-2xl px-4 py-2.5 border border-slate-100">
+          <span className="text-slate-400"><SearchIcon /></span>
+          <input 
+            type="text" 
+            placeholder="Search conversations..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent font-medium" 
+          />
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="flex-1 px-4 py-2 flex flex-col gap-2.5">
+        {filteredChats.map(thread => {
+          const lastMsg = thread.messages[thread.messages.length - 1]
+          const isUnread = thread.unreadCount > 0
+
+          return (
+            <div 
+              key={thread.id}
+              onClick={() => handleOpenChat(thread.id)}
+              className="p-3.5 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer transition active:scale-[0.99]"
+            >
+              <div className="relative flex-shrink-0">
+                <img src={thread.avatar} alt={thread.name} className="w-12 h-12 rounded-full object-cover border border-slate-100 shadow-sm" />
+                {thread.online && (
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-xs font-bold text-slate-900 truncate">{thread.name}</span>
+                    {thread.verified && (
+                      <span className="w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-semibold">{lastMsg ? lastMsg.time : ''}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <p className={`text-[11px] truncate flex-1 leading-relaxed ${isUnread ? 'text-slate-800 font-bold' : 'text-slate-400 font-medium'}`}>
+                    {lastMsg ? lastMsg.text : 'No messages yet'}
+                  </p>
+                  {isUnread && (
+                    <span className="bg-[#3b5bdb] text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                      {thread.unreadCount}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })}
+
+        {filteredChats.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <span className="text-4xl mb-3">💬</span>
+            <h3 className="text-sm font-bold text-slate-900 mb-1">No chats found</h3>
+            <p className="text-xs text-slate-400 max-w-[200px]">No conversations match your search query.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Public Profile Page ──────────────────────────────────────────────────────
+
+function PublicProfilePage({
+  creator,
+  onBack,
+  followedCreators,
+  toggleFollowCreator,
+  onMessageCreator,
+}: {
+  creator: Creator
+  onBack: () => void
+  followedCreators: Set<number>
+  toggleFollowCreator: (id: number) => void
+  onMessageCreator: (creator: Creator) => void
+}) {
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'reviews'>('portfolio')
+  const [copied, setCopied] = useState(false)
+
+  const isFollowing = followedCreators.has(creator.id)
+
+  const handleShare = () => {
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const getPortfolioItems = (id: number) => {
+    const galleries: Record<number, string[]> = {
+      1: [
+        'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=300&h=300&fit=crop&auto=format',
+      ],
+      2: [
+        'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=300&h=300&fit=crop&auto=format',
+      ],
+      3: [
+        'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=300&fit=crop&auto=format',
+      ],
+      4: [
+        'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&h=300&fit=crop&auto=format',
+      ],
+      5: [
+        'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=300&h=300&fit=crop&auto=format',
+      ],
+      6: [
+        'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300&h=300&fit=crop&auto=format',
+        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop&auto=format',
+      ]
+    }
+    return galleries[id] || galleries[1]
+  }
+
+  const getReviews = (name: string) => {
+    return [
+      { id: 1, author: 'Rang Bahar Textiles', rating: 5, text: `Absolute pleasure collaborating with ${name}. Content was high-quality and delivered on time!`, date: '1 month ago' },
+      { id: 2, author: 'The Calcutta Table', rating: 5, text: `Great engagement on the post. Highly recommend collaborating!`, date: '2 months ago' }
+    ]
+  }
+
+  const portfolio = getPortfolioItems(creator.id)
+  const reviews = getReviews(creator.name)
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-[#f8fafc] flex flex-col min-h-screen">
+      {/* Hero */}
+      <div className="relative">
+        <div className="h-32 w-full bg-gradient-to-r from-[#3b5bdb] via-[#7048e8] to-[#f76707]">
+          <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1.5px)', backgroundSize: '16px 16px' }} />
+        </div>
+        
+        <div className="absolute top-10 left-0 right-0 flex items-center justify-between px-5">
+          <button 
+            onClick={onBack}
+            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition"
+          >
+            <ArrowLeftIcon />
+          </button>
+          <button 
+            onClick={handleShare}
+            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition relative"
+          >
+            <ShareIcon />
+            {copied && (
+              <span className="absolute -bottom-8 right-0 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap shadow-md">
+                Link copied!
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div className="absolute -bottom-10 left-5">
+          <div className="relative">
+            <img 
+              src={creator.avatar} 
+              alt={creator.name} 
+              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md shadow-slate-200" 
+            />
+            {creator.verified && (
+              <span className="absolute bottom-0.5 right-0.5 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h2 className="font-display text-xl font-black text-slate-900 leading-tight">{creator.name}</h2>
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
+              <span>{creator.handle}</span>
+              <span className="w-1 h-1 rounded-full bg-slate-300" />
+              <span className="text-[#f76707] font-bold">{creator.niche}</span>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-500 leading-relaxed mb-4">
+          {creator.bio}
+        </p>
+
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-4">
+          <MapPinIcon /><span>Kolkata, West Bengal · Creator</span>
+        </div>
+
+        <div className="flex gap-3 mb-4">
+          <button 
+            onClick={() => toggleFollowCreator(creator.id)}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${isFollowing ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-[#3b5bdb] text-white shadow-blue-100'}`}
+          >
+            {isFollowing ? '✓ Following' : 'Follow'}
+          </button>
+          <button 
+            onClick={() => onMessageCreator(creator)}
+            className="flex-1 py-2.5 border border-slate-200 bg-white rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition"
+          >
+            💬 Chat Message
+          </button>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 pt-2">
+          {[
+            { label: 'Followers', value: creator.followers, color: 'text-rose-500' },
+            { label: 'Avg. ER', value: creator.engagement, color: 'text-indigo-500' },
+            { label: 'Collabs', value: '14+', color: 'text-emerald-500' },
+            { label: 'Rating', value: '5.0 ★', color: 'text-amber-500' }
+          ].map(stat => (
+            <div key={stat.label} className="bg-slate-50 rounded-2xl py-3 px-1 text-center border border-slate-100">
+              <div className={`text-sm font-black leading-none mb-1 stat.color ${stat.color}`}>{stat.value}</div>
+              <div className="text-[9px] text-slate-400 font-semibold">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-5 mt-4 mb-3">
+        <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100 gap-1">
+          {[
+            { id: 'portfolio', label: 'Portfolio' },
+            { id: 'reviews', label: `Reviews (${reviews.length})` }
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${activeTab === tab.id ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-400'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'portfolio' && (
+        <div className="grid grid-cols-2 gap-3 px-5">
+          {portfolio.map((img, i) => (
+            <div key={i} className="aspect-square bg-slate-200 rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+              <img src={img} alt="portfolio item" className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'reviews' && (
+        <div className="px-5 flex flex-col gap-3">
+          {reviews.map(review => (
+            <div key={review.id} className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800">{review.author}</span>
+                <span className="text-[9px] text-slate-400 font-semibold">{review.date}</span>
+              </div>
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(star => (
+                  <span key={star} className="text-amber-400 text-xs">★</span>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                {review.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Root App ───────────────────────────────────────────────────────────────
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('home')
+  const [selectedGig, setSelectedGig] = useState<Gig | null>(null)
+  const [posting, setPosting] = useState(false)
+  const [gigPosted, setGigPosted] = useState(false)
+  const [savedGigs, setSavedGigs] = useState<Set<number>>(new Set([2, 5]))
+  const [followedBrands, setFollowedBrands] = useState<Set<number>>(new Set([1]))
+  const [rsvpEvents, setRsvpEvents] = useState<Set<number>>(new Set([1]))
+  const [viewingNotifications, setViewingNotifications] = useState(false)
+  const [unreadNotifications, setUnreadNotifications] = useState<Set<number>>(new Set([1, 2]))
+  const [chats, setChats] = useState<ChatThread[]>(INITIAL_CHATS)
+  const [activeChatId, setActiveChatId] = useState<number | null>(null)
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null)
+  const [followedCreators, setFollowedCreators] = useState<Set<number>>(new Set())
+
+  const toggleSave = (id: number) => {
+    setSavedGigs(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleFollowBrand = (id: number) => {
+    setFollowedBrands(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleRsvpEvent = (id: number) => {
+    setRsvpEvents(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleFollowCreator = (id: number) => {
+    setFollowedCreators(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const handleOpenCreatorProfile = (name: string) => {
+    const creator = CREATORS.find(c => c.name.toLowerCase() === name.toLowerCase())
+    if (creator) {
+      setSelectedCreator(creator)
+    }
+  }
+
+  const handleMessageCreator = (creator: Creator) => {
+    const existingThread = chats.find(c => c.name.toLowerCase() === creator.name.toLowerCase())
+    if (existingThread) {
+      handleOpenChat(existingThread.id)
+    } else {
+      const newThread = {
+        id: Date.now(),
+        name: creator.name,
+        avatar: creator.avatar,
+        handle: creator.handle,
+        niche: creator.niche,
+        online: true,
+        verified: creator.verified,
+        unreadCount: 0,
+        messages: [
+          { id: Date.now(), text: `Hi ${creator.name}! I saw your profile and would love to collaborate.`, sender: 'me', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        ]
+      }
+      setChats(prev => [newThread, ...prev])
+      handleOpenChat(newThread.id)
+    }
+    setSelectedCreator(null)
+    setActiveTab('chat')
+  }
+
+  const handleOpenChat = (id: number) => {
+    setActiveChatId(id)
+    setChats(prev => prev.map(c => c.id === id ? { ...c, unreadCount: 0 } : c))
+  }
+
+  const handleApply = (gig: Gig) => setSelectedGig(gig)
+  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setActiveTab('home') }
+
+  const showNav = !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null
+
+  const renderMain = () => {
+    if (gigPosted) return <GigPostedSuccess onBack={handleBack} />
+    if (posting) return <PostGigPage onBack={handleBack} onPosted={() => { setPosting(false); setGigPosted(true) }} />
+    if (selectedGig) return <ApplyPage gig={selectedGig} onBack={handleBack} />
+    if (viewingNotifications) {
+      return (
+        <NotificationsPage 
+          onBack={() => setViewingNotifications(false)} 
+          unreadNotifications={unreadNotifications}
+          setUnreadNotifications={setUnreadNotifications}
+        />
+      )
+    }
+    if (selectedCreator) {
+      return (
+        <PublicProfilePage 
+          creator={selectedCreator}
+          onBack={() => setSelectedCreator(null)}
+          followedCreators={followedCreators}
+          toggleFollowCreator={toggleFollowCreator}
+          onMessageCreator={handleMessageCreator}
+        />
+      )
+    }
+    if (activeTab === 'profile') return <ProfilePage onPostGig={() => { setPosting(true) }} />
+    if (activeTab === 'chat') {
+      return (
+        <ChatPage 
+          chats={chats}
+          setChats={setChats}
+          activeChatId={activeChatId}
+          setActiveChatId={setActiveChatId}
+          handleOpenChat={handleOpenChat}
+        />
+      )
+    }
+    if (activeTab === 'explore') {
+      return (
+        <ExplorePage 
+          savedGigs={savedGigs} 
+          toggleSave={toggleSave} 
+          onApply={handleApply}
+          followedBrands={followedBrands}
+          toggleFollowBrand={toggleFollowBrand}
+          rsvpEvents={rsvpEvents}
+          toggleRsvpEvent={toggleRsvpEvent}
+          onBellClick={() => setViewingNotifications(true)}
+          unreadCount={unreadNotifications.size}
+          onCreatorClick={handleOpenCreatorProfile}
+        />
+      )
+    }
+    return (
+      <HomePage 
+        savedGigs={savedGigs} 
+        toggleSave={toggleSave} 
+        onApply={handleApply} 
+        onBellClick={() => setViewingNotifications(true)}
+        unreadCount={unreadNotifications.size}
+        onCreatorClick={handleOpenCreatorProfile}
+      />
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f0f4ff] flex justify-center items-start">
+      <div className="w-full max-w-[430px] min-h-screen bg-[#f0f4ff] flex flex-col relative">
+
+        {renderMain()}
+
+        {showNav && (
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 px-6 pt-3 pb-6 flex items-center justify-around shadow-xl z-20">
+            {[
+              { id: 'home', label: 'Home', icon: '⊞' },
+              { id: 'explore', label: 'Explore', icon: '🧭' },
+              { id: 'post', label: '', icon: '＋', special: true },
+              { id: 'chat', label: 'Chat', icon: '💬' },
+              { id: 'profile', label: 'Profile', icon: '👤' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveTab(tab.id); if (tab.id === 'post') setPosting(true) }}
+                className={`flex flex-col items-center gap-1 ${tab.special ? '-mt-6' : ''}`}
+              >
+                {tab.special ? (
+                  <span className="w-14 h-14 rounded-full bg-[#3b5bdb] flex items-center justify-center text-2xl text-white shadow-lg shadow-blue-300">{tab.icon}</span>
+                ) : (
+                  <>
+                    <span className={`text-lg leading-none ${activeTab === tab.id ? 'opacity-100' : 'opacity-40'}`}>{tab.icon}</span>
+                    <span className={`text-[10px] font-bold ${activeTab === tab.id ? 'text-[#3b5bdb]' : 'text-slate-400'}`}>{tab.label}</span>
+                    {activeTab === tab.id && <span className="w-1 h-1 rounded-full bg-[#3b5bdb]" />}
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

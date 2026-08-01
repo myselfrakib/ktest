@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;0,900;1,700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-background: #f0f4ff;
+  --color-foreground: #0d1117;
+  --color-card: #ffffff;
+  --color-card-foreground: #0d1117;
+  --color-primary: #3b5bdb;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #e8edff;
+  --color-secondary-foreground: #3b5bdb;
+  --color-muted: #f1f3f9;
+  --color-muted-foreground: #6b7280;
+  --color-accent: #f76707;
+  --color-accent-foreground: #ffffff;
+  --color-border: #e2e8f0;
+  --color-ring: #3b5bdb;
+
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-display: 'Fraunces', serif;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #f0f4ff;
+  color: #0d1117;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
