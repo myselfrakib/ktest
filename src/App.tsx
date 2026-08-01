@@ -801,6 +801,7 @@ function HomePage({
   onBellClick,
   unreadCount,
   onCreatorClick,
+  onEventClick,
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -808,6 +809,7 @@ function HomePage({
   onBellClick: () => void
   unreadCount: number
   onCreatorClick: (name: string) => void
+  onEventClick: () => void
 }) {
   const [activeFilter, setActiveFilter] = useState('All Gigs')
   const [activeNiche, setActiveNiche] = useState('All')
@@ -869,32 +871,16 @@ function HomePage({
       <div className="mb-6">
         <div className="flex items-center justify-between px-5 mb-3">
           <h2 className="text-base font-bold text-slate-900">Upcoming Events 🎉</h2>
-          <button className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
+          <button onClick={onEventClick} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
         </div>
         <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
           {EVENTS.map(event => (
-            <div key={event.id} className="min-w-[280px] w-[280px] rounded-3xl overflow-hidden shadow-sm border border-slate-150 cursor-pointer flex-shrink-0 bg-white flex flex-col transition-transform active:scale-[0.98]">
-              <img src={event.image} alt={event.title} className="w-full h-[105px] object-cover" />
-              <div className="p-4 flex flex-col justify-between flex-1 gap-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="bg-[#3b5bdb]/10 text-[#3b5bdb] text-[10px] font-bold px-2.5 py-1 rounded-full">{event.tag}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{event.day} {event.month}</span>
-                </div>
-                <div>
-                  <h3 className="text-slate-900 font-bold text-sm leading-tight mb-0.5 truncate">{event.title}</h3>
-                  <p className="text-slate-500 text-[11px] font-medium truncate">{event.subtitle}</p>
-                </div>
-                <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-0.5">
-                  <div className="flex items-center gap-1 text-slate-400 text-[10px] font-semibold min-w-0">
-                    <CalendarIcon />
-                    <span className="truncate max-w-[140px] text-slate-500">{event.time} · {event.venue}</span>
-                  </div>
-                  <div className="flex items-center gap-1 bg-slate-50 rounded-full px-2 py-0.5 border border-slate-100 flex-shrink-0">
-                    <UsersIcon />
-                    <span className="text-slate-600 text-[9px] font-bold">{event.attendees}</span>
-                  </div>
-                </div>
-              </div>
+            <div 
+              key={event.id} 
+              onClick={onEventClick}
+              className="min-w-[280px] w-[280px] h-[110px] rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer flex-shrink-0 bg-white transition-transform active:scale-[0.98]"
+            >
+              <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
             </div>
           ))}
         </div>
@@ -1773,6 +1759,8 @@ function ExplorePage({
   onBellClick,
   unreadCount,
   onCreatorClick,
+  activeFilter,
+  setActiveFilter,
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -1784,8 +1772,9 @@ function ExplorePage({
   onBellClick: () => void
   unreadCount: number
   onCreatorClick: (name: string) => void
+  activeFilter: 'all' | 'creators' | 'brands' | 'gigs' | 'events'
+  setActiveFilter: (filter: 'all' | 'creators' | 'brands' | 'gigs' | 'events') => void
 }) {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'creators' | 'brands' | 'gigs' | 'events'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
   const query = searchQuery.toLowerCase().trim()
@@ -3038,6 +3027,12 @@ export default function App() {
   const [activeChatId, setActiveChatId] = useState<number | null>(null)
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null)
   const [followedCreators, setFollowedCreators] = useState<Set<number>>(new Set())
+  const [exploreFilter, setExploreFilter] = useState<'all' | 'creators' | 'brands' | 'gigs' | 'events'>('all')
+
+  const handleOpenEventsTab = () => {
+    setExploreFilter('events')
+    setActiveTab('explore')
+  }
 
   const toggleSave = (id: number) => {
     setSavedGigs(prev => {
@@ -3109,7 +3104,7 @@ export default function App() {
   }
 
   const handleApply = (gig: Gig) => setSelectedGig(gig)
-  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setActiveTab('home') }
+  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setExploreFilter('all'); setActiveTab('home') }
 
   const showNav = !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null
 
@@ -3162,6 +3157,8 @@ export default function App() {
           onBellClick={() => setViewingNotifications(true)}
           unreadCount={unreadNotifications.size}
           onCreatorClick={handleOpenCreatorProfile}
+          activeFilter={exploreFilter}
+          setActiveFilter={setExploreFilter}
         />
       )
     }
@@ -3173,6 +3170,7 @@ export default function App() {
         onBellClick={() => setViewingNotifications(true)}
         unreadCount={unreadNotifications.size}
         onCreatorClick={handleOpenCreatorProfile}
+        onEventClick={handleOpenEventsTab}
       />
     )
   }
@@ -3194,7 +3192,11 @@ export default function App() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); if (tab.id === 'post') setPosting(true) }}
+                onClick={() => { 
+                  setActiveTab(tab.id); 
+                  if (tab.id === 'post') setPosting(true);
+                  if (tab.id === 'explore') setExploreFilter('all');
+                }}
                 className={`flex flex-col items-center gap-1 ${tab.special ? '-mt-6' : ''}`}
               >
                 {tab.special ? (
