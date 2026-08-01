@@ -873,26 +873,25 @@ function HomePage({
         </div>
         <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
           {EVENTS.map(event => (
-            <div key={event.id} className="min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0" style={{ background: event.color }}>
-              <img src={event.image} alt={event.title} className="w-full h-[110px] object-cover opacity-30" />
-              <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                <div className="flex items-start justify-between">
-                  <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/30">{event.tag}</span>
-                  <div className="text-right">
-                    <div className="text-white font-display font-black text-2xl leading-none">{event.day}</div>
-                    <div className="text-white/80 text-[10px] font-bold tracking-widest">{event.month}</div>
-                  </div>
+            <div key={event.id} className="min-w-[280px] w-[280px] rounded-3xl overflow-hidden shadow-sm border border-slate-150 cursor-pointer flex-shrink-0 bg-white flex flex-col transition-transform active:scale-[0.98]">
+              <img src={event.image} alt={event.title} className="w-full h-[105px] object-cover" />
+              <div className="p-4 flex flex-col justify-between flex-1 gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="bg-[#3b5bdb]/10 text-[#3b5bdb] text-[10px] font-bold px-2.5 py-1 rounded-full">{event.tag}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{event.day} {event.month}</span>
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-base leading-tight mb-0.5">{event.title}</h3>
-                  <p className="text-white/75 text-xs mb-2">{event.subtitle}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-white/80 text-[11px]">
-                      <CalendarIcon /><span>{event.time} · {event.venue}</span>
-                    </div>
-                    <div className="flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
-                      <UsersIcon /><span className="text-white text-[10px] font-bold">{event.attendees}</span>
-                    </div>
+                  <h3 className="text-slate-900 font-bold text-sm leading-tight mb-0.5 truncate">{event.title}</h3>
+                  <p className="text-slate-500 text-[11px] font-medium truncate">{event.subtitle}</p>
+                </div>
+                <div className="flex items-center justify-between border-t border-slate-100 pt-2 mt-0.5">
+                  <div className="flex items-center gap-1 text-slate-400 text-[10px] font-semibold min-w-0">
+                    <CalendarIcon />
+                    <span className="truncate max-w-[140px] text-slate-500">{event.time} · {event.venue}</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-slate-50 rounded-full px-2 py-0.5 border border-slate-100 flex-shrink-0">
+                    <UsersIcon />
+                    <span className="text-slate-600 text-[9px] font-bold">{event.attendees}</span>
                   </div>
                 </div>
               </div>
