@@ -49,7 +49,7 @@ const GIGS = [
     followers: '89K',
     niche: 'Food & Travel',
     title: 'Restaurant Review Collab – Park Street',
-    type: 'Non-Paid',
+    type: 'Collab',
     budget: 'Complimentary Meal',
     tags: ['Food', 'Review', 'Reel'],
     location: 'Park Street, KOL',
@@ -254,13 +254,13 @@ const BRANDS = [
   },
 ]
 
-const FILTERS = ['All Gigs', 'Paid', 'Barter', 'Non-Paid', 'Collab']
+const FILTERS = ['All Gigs', 'Paid', 'Barter', 'Collab']
 const NICHES = ['All', 'Fashion', 'Food', 'Photography', 'Video', 'Wellness']
 
 const TYPE_COLORS: Record<string, string> = {
   Paid: 'bg-emerald-100 text-emerald-700',
   Barter: 'bg-violet-100 text-violet-700',
-  'Non-Paid': 'bg-amber-100 text-amber-700',
+  Collab: 'bg-amber-100 text-amber-700',
 }
 
 type Gig = typeof GIGS[0]
@@ -904,7 +904,7 @@ function HomePage({
       {/* Filters */}
       <div className="px-5 mb-3">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-slate-900">Browse Gigs 🚀</h2>
+          <h2 className="text-base font-bold text-slate-900">Browse Gigs</h2>
           <span className="text-xs text-slate-500 font-medium">{filteredGigs.length} found</span>
         </div>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
@@ -1125,7 +1125,7 @@ function PostGigPage({ onBack, onPosted }: { onBack: () => void; onPosted: () =>
                     {[
                       { val: 'Paid', emoji: '💰', desc: 'You pay' },
                       { val: 'Barter', emoji: '🔄', desc: 'Exchange' },
-                      { val: 'Non-Paid', emoji: '🤝', desc: 'Free collab' },
+                      { val: 'Collab', emoji: '🤝', desc: 'Free collab' },
                     ].map(({ val, emoji, desc }) => (
                       <button
                         key={val}
