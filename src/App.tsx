@@ -1459,14 +1459,43 @@ function HomePage({
       <div className="px-5 flex flex-col gap-3">
         {filteredGigs.map((gig, i) => {
           const isFeat = (gig as any).isFeatured || i === 0
-          const matchedCreator = creators.find(c => c.name.toLowerCase() === gig.creatorName.toLowerCase() || (c.handle && c.handle.toLowerCase() === gig.handle.toLowerCase()))
-          const matchedBrand = brands.find(b => b.name.toLowerCase() === (gig.brand || gig.creatorName).toLowerCase())
-          const displayAvatar = matchedCreator?.avatar || matchedBrand?.logo || gig.avatar
-          const displayName = matchedCreator?.name || matchedBrand?.name || gig.creatorName
-          const displayHandle = matchedCreator?.handle || gig.handle
-          const isVerified = matchedCreator?.verified || matchedBrand?.verified || gig.verified
-          const displayFollowers = matchedCreator?.followers || gig.followers
-          const hasInstagram = matchedCreator ? ((matchedCreator as any).isInstagramConnected === true || ((matchedCreator as any).isInstagramConnected !== false && displayFollowers && displayFollowers !== '0')) : true
+          const isOwner = !!(userProfile && (
+            (auth.currentUser && (gig as any).userId === auth.currentUser.uid) ||
+            (userProfile.name && userProfile.name.toLowerCase() === gig.creatorName?.toLowerCase()) ||
+            (userProfile.handle && userProfile.handle.toLowerCase() === gig.handle?.toLowerCase()) ||
+            (userProfile.name && userProfile.name.toLowerCase() === gig.brand?.toLowerCase())
+          ))
+
+          const matchedCreator = creators.find(c => 
+            ((gig as any).userId && (c as any).uid === (gig as any).userId) ||
+            (c.handle && gig.handle && c.handle.toLowerCase() === gig.handle.toLowerCase())
+          )
+          const matchedBrand = brands.find(b => 
+            ((gig as any).userId && (b as any).uid === (gig as any).userId) ||
+            (b.name && gig.brand && b.name.toLowerCase() === gig.brand.toLowerCase())
+          )
+
+          const displayAvatar = isOwner
+            ? (userProfile.avatar || userProfile.logo || gig.avatar || gig.brandLogo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')
+            : (gig.avatar || gig.brandLogo || matchedCreator?.avatar || matchedBrand?.logo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')
+
+          const displayName = isOwner 
+            ? (userProfile.name || gig.creatorName)
+            : (gig.creatorName || matchedCreator?.name || matchedBrand?.name)
+
+          const displayHandle = isOwner 
+            ? (userProfile.handle || gig.handle)
+            : (gig.handle || matchedCreator?.handle)
+
+          const isVerified = isOwner 
+            ? (userProfile.verified ?? gig.verified)
+            : (gig.verified ?? matchedCreator?.verified ?? matchedBrand?.verified ?? true)
+
+          const displayFollowers = isOwner 
+            ? (userProfile.followers || gig.followers)
+            : (gig.followers || matchedCreator?.followers)
+
+          const hasInstagram = displayFollowers && displayFollowers !== '0'
 
           return (
             <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border cursor-pointer transition-transform active:scale-[0.98] ${isFeat ? 'border-2 border-[#3b5bdb] shadow-blue-100' : 'border-slate-100'}`}>
