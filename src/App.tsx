@@ -1580,20 +1580,6 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
         </div>
       </div>
 
-      {/* Post Gig CTA */}
-      <div className="px-5 mb-5">
-        <button
-          onClick={onPostGig}
-          className="w-full flex items-center gap-3 bg-[#3b5bdb] text-white rounded-2xl px-4 py-3.5 shadow-md shadow-blue-200"
-        >
-          <span className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg">＋</span>
-          <div className="flex-1 text-left">
-            <div className="text-sm font-bold">Post a New Gig</div>
-            <div className="text-[11px] text-white/70">Find creators or brands to collab with</div>
-          </div>
-          <ChevronRightIcon />
-        </button>
-      </div>
 
       {/* Section tabs */}
       <div className="px-5 mb-4">
