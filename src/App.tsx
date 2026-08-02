@@ -1261,6 +1261,48 @@ function ViewMyGigPage({
   )
 }
 
+// ── Helper: Resolve Gig Poster Details ───────────────────────────────────────
+
+function resolveGigPosterDetails(gig: Gig, userProfile?: any, creators: Creator[] = [], brands: Brand[] = []) {
+  const isOwner = !!(userProfile && (
+    (auth.currentUser && (gig as any).userId === auth.currentUser.uid) ||
+    (userProfile.name && userProfile.name.toLowerCase() === gig.creatorName?.toLowerCase()) ||
+    (userProfile.handle && userProfile.handle.toLowerCase() === gig.handle?.toLowerCase()) ||
+    (userProfile.name && userProfile.name.toLowerCase() === gig.brand?.toLowerCase())
+  ))
+
+  const matchedCreator = creators.find(c => 
+    ((gig as any).userId && (c as any).uid === (gig as any).userId) ||
+    (c.handle && gig.handle && c.handle.toLowerCase() === gig.handle.toLowerCase())
+  )
+  const matchedBrand = brands.find(b => 
+    ((gig as any).userId && (b as any).uid === (gig as any).userId) ||
+    (b.name && gig.brand && b.name.toLowerCase() === gig.brand.toLowerCase())
+  )
+
+  const avatar = isOwner
+    ? (userProfile.avatar || userProfile.logo || gig.avatar || gig.brandLogo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')
+    : (gig.avatar || gig.brandLogo || matchedCreator?.avatar || matchedBrand?.logo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')
+
+  const name = isOwner 
+    ? (userProfile.name || gig.creatorName)
+    : (gig.creatorName || matchedCreator?.name || matchedBrand?.name)
+
+  const handle = isOwner 
+    ? (userProfile.handle || gig.handle)
+    : (gig.handle || matchedCreator?.handle || '@brand')
+
+  const verified = isOwner 
+    ? (userProfile.verified ?? gig.verified)
+    : (gig.verified ?? matchedCreator?.verified ?? matchedBrand?.verified ?? true)
+
+  const followers = isOwner 
+    ? (userProfile.followers || gig.followers)
+    : (gig.followers || matchedCreator?.followers || '50K')
+
+  return { avatar, name, handle, verified, followers, isOwner }
+}
+
 // ── Home Page ──────────────────────────────────────────────────────────────
 
 function HomePage({
@@ -1462,42 +1504,12 @@ function HomePage({
       <div className="px-5 flex flex-col gap-3">
         {filteredGigs.map((gig, i) => {
           const isFeat = !!(gig as any).isFeatured
-          const isOwner = !!(userProfile && (
-            (auth.currentUser && (gig as any).userId === auth.currentUser.uid) ||
-            (userProfile.name && userProfile.name.toLowerCase() === gig.creatorName?.toLowerCase()) ||
-            (userProfile.handle && userProfile.handle.toLowerCase() === gig.handle?.toLowerCase()) ||
-            (userProfile.name && userProfile.name.toLowerCase() === gig.brand?.toLowerCase())
-          ))
-
-          const matchedCreator = creators.find(c => 
-            ((gig as any).userId && (c as any).uid === (gig as any).userId) ||
-            (c.handle && gig.handle && c.handle.toLowerCase() === gig.handle.toLowerCase())
-          )
-          const matchedBrand = brands.find(b => 
-            ((gig as any).userId && (b as any).uid === (gig as any).userId) ||
-            (b.name && gig.brand && b.name.toLowerCase() === gig.brand.toLowerCase())
-          )
-
-          const displayAvatar = isOwner
-            ? (userProfile.avatar || userProfile.logo || gig.avatar || gig.brandLogo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')
-            : (gig.avatar || gig.brandLogo || matchedCreator?.avatar || matchedBrand?.logo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')
-
-          const displayName = isOwner 
-            ? (userProfile.name || gig.creatorName)
-            : (gig.creatorName || matchedCreator?.name || matchedBrand?.name)
-
-          const displayHandle = isOwner 
-            ? (userProfile.handle || gig.handle)
-            : (gig.handle || matchedCreator?.handle)
-
-          const isVerified = isOwner 
-            ? (userProfile.verified ?? gig.verified)
-            : (gig.verified ?? matchedCreator?.verified ?? matchedBrand?.verified ?? true)
-
-          const displayFollowers = isOwner 
-            ? (userProfile.followers || gig.followers)
-            : (gig.followers || matchedCreator?.followers)
-
+          const poster = resolveGigPosterDetails(gig, userProfile, creators, brands)
+          const displayAvatar = poster.avatar
+          const displayName = poster.name
+          const displayHandle = poster.handle
+          const isVerified = poster.verified
+          const displayFollowers = poster.followers
           const hasInstagram = displayFollowers && displayFollowers !== '0'
 
           return (
@@ -3669,7 +3681,10 @@ function ExplorePage({
                       </span>
                     )}
                     <div className="text-[9px] text-slate-500 font-semibold truncate max-w-full mb-3">{creator.niche}</div>
-                    <button className="w-full mt-auto bg-[#3b5bdb]/10 text-[#3b5bdb] text-[9px] font-bold py-1.5 rounded-lg transition">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onCreatorClick(creator.name) }} 
+                      className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[9px] font-bold py-1.5 rounded-lg transition cursor-pointer"
+                    >
                       Collab
                     </button>
                   </div>
@@ -3813,6 +3828,14 @@ function ExplorePage({
               onChange={e => setSearchQuery(e.target.value)}
               className="flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent font-medium" 
             />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="w-5 h-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 text-xs font-bold flex items-center justify-center transition cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -3930,37 +3953,48 @@ function ExplorePage({
               <button onClick={() => setActiveFilter('gigs')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
             </div>
             <div className="flex flex-col gap-3 px-5">
-              {gigs.slice(0, 2).map((gig, i) => (
-                <div key={gig.id} onClick={() => onApply(gig)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98]">
-                  <div className="flex items-center justify-between mb-3">
-                    <div 
-                      onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
-                      className="flex items-center gap-3 cursor-pointer hover:opacity-85"
-                    >
-                      <div className="relative">
-                        <img src={gig.avatar} alt={gig.creatorName} className="w-10 h-10 rounded-full object-cover border border-slate-100" />
-                        {gig.verified && (
-                          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
-                            <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
-                          </span>
-                        )}
+              {gigs.slice(0, 2).map((gig) => {
+                const poster = resolveGigPosterDetails(gig, userProfile, creators, brands)
+                return (
+                  <div key={gig.id} onClick={() => onApply(gig)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div 
+                        onClick={e => { e.stopPropagation(); onCreatorClick(poster.name) }}
+                        className="flex items-center gap-3 cursor-pointer hover:opacity-85"
+                      >
+                        <div className="relative">
+                          <img src={poster.avatar} alt={poster.name} className="w-10 h-10 rounded-full object-cover border border-slate-100" />
+                          {poster.verified && (
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                              <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-slate-900">{poster.name}</span>
+                          <div className="text-[10px] text-slate-400 font-medium">{poster.handle}</div>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-xs font-bold text-slate-900">{gig.creatorName}</span>
-                        <div className="text-[10px] text-slate-400 font-medium">{gig.handle}</div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+                        <button
+                          onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
+                          className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
+                        >
+                          <BookmarkIcon filled={savedGigs.has(gig.id)} />
+                        </button>
                       </div>
                     </div>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+                    <h3 className="text-xs font-bold text-slate-900 mb-2 truncate">{gig.title}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">{gig.budget}</span>
+                      <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm">
+                        Apply
+                      </button>
+                    </div>
                   </div>
-                  <h3 className="text-xs font-bold text-slate-900 mb-2 truncate">{gig.title}</h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-800">{gig.budget}</span>
-                    <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm">
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
@@ -4042,7 +4076,10 @@ function ExplorePage({
                   )}
                 </div>
                 <div className="text-[10px] text-slate-500 line-clamp-2 min-h-[28px] leading-relaxed mb-4 px-1">{creator.bio}</div>
-                <button className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[10px] font-bold py-2 rounded-xl transition">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onCreatorClick(creator.name) }}
+                  className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[10px] font-bold py-2 rounded-xl transition cursor-pointer"
+                >
                   Collab Pitch
                 </button>
               </div>
