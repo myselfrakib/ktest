@@ -3576,6 +3576,7 @@ function ViewEventPage({
   userProfile?: any
 }) {
   const [copied, setCopied] = useState(false)
+  const [showConfirmToast, setShowConfirmToast] = useState(false)
   const isFeat = (event as any).isFeatured || false
 
   const handleShare = () => {
@@ -3586,11 +3587,21 @@ function ViewEventPage({
     }
   }
 
-  const speakers = Array.isArray((event as any).speakers) && (event as any).speakers.length > 0 
-    ? (event as any).speakers 
+  const handleRegisterClick = () => {
+    if (isRsvp) return
+    setShowConfirmToast(true)
+  }
+
+  const handleConfirmRegister = () => {
+    setShowConfirmToast(false)
+    toggleRsvpEvent(event.id)
+  }
+
+  const speakers = Array.isArray((event as any).speakers) && (event as any).speakers.length > 0
+    ? (event as any).speakers
     : []
   const organizer = (event as any).organizer || 'Kreator Kolkata Community'
-  const description = (event as any).description || 'Join Kolkata’s premier creator networking meetup! Connect with top lifestyle, food, and tech creators, meet hiring brand managers, and participate in exclusive collab pitch sessions.'
+  const description = (event as any).description || "Join Kolkata's premier creator networking meetup! Connect with top lifestyle, food, and tech creators, meet hiring brand managers, and participate in exclusive collab pitch sessions."
   const entryFee = (event as any).entryFee || 'Free RSVP'
 
   return (
@@ -3686,7 +3697,7 @@ function ViewEventPage({
             </div>
           </div>
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${isRsvp ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-[#3b5bdb]'}`}>
-            {isRsvp ? '✓ RSVP Confirmed' : 'Spots Available'}
+            {isRsvp ? '✓ Registered' : 'Spots Available'}
           </span>
         </div>
 
@@ -3733,24 +3744,51 @@ function ViewEventPage({
           <div className="text-sm font-bold text-slate-900">{entryFee}</div>
         </div>
         <button
-          onClick={() => toggleRsvpEvent(event.id)}
-          className={`flex-1 py-3.5 rounded-2xl font-bold text-xs shadow-lg transition active:scale-98 cursor-pointer flex items-center justify-center gap-2 ${
+          onClick={handleRegisterClick}
+          disabled={isRsvp}
+          className={`flex-1 py-3.5 rounded-2xl font-bold text-xs shadow-lg transition active:scale-98 flex items-center justify-center gap-2 ${
             isRsvp 
-              ? 'bg-emerald-600 text-white shadow-emerald-200 hover:bg-emerald-700' 
-              : 'bg-[#3b5bdb] text-white shadow-blue-200 hover:bg-[#2b4ef7]'
+              ? 'bg-emerald-600 text-white shadow-emerald-200 opacity-100 cursor-default' 
+              : 'bg-[#3b5bdb] text-white shadow-blue-200 hover:bg-[#2b4ef7] cursor-pointer'
           }`}
         >
-          {isRsvp ? (
-            <>
-              <span>✓ Attending (Registered)</span>
-            </>
-          ) : (
-            <>
-              <span>RSVP Now 🎉</span>
-            </>
-          )}
+          {isRsvp ? '✓ Registered' : 'Register Now 🎉'}
         </button>
       </div>
+
+      {/* Confirmation Toast Overlay */}
+      {showConfirmToast && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center pb-8 px-5 pointer-events-none">
+          <div className="w-full max-w-[390px] bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 pointer-events-auto animate-[slideUp_0.25s_ease-out]">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#3b5bdb]/10 flex items-center justify-center text-[#3b5bdb] text-xl flex-shrink-0">
+                🎟️
+              </div>
+              <div>
+                <div className="text-sm font-bold text-slate-900">Confirm Registration</div>
+                <div className="text-[10px] text-slate-500 font-medium mt-0.5">This action cannot be undone</div>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed mb-4">
+              Are you sure you want to register for <span className="font-bold text-slate-900">"{event.title}"</span>? Once registered, you cannot unregister.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmToast(false)}
+                className="flex-1 py-3 bg-slate-100 text-slate-700 text-xs font-bold rounded-2xl hover:bg-slate-200 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRegister}
+                className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-2xl shadow-lg shadow-blue-200 hover:bg-[#2b4ef7] transition cursor-pointer"
+              >
+                Yes, Register Me ✓
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -3975,10 +4013,11 @@ function ExplorePage({
                       <p className="text-[10px] text-slate-400">{event.date} · {event.venue}</p>
                     </div>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); toggleRsvpEvent(event.id); }}
-                      className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition cursor-pointer ${isRsvp ? 'bg-emerald-50 text-emerald-600' : 'bg-[#3b5bdb] text-white'}`}
+                      onClick={(e) => { e.stopPropagation(); if (!isRsvp) toggleRsvpEvent(event.id); }}
+                      disabled={isRsvp}
+                      className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition ${isRsvp ? 'bg-emerald-50 text-emerald-600 cursor-default' : 'bg-[#3b5bdb] text-white cursor-pointer'}`}
                     >
-                      {isRsvp ? 'Attending' : 'RSVP'}
+                      {isRsvp ? '✓ Registered' : 'Register Now'}
                     </button>
                   </div>
                 )
@@ -4229,10 +4268,11 @@ function ExplorePage({
                           )}
                         </div>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); toggleRsvpEvent(event.id); }}
-                          className="bg-white text-slate-800 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md active:scale-95 transition"
+                          onClick={(e) => { e.stopPropagation(); if (!isRsvp) toggleRsvpEvent(event.id); }}
+                          disabled={isRsvp}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md active:scale-95 transition ${isRsvp ? 'bg-emerald-100 text-emerald-700 cursor-default' : 'bg-white text-slate-800 cursor-pointer'}`}
                         >
-                          {isRsvp ? 'Attending' : 'RSVP'}
+                          {isRsvp ? '✓ Registered' : 'Register Now'}
                         </button>
                       </div>
                       <div>
@@ -4450,10 +4490,11 @@ function ExplorePage({
                     </div>
                   </div>
                   <button
-                    onClick={(e) => { e.stopPropagation(); toggleRsvpEvent(event.id); }}
-                    className={`text-xs font-bold px-4 py-2.5 rounded-xl transition cursor-pointer ${isRsvp ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
+                    onClick={(e) => { e.stopPropagation(); if (!isRsvp) toggleRsvpEvent(event.id); }}
+                    disabled={isRsvp}
+                    className={`text-xs font-bold px-4 py-2.5 rounded-xl transition ${isRsvp ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100 cursor-pointer'}`}
                   >
-                    {isRsvp ? '✓ Attending' : 'RSVP Now'}
+                    {isRsvp ? '✓ Registered' : 'Register Now'}
                   </button>
                 </div>
               </div>
@@ -6780,26 +6821,29 @@ export default function App() {
 
   const toggleRsvpEvent = async (id: number) => {
     const isCurrentlyRsvp = rsvpEvents.has(id)
+    // Registration is one-way — no unregistration allowed
+    if (isCurrentlyRsvp) return
+
     setRsvpEvents(prev => {
       const next = new Set(prev)
-      isCurrentlyRsvp ? next.delete(id) : next.add(id)
+      next.add(id)
       return next
     })
 
     try {
       const eventRef = doc(db, 'events', String(id))
       await updateDoc(eventRef, {
-        attendees: increment(isCurrentlyRsvp ? -1 : 1)
+        attendees: increment(1)
       })
 
       if (auth.currentUser) {
         const userRef = doc(db, 'users', auth.currentUser.uid)
         await updateDoc(userRef, {
-          rsvps: isCurrentlyRsvp ? arrayRemove(id) : arrayUnion(id)
+          rsvps: arrayUnion(id)
         })
       }
     } catch (err) {
-      console.warn("Error syncing RSVP to Firestore:", err)
+      console.warn("Error syncing registration to Firestore:", err)
     }
   }
 
