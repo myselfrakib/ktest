@@ -1550,7 +1550,7 @@ function ProfilePage({
   onPostGig: () => void; 
   onLogout: () => void;
   userProfile: any;
-  userRole: 'creator' | 'brand' | null;
+  userRole: 'creator' | 'brand' | 'admin' | null;
 }) {
   const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews' | 'about'>('portfolio')
   const [showLogoutToast, setShowLogoutToast] = useState(false)
@@ -2251,7 +2251,7 @@ function ProfileSetupPage({
   onComplete
 }: {
   userProfile: any;
-  userRole: 'creator' | 'brand' | null;
+  userRole: 'creator' | 'brand' | 'admin' | null;
   onComplete: () => void;
 }) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -4257,15 +4257,586 @@ function SlideScreen({
   )
 }
 
+// ── Admin Dashboard ───────────────────────────────────────────────────────────
+
+function AdminDashboardPage({
+  gigs,
+  events,
+  creators,
+  brands,
+  onLogout
+}: {
+  gigs: Gig[];
+  events: Event[];
+  creators: Creator[];
+  brands: Brand[];
+  onLogout: () => void;
+}) {
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'gigs' | 'admins' | 'users'>('overview')
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false)
+  const [adminsList, setAdminsList] = useState<any[]>([])
+
+  // Create Event State
+  const [eventTitle, setEventTitle] = useState('')
+  const [eventSubtitle, setEventSubtitle] = useState('')
+  const [eventDate, setEventDate] = useState('')
+  const [eventTime, setEventTime] = useState('5:00 PM')
+  const [eventVenue, setEventVenue] = useState('')
+  const [eventLocation, setEventLocation] = useState('Kolkata, WB')
+  const [eventTag, setEventTag] = useState('Featured Event')
+  const [eventImage, setEventImage] = useState('')
+  const [eventFile, setEventFile] = useState<File | null>(null)
+  const [eventPreviewUrl, setEventPreviewUrl] = useState<string | null>(null)
+  const [creatingEvent, setCreatingEvent] = useState(false)
+
+  // Listen to admins collection
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'admins'), (snap) => {
+      const list = snap.docs.map(d => ({ uid: d.id, ...d.data() }))
+      setAdminsList(list)
+    }, (err) => console.warn("Admin list error:", err))
+    return () => unsub()
+  }, [])
+
+  // Toggle Gig Featured Status
+  const toggleFeatureGig = async (gig: Gig) => {
+    try {
+      const current = (gig as any).isFeatured || false
+      await updateDoc(doc(db, 'gigs', String(gig.id)), {
+        isFeatured: !current
+      })
+    } catch (err: any) {
+      alert(err.message || 'Failed to update gig status')
+    }
+  }
+
+  // Toggle Event Featured Status
+  const toggleFeatureEvent = async (ev: Event) => {
+    try {
+      const current = (ev as any).isFeatured || false
+      await updateDoc(doc(db, 'events', String(ev.id)), {
+        isFeatured: !current
+      })
+    } catch (err: any) {
+      alert(err.message || 'Failed to update event status')
+    }
+  }
+
+  // Approve Admin Access
+  const handleApproveAdmin = async (uid: string) => {
+    try {
+      await updateDoc(doc(db, 'admins', uid), {
+        isAdmin: true
+      })
+      alert('Admin user approved successfully!')
+    } catch (err: any) {
+      alert(err.message || 'Failed to approve admin')
+    }
+  }
+
+  // Submit New Event to Firestore
+  const handleCreateEventSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!eventTitle.trim() || !eventVenue.trim()) return
+
+    setCreatingEvent(true)
+    try {
+      let finalCover = eventImage.trim() || 'https://images.unsplash.com/photo-1648440108249-30567222448a?w=400&h=200&fit=crop&auto=format'
+      
+      if (eventFile) {
+        const storageRef = ref(storage, `event_covers/${Date.now()}`)
+        const uploadResult = await uploadBytes(storageRef, eventFile)
+        finalCover = await getDownloadURL(uploadResult.ref)
+      }
+
+      const newId = Date.now()
+      const dObj = eventDate ? new Date(eventDate) : new Date()
+      const dayStr = isNaN(dObj.getDate()) ? '15' : String(dObj.getDate())
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+      const monthStr = isNaN(dObj.getMonth()) ? 'AUG' : months[dObj.getMonth()]
+
+      const newEv: Event = {
+        id: newId,
+        title: eventTitle.trim(),
+        subtitle: eventSubtitle.trim() || 'Kreator Kolkata Official Event',
+        date: eventDate.trim() || 'Aug 25, 2026',
+        day: dayStr,
+        month: monthStr,
+        time: eventTime.trim() || '5:00 PM',
+        venue: eventVenue.trim(),
+        location: eventLocation.trim() || 'Kolkata, WB',
+        attendees: 1,
+        tag: eventTag.trim() || 'Networking',
+        color: '#3b5bdb',
+        image: finalCover,
+        ...( { isFeatured: true } as any )
+      }
+
+      await setDoc(doc(db, 'events', String(newId)), newEv)
+      setShowCreateEventModal(false)
+      setEventTitle('')
+      setEventSubtitle('')
+      setEventDate('')
+      setEventTime('5:00 PM')
+      setEventVenue('')
+      setEventLocation('Kolkata, WB')
+      setEventTag('Featured Event')
+      setEventImage('')
+      setEventFile(null)
+      setEventPreviewUrl(null)
+    } catch (err: any) {
+      alert(err.message || 'Failed to create event')
+    } finally {
+      setCreatingEvent(false)
+    }
+  }
+
+  const pendingAdmins = adminsList.filter(a => a.isAdmin === false)
+
+  return (
+    <div className="flex-1 bg-[#0a1628] min-h-screen text-slate-100 flex flex-col pb-20">
+      
+      {/* Admin Top Header */}
+      <div className="bg-[#0f1d38] border-b border-slate-800 px-6 py-5 flex items-center justify-between sticky top-0 z-30 shadow-md">
+        <div className="flex items-center gap-2.5">
+          <span className="w-8 h-8 rounded-xl bg-[#3b5bdb] flex items-center justify-center text-sm shadow-md">⚡</span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-black text-white leading-none">Admin Panel</h2>
+              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-400/30">
+                CONTROL CENTER
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium mt-0.5">Kreator Kolkata Management</p>
+          </div>
+        </div>
+        <button 
+          onClick={onLogout}
+          className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl transition cursor-pointer"
+        >
+          Logout 🚪
+        </button>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="p-5 flex flex-col gap-6">
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-[#0f1d38] border border-slate-800/80 rounded-2xl p-4 shadow-sm">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Users</div>
+            <div className="text-2xl font-black text-white">{creators.length + brands.length}</div>
+            <div className="text-[10px] text-slate-500 font-medium mt-1">{creators.length} Creators · {brands.length} Brands</div>
+          </div>
+          <div className="bg-[#0f1d38] border border-slate-800/80 rounded-2xl p-4 shadow-sm">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Gigs & Events</div>
+            <div className="text-2xl font-black text-emerald-400">{gigs.length + events.length}</div>
+            <div className="text-[10px] text-slate-500 font-medium mt-1">{gigs.length} Gigs · {events.length} Events</div>
+          </div>
+        </div>
+
+        {/* Quick Action Button */}
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setShowCreateEventModal(true)}
+            className="flex-1 bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white py-3 rounded-2xl font-bold text-xs shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+          >
+            <span>＋</span> Create New Event
+          </button>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex bg-[#0f1d38] p-1 rounded-2xl border border-slate-800 gap-1 overflow-x-auto scrollbar-hide">
+          {(['overview', 'events', 'gigs', 'admins', 'users'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold capitalize transition whitespace-nowrap cursor-pointer ${activeTab === tab ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              {tab === 'admins' ? `Admins (${pendingAdmins.length})` : tab}
+            </button>
+          ))}
+        </div>
+
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === 'overview' && (
+          <div className="flex flex-col gap-4">
+            
+            {/* Pending Admins Alert */}
+            {pendingAdmins.length > 0 && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <span>⚠️</span> {pendingAdmins.length} Pending Admin Approval Request(s)
+                  </span>
+                  <button 
+                    onClick={() => setActiveTab('admins')}
+                    className="text-[10px] font-bold text-amber-400 underline"
+                  >
+                    View & Approve →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Gigs Preview */}
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800/80 flex flex-col gap-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Live Platform Gigs</h3>
+                <span className="text-xs text-slate-500 font-bold">{gigs.length} Total</span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {gigs.slice(0, 4).map(gig => (
+                  <div key={gig.id} className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-white truncate">{gig.title}</div>
+                      <div className="text-[10px] text-slate-400 font-medium mt-0.5">{gig.brand || gig.creatorName} · {gig.budget}</div>
+                    </div>
+                    <button 
+                      onClick={() => toggleFeatureGig(gig)}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition cursor-pointer ${(gig as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                    >
+                      {(gig as any).isFeatured ? '⭐ Featured' : 'Feature'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Events Preview */}
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800/80 flex flex-col gap-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Platform Events</h3>
+                <span className="text-xs text-slate-500 font-bold">{events.length} Total</span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {events.slice(0, 4).map(ev => (
+                  <div key={ev.id} className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-white truncate">{ev.title}</div>
+                      <div className="text-[10px] text-slate-400 font-medium mt-0.5">{ev.date} · {ev.venue}</div>
+                    </div>
+                    <button 
+                      onClick={() => toggleFeatureEvent(ev)}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition cursor-pointer ${(ev as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                    >
+                      {(ev as any).isFeatured ? '⭐ Featured' : 'Feature'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 2: EVENTS */}
+        {activeTab === 'events' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Manage & Feature Events</h3>
+              <button 
+                onClick={() => setShowCreateEventModal(true)}
+                className="bg-[#3b5bdb] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm cursor-pointer"
+              >
+                ＋ New Event
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {events.map(ev => (
+                <div key={ev.id} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 flex flex-col gap-3">
+                  <div className="flex gap-3 items-start">
+                    <img src={ev.image} alt={ev.title} className="w-16 h-16 rounded-2xl object-cover border border-slate-700 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-white truncate">{ev.title}</h4>
+                        {(ev as any).isFeatured && (
+                          <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
+                            FEATURED
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5 font-medium">{ev.date} · {ev.time}</div>
+                      <div className="text-[10px] text-slate-500 truncate mt-0.5">{ev.venue}, {ev.location}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                    <span className="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2.5 py-1 rounded-lg">
+                      {ev.tag || 'Event'}
+                    </span>
+                    <button 
+                      onClick={() => toggleFeatureEvent(ev)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${(ev as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                    >
+                      {(ev as any).isFeatured ? '⭐ Remove Feature' : '⭐ Feature Event'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: GIGS */}
+        {activeTab === 'gigs' && (
+          <div className="flex flex-col gap-4">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Manage & Feature Gigs</h3>
+            <div className="flex flex-col gap-3">
+              {gigs.map(gig => (
+                <div key={gig.id} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1 pr-3">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-white truncate">{gig.title}</h4>
+                        {(gig as any).isFeatured && (
+                          <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
+                            FEATURED
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-400 mt-1 font-medium">{gig.brand || gig.creatorName} · {gig.budget}</div>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{gig.type}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                    <span className="text-[10px] text-slate-400">{gig.location}</span>
+                    <button 
+                      onClick={() => toggleFeatureGig(gig)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${(gig as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                    >
+                      {(gig as any).isFeatured ? '⭐ Remove Feature' : '⭐ Feature Gig'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: ADMIN APPROVALS */}
+        {activeTab === 'admins' && (
+          <div className="flex flex-col gap-4">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Admin User Management</h3>
+            <div className="flex flex-col gap-3">
+              {adminsList.map(a => (
+                <div key={a.uid} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-white truncate">{a.name || 'Admin User'}</h4>
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${a.isAdmin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>
+                        {a.isAdmin ? 'ACTIVE ADMIN' : 'PENDING APPROVAL'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1 truncate">{a.email}</div>
+                  </div>
+
+                  {!a.isAdmin && (
+                    <button 
+                      onClick={() => handleApproveAdmin(a.uid)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-md cursor-pointer"
+                    >
+                      ✓ Approve (isAdmin=true)
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {adminsList.length === 0 && (
+                <div className="text-center py-10 text-slate-500 text-xs font-medium">No admin accounts registered yet.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: USERS */}
+        {activeTab === 'users' && (
+          <div className="flex flex-col gap-4">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Registered Creators & Brands</h3>
+            <div className="flex flex-col gap-3">
+              {creators.map(c => (
+                <div key={c.id} className="bg-[#0f1d38] rounded-2xl p-3 border border-slate-800 flex items-center gap-3">
+                  <img src={c.avatar} alt={c.name} className="w-10 h-10 rounded-full object-cover border border-slate-700" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white truncate">{c.name}</div>
+                    <div className="text-[10px] text-slate-400 truncate">{c.handle} · {c.niche}</div>
+                  </div>
+                  <span className="text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">Creator</span>
+                </div>
+              ))}
+              {brands.map(b => (
+                <div key={b.id} className="bg-[#0f1d38] rounded-2xl p-3 border border-slate-800 flex items-center gap-3">
+                  <img src={b.logo} alt={b.name} className="w-10 h-10 rounded-full object-cover border border-slate-700" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white truncate">{b.name}</div>
+                    <div className="text-[10px] text-slate-400 truncate">{b.industry} · {b.location}</div>
+                  </div>
+                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full">Brand</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* CREATE EVENT MODAL */}
+      {showCreateEventModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="bg-[#0f1d38] text-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-800 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <h3 className="text-base font-bold text-white">Create Platform Event</h3>
+              <button 
+                onClick={() => setShowCreateEventModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateEventSubmit} className="flex flex-col gap-3.5 overflow-y-auto max-h-[65vh] pr-1">
+              
+              {/* Event Cover Image Picker */}
+              <div className="flex flex-col items-center gap-2 mb-1">
+                <div 
+                  onClick={() => document.getElementById('event-file-input')?.click()}
+                  className="w-full h-28 rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/60 overflow-hidden relative group cursor-pointer flex items-center justify-center"
+                >
+                  {eventPreviewUrl || eventImage ? (
+                    <img src={eventPreviewUrl || eventImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-slate-500">
+                      <span className="text-2xl">🖼️</span>
+                      <span className="text-xs font-bold">Upload Event Cover Image</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">Change Cover</span>
+                  </div>
+                </div>
+                <input 
+                  type="file" 
+                  id="event-file-input" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) {
+                      setEventFile(f)
+                      setEventPreviewUrl(URL.createObjectURL(f))
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Event Title *</label>
+                <input 
+                  required
+                  type="text" 
+                  value={eventTitle}
+                  onChange={e => setEventTitle(e.target.value)}
+                  placeholder="e.g. Kolkata Creator Conclave 2026"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Subtitle / Tagline</label>
+                <input 
+                  type="text" 
+                  value={eventSubtitle}
+                  onChange={e => setEventSubtitle(e.target.value)}
+                  placeholder="e.g. Network with Kolkata's top creators"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Date *</label>
+                  <input 
+                    required
+                    type="text" 
+                    value={eventDate}
+                    onChange={e => setEventDate(e.target.value)}
+                    placeholder="e.g. Aug 28, 2026"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Time</label>
+                  <input 
+                    type="text" 
+                    value={eventTime}
+                    onChange={e => setEventTime(e.target.value)}
+                    placeholder="e.g. 5:00 PM"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Venue & Location *</label>
+                <input 
+                  required
+                  type="text" 
+                  value={eventVenue}
+                  onChange={e => setEventVenue(e.target.value)}
+                  placeholder="e.g. Biswa Bangla Gate, New Town"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Category Tag</label>
+                <input 
+                  type="text" 
+                  value={eventTag}
+                  onChange={e => setEventTag(e.target.value)}
+                  placeholder="e.g. Networking, Summit, Party"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3 border-t border-slate-800">
+                <button 
+                  type="button"
+                  onClick={() => setShowCreateEventModal(false)}
+                  disabled={creatingEvent}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()}
+                  className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl shadow-md shadow-blue-900/40 hover:bg-[#2b4ef7] transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {creatingEvent ? 'Publishing…' : 'Publish Event ✨'}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
 function AuthScreen({ 
   onBack, 
   onAuthSubmit 
 }: { 
   onBack: () => void; 
-  onAuthSubmit: (email: string, pass: string, mode: 'login' | 'signup', name: string, role?: 'creator' | 'brand') => void 
+  onAuthSubmit: (email: string, pass: string, mode: 'login' | 'signup', name: string, role?: 'creator' | 'brand' | 'admin') => void 
 }) {
   const [mode, setMode] = useState<'signup' | 'login'>('signup')
-  const [role, setRole] = useState<'creator' | 'brand'>('creator')
+  const [role, setRole] = useState<'creator' | 'brand' | 'admin'>('creator')
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [password, setPassword] = useState('')
@@ -4414,7 +4985,7 @@ function AuthScreen({
             padding: 4,
             marginBottom: 16,
           }}>
-            {(['creator', 'brand'] as const).map((r) => (
+            {(['creator', 'brand', 'admin'] as const).map((r) => (
               <button key={r} onClick={() => setRole(r)} style={{
                 flex: 1,
                 padding: '9px 0',
@@ -4422,14 +4993,14 @@ function AuthScreen({
                 border: 'none',
                 cursor: 'pointer',
                 fontFamily: "'Instrument Sans', sans-serif",
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 600,
                 background: role === r ? '#fff' : 'transparent',
                 color: role === r ? '#0a1628' : '#adb3cc',
                 boxShadow: role === r ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
                 transition: 'all 0.2s',
               }}>
-                {r === 'creator' ? 'I am a Creator' : 'I am a Brand'}
+                {r === 'creator' ? 'Creator' : r === 'brand' ? 'Brand' : 'Admin'}
               </button>
             ))}
           </div>
@@ -4440,7 +5011,7 @@ function AuthScreen({
           {mode === 'signup' && (
             <input
               type="text"
-              placeholder={role === 'brand' ? 'Company / Brand name' : 'Your name'}
+              placeholder={role === 'brand' ? 'Company / Brand name' : role === 'admin' ? 'Admin Full Name' : 'Your name'}
               value={name}
               onChange={(e) => setName(e.target.value)}
               style={field}
@@ -4544,7 +5115,7 @@ export default function App() {
 
   // User Profile and Role State
   const [userProfile, setUserProfile] = useState<any>(null)
-  const [userRole, setUserRole] = useState<'creator' | 'brand' | null>(null)
+  const [userRole, setUserRole] = useState<'creator' | 'brand' | 'admin' | null>(null)
 
   // Auth State changed hook
   useEffect(() => {
@@ -4556,6 +5127,23 @@ export default function App() {
       unsubs = []
 
       if (user) {
+        const adminRef = doc(db, 'admins', user.uid)
+        const unsubAdmin = onSnapshot(adminRef, (snap) => {
+          if (snap.exists()) {
+            const data = snap.data()
+            if (data.isAdmin === true) {
+              setUserRole('admin')
+              setUserProfile(data)
+            } else {
+              setUserRole(null)
+              setUserProfile(null)
+              alert('Admin account is pending approval.\n\nPlease update "isAdmin: true" on this document in Cloud Firestore to enable admin login.')
+              signOut(auth)
+            }
+          }
+        }, (err) => console.warn("Admin snapshot error:", err))
+        unsubs.push(unsubAdmin)
+
         const creatorRef = doc(db, 'creators', user.uid)
         const unsubCreator = onSnapshot(creatorRef, (snap) => {
           if (snap.exists()) {
@@ -4797,7 +5385,7 @@ export default function App() {
     touchStartX.current = null
   }
 
-  const handleAuthSubmit = async (email: string, pass: string, mode: 'login' | 'signup', name: string, role?: 'creator' | 'brand') => {
+  const handleAuthSubmit = async (email: string, pass: string, mode: 'login' | 'signup', name: string, role?: 'creator' | 'brand' | 'admin') => {
     let formattedEmail = email.trim();
     if (!formattedEmail.includes('@')) {
       formattedEmail = `${formattedEmail.replace(/\s+/g, '')}@kreator.com`;
@@ -4806,7 +5394,18 @@ export default function App() {
     try {
       if (mode === 'signup') {
         const credential = await createUserWithEmailAndPassword(auth, formattedEmail, pass);
-        if (role === 'brand') {
+        if (role === 'admin') {
+          const newAdmin = {
+            id: Date.now(),
+            name: name || 'Admin User',
+            email: formattedEmail,
+            isAdmin: false, // Default false until manually changed to true in DB
+            setupComplete: true,
+            createdAt: new Date().toISOString()
+          };
+          await setDoc(doc(db, 'admins', credential.user.uid), newAdmin);
+          alert('Admin account submitted successfully!\n\nStatus: Pending Approval (isAdmin = false).\nPlease set "isAdmin: true" on this document in Cloud Firestore "admins" collection to activate.');
+        } else if (role === 'brand') {
           const newBrand = {
             id: Date.now(),
             name: name || 'New Brand',
@@ -4946,7 +5545,15 @@ export default function App() {
     <div className="min-h-screen bg-[#f0f4ff] flex justify-center items-start">
       <div className="w-full max-w-[430px] min-h-screen bg-[#f0f4ff] flex flex-col relative overflow-hidden">
         {isLoggedIn ? (
-          !userProfile ? (
+          userRole === 'admin' ? (
+            <AdminDashboardPage 
+              gigs={gigs} 
+              events={events} 
+              creators={creators} 
+              brands={brands} 
+              onLogout={handleLogout} 
+            />
+          ) : !userProfile ? (
             <div className="flex-1 flex flex-col items-center justify-center bg-white p-6">
               <div className="w-10 h-10 rounded-full border-4 border-slate-100 border-t-[#3b5bdb] animate-spin mb-4" />
               <div className="text-sm font-bold text-slate-500 animate-pulse text-center">Loading Kolkata network profile…</div>
