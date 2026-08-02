@@ -836,6 +836,8 @@ function HomePage({
   onSearch,
   gigs = GIGS,
   events = EVENTS,
+  userProfile,
+  onProfileClick
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -847,10 +849,14 @@ function HomePage({
   onSearch: (query: string) => void
   gigs?: Gig[]
   events?: Event[]
+  userProfile?: any
+  onProfileClick?: () => void
 }) {
   const [activeFilter, setActiveFilter] = useState('All Gigs')
   const [activeNiche, setActiveNiche] = useState('All')
   const [localSearch, setLocalSearch] = useState('')
+
+  const userAvatar = userProfile?.avatar || userProfile?.logo || "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -894,9 +900,10 @@ function HomePage({
               )}
             </button>
             <img
-              src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
+              src={userAvatar}
               alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border-2 border-[#3b5bdb]"
+              onClick={onProfileClick}
+              className="w-10 h-10 rounded-full object-cover border-2 border-[#3b5bdb] cursor-pointer hover:opacity-90 transition active:scale-95"
             />
           </div>
         </div>
@@ -2581,6 +2588,8 @@ function ExplorePage({
   creators = CREATORS,
   brands = BRANDS,
   events = EVENTS,
+  userProfile,
+  onProfileClick
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -2601,7 +2610,11 @@ function ExplorePage({
   creators?: Creator[]
   brands?: Brand[]
   events?: Event[]
+  userProfile?: any
+  onProfileClick?: () => void
 }) {
+
+  const userAvatar = userProfile?.avatar || userProfile?.logo || "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
 
   const query = searchQuery.toLowerCase().trim()
   const filteredCreators = creators.filter(c => 
@@ -2797,9 +2810,10 @@ function ExplorePage({
               )}
             </button>
             <img
-              src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
+              src={userAvatar}
               alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border-2 border-[#3b5bdb]"
+              onClick={onProfileClick}
+              className="w-10 h-10 rounded-full object-cover border-2 border-[#3b5bdb] cursor-pointer hover:opacity-90 transition active:scale-95"
             />
           </div>
         </div>
@@ -5438,7 +5452,7 @@ export default function App() {
   }
 
   const handleOpenCreatorProfile = (name: string) => {
-    const creator = CREATORS.find(c => c.name.toLowerCase() === name.toLowerCase())
+    const creator = creators.find(c => c.name.toLowerCase() === name.toLowerCase()) || CREATORS.find(c => c.name.toLowerCase() === name.toLowerCase())
     if (creator) {
       setSelectedCreator(creator)
     }
@@ -5682,6 +5696,10 @@ export default function App() {
           setActiveFilter={setExploreFilter}
           gigs={gigs}
           events={events}
+          creators={creators}
+          brands={brands}
+          userProfile={userProfile}
+          onProfileClick={() => setActiveTab('profile')}
         />
       )
     }
@@ -5697,6 +5715,8 @@ export default function App() {
         onSearch={handleHomeSearch}
         gigs={gigs}
         events={events}
+        userProfile={userProfile}
+        onProfileClick={() => setActiveTab('profile')}
       />
     )
   }
