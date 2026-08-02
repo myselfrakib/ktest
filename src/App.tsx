@@ -5,6 +5,25 @@ import {
   type CSSProperties,
   type TouchEvent,
 } from 'react'
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth'
+import {
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  updateDoc
+} from 'firebase/firestore'
+import { auth, db } from './firebase'
 
 const GIGS = [
   {
@@ -809,6 +828,7 @@ function HomePage({
   onCreatorClick,
   onEventClick,
   onSearch,
+  gigs = GIGS,
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -818,6 +838,7 @@ function HomePage({
   onCreatorClick: (name: string) => void
   onEventClick: () => void
   onSearch: (query: string) => void
+  gigs?: Gig[]
 }) {
   const [activeFilter, setActiveFilter] = useState('All Gigs')
   const [activeNiche, setActiveNiche] = useState('All')
@@ -829,7 +850,7 @@ function HomePage({
     }
   }
 
-  const filteredGigs = GIGS.filter(g => {
+  const filteredGigs = gigs.filter(g => {
     const matchType = activeFilter === 'All Gigs' || activeFilter === 'Collab' || g.type === activeFilter
     const matchNiche = activeNiche === 'All' || g.niche.includes(activeNiche) || g.tags.includes(activeNiche)
     return matchType && matchNiche
@@ -1935,6 +1956,10 @@ function ExplorePage({
   setSearchQuery,
   activeFilter,
   setActiveFilter,
+  gigs = GIGS,
+  creators = CREATORS,
+  brands = BRANDS,
+  events = EVENTS,
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -1951,28 +1976,32 @@ function ExplorePage({
   setSearchQuery: (query: string) => void
   activeFilter: 'all' | 'creators' | 'brands' | 'gigs' | 'events'
   setActiveFilter: (filter: 'all' | 'creators' | 'brands' | 'gigs' | 'events') => void
+  gigs?: Gig[]
+  creators?: Creator[]
+  brands?: Brand[]
+  events?: Event[]
 }) {
 
   const query = searchQuery.toLowerCase().trim()
-  const filteredCreators = CREATORS.filter(c => 
+  const filteredCreators = creators.filter(c => 
     c.name.toLowerCase().includes(query) || 
     c.handle.toLowerCase().includes(query) || 
     c.niche.toLowerCase().includes(query) ||
     c.bio.toLowerCase().includes(query)
   )
-  const filteredBrands = BRANDS.filter(b => 
+  const filteredBrands = brands.filter(b => 
     b.name.toLowerCase().includes(query) || 
     b.industry.toLowerCase().includes(query) || 
     b.bio.toLowerCase().includes(query) ||
     b.location.toLowerCase().includes(query)
   )
-  const filteredGigs = GIGS.filter(g => 
+  const filteredGigs = gigs.filter(g => 
     g.title.toLowerCase().includes(query) || 
     g.creatorName.toLowerCase().includes(query) || 
     g.niche.toLowerCase().includes(query) || 
     g.tags.some(t => t.toLowerCase().includes(query))
   )
-  const filteredEvents = EVENTS.filter(e => 
+  const filteredEvents = events.filter(e => 
     e.title.toLowerCase().includes(query) || 
     e.subtitle.toLowerCase().includes(query) || 
     e.venue.toLowerCase().includes(query) ||
@@ -2202,7 +2231,7 @@ function ExplorePage({
               <button onClick={() => setActiveFilter('creators')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
             </div>
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
-              {CREATORS.slice(0, 4).map(creator => (
+              {creators.slice(0, 4).map(creator => (
                 <div 
                   key={creator.id} 
                   onClick={() => onCreatorClick(creator.name)}
@@ -2235,7 +2264,7 @@ function ExplorePage({
               <button onClick={() => setActiveFilter('brands')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
             </div>
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
-              {BRANDS.map(brand => {
+              {brands.map(brand => {
                 const isFollowing = followedBrands.has(brand.id)
                 return (
                   <div 
@@ -2279,7 +2308,7 @@ function ExplorePage({
               <button onClick={() => setActiveFilter('gigs')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
             </div>
             <div className="flex flex-col gap-3 px-5">
-              {GIGS.slice(0, 2).map((gig, i) => (
+              {gigs.slice(0, 2).map((gig, i) => (
                 <div key={gig.id} onClick={() => onApply(gig)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98]">
                   <div className="flex items-center justify-between mb-3">
                     <div 
@@ -2320,7 +2349,7 @@ function ExplorePage({
               <button onClick={() => setActiveFilter('events')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
             </div>
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
-              {EVENTS.map(event => {
+              {events.map(event => {
                 const isRsvp = rsvpEvents.has(event.id)
                 return (
                   <div key={event.id} className="min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0" style={{ background: event.color }}>
@@ -2761,38 +2790,30 @@ function ChatPage({
     const now = new Date()
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-    setChats(prev => prev.map(c => {
-      if (c.id === activeChatId) {
-        return {
-          ...c,
-          messages: [
-            ...c.messages,
-            { id: Date.now(), text: userMessageText, sender: 'me', time: timeStr }
-          ]
-        }
-      }
-      return c
-    }))
+    const currentChat = chats.find(c => c.id === activeChatId)
+    if (!currentChat) return
+
+    const userMessage = { id: Date.now(), text: userMessageText, sender: 'me', time: timeStr }
+    const updatedMessages = [...currentChat.messages, userMessage]
+
+    updateDoc(doc(db, 'chats', String(activeChatId)), {
+      messages: updatedMessages
+    })
 
     setInputText('')
 
     setIsTyping(true)
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsTyping(false)
-      const replyText = getAutoReplyMessage(activeChat?.name || '', userMessageText)
+      const latestChat = chats.find(c => c.id === activeChatId)
+      if (!latestChat) return
+
+      const replyText = getAutoReplyMessage(latestChat.name || '', userMessageText)
+      const replyMessage = { id: Date.now() + 1, text: replyText, sender: 'them', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
       
-      setChats(prev => prev.map(c => {
-        if (c.id === activeChatId) {
-          return {
-            ...c,
-            messages: [
-              ...c.messages,
-              { id: Date.now() + 1, text: replyText, sender: 'them', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-            ]
-          }
-        }
-        return c
-      }))
+      await updateDoc(doc(db, 'chats', String(activeChatId)), {
+        messages: [...latestChat.messages, replyMessage]
+      })
     }, 1500)
   }
 
@@ -3214,6 +3235,7 @@ function PublicBrandProfilePage({
   toggleFollowBrand,
   onMessageBrand,
   onApply,
+  gigs = GIGS,
 }: {
   brand: Brand
   onBack: () => void
@@ -3221,6 +3243,7 @@ function PublicBrandProfilePage({
   toggleFollowBrand: (id: number) => void
   onMessageBrand: (brand: Brand) => void
   onApply: (gig: Gig) => void
+  gigs?: Gig[]
 }) {
   const [activeTab, setActiveTab] = useState<'campaigns' | 'about'>('campaigns')
   const [copied, setCopied] = useState(false)
@@ -3232,7 +3255,7 @@ function PublicBrandProfilePage({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const brandGigs = GIGS.filter(g => g.brand && g.brand.toLowerCase() === brand.name.toLowerCase())
+  const brandGigs = gigs.filter(g => g.brand && g.brand.toLowerCase() === brand.name.toLowerCase())
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-[#f8fafc] flex flex-col min-h-screen">
@@ -3637,10 +3660,17 @@ function SlideScreen({
   )
 }
 
-function AuthScreen({ onBack, onLoginSuccess }: { onBack: () => void; onLoginSuccess: () => void }) {
+function AuthScreen({ 
+  onBack, 
+  onAuthSubmit 
+}: { 
+  onBack: () => void; 
+  onAuthSubmit: (email: string, pass: string, mode: 'login' | 'signup', name: string) => void 
+}) {
   const [mode, setMode] = useState<'signup' | 'login'>('signup')
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
+  const [password, setPassword] = useState('')
 
   const field: CSSProperties = {
     width: '100%',
@@ -3811,11 +3841,26 @@ function AuthScreen({ onBack, onLoginSuccess }: { onBack: () => void; onLoginSuc
               e.currentTarget.style.background = '#f0f2fc'
             }}
           />
+          <input
+            type="password"
+            placeholder="Password (min 6 characters)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={field}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = INTRO_BLUE
+              e.currentTarget.style.background = '#fff'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = '#e2e6f5'
+              e.currentTarget.style.background = '#f0f2fc'
+            }}
+          />
         </div>
 
         {/* cta */}
         <button
-          onClick={onLoginSuccess}
+          onClick={() => onAuthSubmit(contact, password, mode, name)}
           style={{
             marginTop: 24,
             width: '100%',
@@ -3862,6 +3907,91 @@ function AuthScreen({ onBack, onLoginSuccess }: { onBack: () => void; onLoginSuc
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [introPage, setIntroPage] = useState(0)
+
+  // Synchronized lists loaded from Firestore
+  const [gigs, setGigs] = useState<Gig[]>(GIGS)
+  const [creators, setCreators] = useState<Creator[]>(CREATORS)
+  const [brands, setBrands] = useState<Brand[]>(BRANDS)
+  const [events, setEvents] = useState<Event[]>(EVENTS)
+
+  // Auth State changed hook
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user)
+    })
+    return unsubscribe
+  }, [])
+
+  // Database Syncer and Seeder
+  useEffect(() => {
+    const unsubscribeGigs = onSnapshot(collection(db, 'gigs'), (snapshot) => {
+      if (snapshot.empty) {
+        GIGS.forEach(async (g) => {
+          await setDoc(doc(db, 'gigs', String(g.id)), g)
+        })
+      } else {
+        const list = snapshot.docs.map(doc => doc.data() as Gig)
+        list.sort((a, b) => a.id - b.id)
+        setGigs(list)
+      }
+    })
+
+    const unsubscribeCreators = onSnapshot(collection(db, 'creators'), (snapshot) => {
+      if (snapshot.empty) {
+        CREATORS.forEach(async (c) => {
+          await setDoc(doc(db, 'creators', String(c.id)), c)
+        })
+      } else {
+        const list = snapshot.docs.map(doc => doc.data() as Creator)
+        list.sort((a, b) => a.id - b.id)
+        setCreators(list)
+      }
+    })
+
+    const unsubscribeBrands = onSnapshot(collection(db, 'brands'), (snapshot) => {
+      if (snapshot.empty) {
+        BRANDS.forEach(async (b) => {
+          await setDoc(doc(db, 'brands', String(b.id)), b)
+        })
+      } else {
+        const list = snapshot.docs.map(doc => doc.data() as Brand)
+        list.sort((a, b) => a.id - b.id)
+        setBrands(list)
+      }
+    })
+
+    const unsubscribeEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
+      if (snapshot.empty) {
+        EVENTS.forEach(async (e) => {
+          await setDoc(doc(db, 'events', String(e.id)), e)
+        })
+      } else {
+        const list = snapshot.docs.map(doc => doc.data() as Event)
+        list.sort((a, b) => a.id - b.id)
+        setEvents(list)
+      }
+    })
+
+    const unsubscribeChats = onSnapshot(collection(db, 'chats'), (snapshot) => {
+      if (snapshot.empty) {
+        INITIAL_CHATS.forEach(async (c) => {
+          await setDoc(doc(db, 'chats', String(c.id)), c)
+        })
+      } else {
+        const list = snapshot.docs.map(doc => doc.data() as ChatThread)
+        list.sort((a, b) => b.id - a.id)
+        setChats(list)
+      }
+    })
+
+    return () => {
+      unsubscribeGigs()
+      unsubscribeCreators()
+      unsubscribeBrands()
+      unsubscribeEvents()
+      unsubscribeChats()
+    }
+  }, [])
   const touchStartX = useRef<number | null>(null)
 
   const [activeTab, setActiveTab] = useState('home')
@@ -4004,8 +4134,37 @@ export default function App() {
     touchStartX.current = null
   }
 
+  const handleAuthSubmit = async (email: string, pass: string, mode: 'login' | 'signup', name: string) => {
+    let formattedEmail = email.trim();
+    if (!formattedEmail.includes('@')) {
+      formattedEmail = `${formattedEmail.replace(/\s+/g, '')}@kreator.com`;
+    }
+    
+    try {
+      if (mode === 'signup') {
+        const credential = await createUserWithEmailAndPassword(auth, formattedEmail, pass);
+        const newCreator = {
+          id: Date.now(),
+          name: name || 'New Creator',
+          handle: `@${(name || 'creator').toLowerCase().replace(/\s+/g, '')}`,
+          avatar: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format',
+          followers: '0',
+          niche: 'Fashion & Lifestyle',
+          bio: 'Kreator Kolkata member',
+          verified: false,
+          followers_count: 0
+        };
+        await setDoc(doc(db, 'creators', credential.user.uid), newCreator);
+      } else {
+        await signInWithEmailAndPassword(auth, formattedEmail, pass);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Authentication failed');
+    }
+  }
+
   const handleLogout = () => {
-    setIsLoggedIn(false)
+    signOut(auth)
     setIntroPage(0)
     setActiveTab('home')
   }
@@ -4043,6 +4202,7 @@ export default function App() {
           toggleFollowBrand={toggleFollowBrand}
           onMessageBrand={handleMessageBrand}
           onApply={handleApply}
+          gigs={gigs}
         />
       )
     }
@@ -4141,7 +4301,7 @@ export default function App() {
             onTouchEnd={handleTouchEnd}
           >
             {isIntroAuth ? (
-              <AuthScreen onBack={() => setIntroPage(SLIDES.length - 1)} onLoginSuccess={() => setIsLoggedIn(true)} />
+              <AuthScreen onBack={() => setIntroPage(SLIDES.length - 1)} onAuthSubmit={handleAuthSubmit} />
             ) : (
               <SlideScreen
                 slide={SLIDES[introPage]}
