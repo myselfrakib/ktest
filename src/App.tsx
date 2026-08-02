@@ -3309,7 +3309,7 @@ const SLIDES = [
     headline: "Find Your",
     headlineAccent: "Crew.",
     sub: "Photographers, stylists, writers, reels creators — find your people and make things happen together.",
-    img: 'https://images.unsplash.com/photo-1683826219617-26301021c590?w=900&h=1200&fit=crop&auto=format&q=80',
+    img: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=900&h=1200&fit=crop&auto=format&q=80',
     alt: 'Creators collaborating',
   },
   {
