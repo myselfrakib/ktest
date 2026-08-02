@@ -900,6 +900,367 @@ function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack
   )
 }
 
+// ── View & Manage My Gig Page ────────────────────────────────────────────────
+
+function ViewMyGigPage({
+  gig,
+  initialTab = 'applicants',
+  onBack,
+  onOpenChat,
+}: {
+  gig: Gig;
+  initialTab?: 'applicants' | 'edit';
+  onBack: () => void;
+  onOpenChat?: (applicantName: string, avatar: string) => void;
+}) {
+  const [activeTab, setActiveTab] = useState<'applicants' | 'edit'>(initialTab)
+  const [applications, setApplications] = useState<any[]>([])
+  const [loadingApps, setLoadingApps] = useState(true)
+
+  // Edit states
+  const [editTitle, setEditTitle] = useState(gig.title)
+  const [editType, setEditType] = useState(gig.type)
+  const [editBudget, setEditBudget] = useState(gig.budget)
+  const [editLocation, setEditLocation] = useState(gig.location)
+  const [editDeadline, setEditDeadline] = useState(gig.deadline || 'Aug 30, 2026')
+  const [editDescription, setEditDescription] = useState(gig.description || '')
+  const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
+  // Status state
+  const [gigStatus, setGigStatus] = useState((gig as any).status || 'Active')
+
+  // Real-time Firestore applications fetch
+  useEffect(() => {
+    setLoadingApps(true)
+    const qApps = query(collection(db, 'applications'), where('gigId', '==', gig.id))
+    const unsubscribe = onSnapshot(qApps, (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      setApplications(list)
+      setLoadingApps(false)
+    }, (err) => {
+      console.warn("Apps snapshot error:", err)
+      setLoadingApps(false)
+    })
+    return () => unsubscribe()
+  }, [gig.id])
+
+  const handleSaveGig = async () => {
+    if (!editTitle.trim()) return
+    setSaving(true)
+    setSaveSuccess(false)
+    try {
+      const qGigs = query(collection(db, 'gigs'), where('id', '==', gig.id))
+      const snap = await getDocs(qGigs)
+      if (!snap.empty) {
+        await updateDoc(snap.docs[0].ref, {
+          title: editTitle,
+          type: editType,
+          budget: editBudget,
+          location: editLocation,
+          deadline: editDeadline,
+          description: editDescription,
+          status: gigStatus
+        })
+      } else {
+        await setDoc(doc(db, 'gigs', String(gig.id)), {
+          ...gig,
+          title: editTitle,
+          type: editType,
+          budget: editBudget,
+          location: editLocation,
+          deadline: editDeadline,
+          description: editDescription,
+          status: gigStatus
+        }, { merge: true })
+      }
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch (err: any) {
+      alert(err.message || 'Failed to update gig in database')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggleGigStatus = async () => {
+    const nextStatus = gigStatus === 'Active' ? 'Closed' : 'Active'
+    setGigStatus(nextStatus)
+    try {
+      const qGigs = query(collection(db, 'gigs'), where('id', '==', gig.id))
+      const snap = await getDocs(qGigs)
+      if (!snap.empty) {
+        await updateDoc(snap.docs[0].ref, { status: nextStatus })
+      }
+    } catch (err) {
+      console.warn("Status update error:", err)
+    }
+  }
+
+  return (
+    <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide bg-[#f8fafc] min-h-screen pb-24">
+      {/* Top Header */}
+      <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-20 shadow-xs">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={onBack} 
+            className="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 shadow-sm flex items-center justify-center border border-slate-200 text-slate-700 active:scale-95 transition cursor-pointer"
+          >
+            <ArrowLeftIcon />
+          </button>
+          <div>
+            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gig Management</div>
+            <div className="text-sm font-black text-slate-900 leading-tight max-w-[180px] truncate">{gig.title}</div>
+          </div>
+        </div>
+
+        <button
+          onClick={toggleGigStatus}
+          className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+            gigStatus === 'Active' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <span className={`w-2 h-2 rounded-full ${gigStatus === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+          {gigStatus}
+        </button>
+      </div>
+
+      {/* Hero Banner */}
+      <div className="px-5 pt-5 pb-3">
+        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <img 
+              src={gig.avatar || gig.brandLogo || 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format'} 
+              alt="" 
+              className="w-12 h-12 rounded-full object-cover border-2 border-[#e8edff]" 
+            />
+            <div className="flex-1">
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-bold text-slate-900">{gig.creatorName || gig.brand}</span>
+                {gig.verified && <span className="text-[#3b5bdb] text-xs">✓</span>}
+              </div>
+              <span className="text-xs text-slate-400 font-medium">{gig.handle}</span>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-base font-extrabold text-slate-900 leading-snug mb-2">{gig.title}</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
+              <span className="text-xs font-bold text-slate-800 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-100">{gig.budget}</span>
+              <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                <MapPinIcon /> {formatLocation(gig.location)}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-50 text-center">
+            <div className="bg-slate-50 rounded-2xl py-2 px-1">
+              <div className="text-xs font-black text-[#3b5bdb]">{applications.length}</div>
+              <div className="text-[9px] text-slate-400 font-semibold">Applicants</div>
+            </div>
+            <div className="bg-slate-50 rounded-2xl py-2 px-1">
+              <div className="text-xs font-black text-[#f76707]">{gig.type}</div>
+              <div className="text-[9px] text-slate-400 font-semibold">Deal Type</div>
+            </div>
+            <div className="bg-slate-50 rounded-2xl py-2 px-1">
+              <div className="text-xs font-black text-emerald-600">{gig.deadline ? gig.deadline.split(',')[0] : 'Aug 30'}</div>
+              <div className="text-[9px] text-slate-400 font-semibold">Deadline</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Row */}
+      <div className="px-5 mb-4">
+        <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100 gap-1">
+          <button
+            onClick={() => setActiveTab('applicants')}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'applicants' ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>👥</span> Applicants ({applications.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('edit')}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeTab === 'edit' ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>✏️</span> Edit Gig Details
+          </button>
+        </div>
+      </div>
+
+      {/* TAB 1: APPLICANTS */}
+      {activeTab === 'applicants' && (
+        <div className="px-5 flex flex-col gap-3">
+          {loadingApps ? (
+            <div className="py-12 flex flex-col items-center justify-center gap-3">
+              <div className="w-8 h-8 rounded-full border-3 border-slate-200 border-t-[#3b5bdb] animate-spin" />
+              <span className="text-xs text-slate-400 font-medium">Fetching real-time applications...</span>
+            </div>
+          ) : applications.length > 0 ? (
+            applications.map((app) => (
+              <div key={app.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={app.applicantAvatar || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format'} 
+                      alt="" 
+                      className="w-10 h-10 rounded-full object-cover border border-slate-100" 
+                    />
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">{app.applicantName || 'Creator'}</h4>
+                      <span className="text-[10px] text-slate-400 font-medium">{app.instaHandle || app.applicantHandle || '@creator'}</span>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    {app.expectedRate || 'Standard Rate'}
+                  </span>
+                </div>
+
+                {app.pitch && (
+                  <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 leading-relaxed italic">
+                    "{app.pitch}"
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[9px] text-slate-400 font-semibold">
+                    Applied: {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'Recently'}
+                  </span>
+
+                  <button
+                    onClick={() => onOpenChat && onOpenChat(app.applicantName || 'Creator', app.applicantAvatar || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')}
+                    className="bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm cursor-pointer active:scale-95 transition flex items-center gap-1"
+                  >
+                    💬 Chat & Connect
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="bg-white rounded-3xl p-8 text-center border border-slate-100 shadow-sm flex flex-col items-center gap-3">
+              <span className="text-4xl">📩</span>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 mb-1">No Applications Received Yet</h3>
+                <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+                  Your gig is live in the Browse Gigs feed! Creators and brands across Kolkata will discover and pitch here soon.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: EDIT GIG DETAILS */}
+      {activeTab === 'edit' && (
+        <div className="px-5">
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 mb-0.5">Edit Campaign Specifications</h3>
+              <p className="text-[10px] text-slate-400">Updates saved here sync instantly across the entire platform.</p>
+            </div>
+
+            {saveSuccess && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold p-3 rounded-2xl flex items-center gap-2 animate-in fade-in">
+                <span>✓</span> Gig details updated successfully in Database!
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Gig Title</label>
+                <input 
+                  type="text" 
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Deal Type</label>
+                  <select 
+                    value={editType}
+                    onChange={(e) => setEditType(e.target.value)}
+                    className="w-full px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  >
+                    <option value="Paid">Paid</option>
+                    <option value="Barter">Barter</option>
+                    <option value="PR Package">PR Package</option>
+                    <option value="Event RSVP">Event RSVP</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Location</label>
+                  <input 
+                    type="text" 
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    className="w-full px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Budget / Offer</label>
+                  <input 
+                    type="text" 
+                    value={editBudget}
+                    onChange={(e) => setEditBudget(e.target.value)}
+                    className="w-full px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Deadline</label>
+                  <input 
+                    type="text" 
+                    value={editDeadline}
+                    onChange={(e) => setEditDeadline(e.target.value)}
+                    className="w-full px-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Description & Requirements</label>
+                <textarea 
+                  rows={4}
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition resize-none leading-relaxed"
+                />
+              </div>
+
+              <button 
+                onClick={handleSaveGig}
+                disabled={saving || !editTitle.trim()}
+                className="w-full bg-[#3b5bdb] text-white text-xs font-bold py-3.5 rounded-2xl shadow-md shadow-blue-200 active:scale-98 transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 mt-2"
+              >
+                {saving ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
+                    </svg>
+                    Saving Changes…
+                  </>
+                ) : 'Save Changes to Database 💾'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Home Page ──────────────────────────────────────────────────────────────
 
 function HomePage({
@@ -1730,7 +2091,7 @@ function ProfilePage({
   userRole: 'creator' | 'brand' | 'admin' | 'admin_pending' | null;
   onSwitchToAdmin?: () => void;
   gigs?: Gig[];
-  onViewGig?: (gig: Gig) => void;
+  onViewGig?: (gig: Gig, initialTab?: 'applicants' | 'edit') => void;
 }) {
   const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews' | 'about'>('portfolio')
   const [showLogoutToast, setShowLogoutToast] = useState(false)
@@ -2144,13 +2505,13 @@ function ProfilePage({
                 </div>
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => handleOpenEditGig(g)}
+                    onClick={() => onViewGig && onViewGig(g, 'edit')}
                     className="text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition cursor-pointer"
                   >
                     Edit
                   </button>
                   <button 
-                    onClick={() => onViewGig && onViewGig(g)}
+                    onClick={() => onViewGig && onViewGig(g, 'applicants')}
                     className="text-xs font-bold text-white bg-[#3b5bdb] hover:bg-[#2b4ef7] px-3.5 py-1.5 rounded-xl shadow-sm shadow-blue-200 transition cursor-pointer active:scale-95 flex items-center gap-1"
                   >
                     View ({g.applicants || 0}) ↗
@@ -6109,10 +6470,13 @@ export default function App() {
     setChats(prev => prev.map(c => c.id === id ? { ...c, unreadCount: 0 } : c))
   }
 
-  const handleApply = (gig: Gig) => setSelectedGig(gig)
-  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setSelectedBrand(null); setExploreFilter('all'); setExploreSearchQuery(''); setActiveTab('home') }
+  const [selectedMyGig, setSelectedMyGig] = useState<Gig | null>(null)
+  const [selectedMyGigTab, setSelectedMyGigTab] = useState<'applicants' | 'edit'>('applicants')
 
-  const showNav = isLoggedIn && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
+  const handleApply = (gig: Gig) => setSelectedGig(gig)
+  const handleBack = () => { setSelectedMyGig(null); setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setSelectedBrand(null); setExploreFilter('all'); setExploreSearchQuery(''); setActiveTab('home') }
+
+  const showNav = isLoggedIn && !selectedMyGig && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
 
   const handleTouchStart = (e: any) => {
     touchStartX.current = e.touches[0].clientX
@@ -6214,6 +6578,29 @@ export default function App() {
   }
 
   const renderMain = () => {
+    if (selectedMyGig) {
+      return (
+        <ViewMyGigPage 
+          gig={selectedMyGig} 
+          initialTab={selectedMyGigTab}
+          onBack={() => setSelectedMyGig(null)} 
+          onOpenChat={(applicantName, avatar) => {
+            handleMessageCreator({ 
+              id: Date.now(), 
+              name: applicantName, 
+              avatar: avatar, 
+              handle: `@${applicantName.toLowerCase().replace(/\s+/g, '')}`, 
+              niche: 'Creator', 
+              followers: '10K', 
+              engagement: '4.8%',
+              verified: true, 
+              bio: '',
+              recentPost: ''
+            })
+          }}
+        />
+      )
+    }
     if (gigPosted) return <GigPostedSuccess onBack={handleBack} />
     if (posting) return <PostGigPage userProfile={userProfile} userRole={userRole} onBack={handleBack} onPosted={() => { setPosting(false); setGigPosted(true) }} />
     if (selectedGig) return <ApplyPage gig={selectedGig} onBack={handleBack} userProfile={userProfile} currentUser={auth.currentUser} />
@@ -6259,7 +6646,10 @@ export default function App() {
           userRole={userRole}
           onSwitchToAdmin={() => setAdminViewMode('dashboard')}
           gigs={gigs}
-          onViewGig={handleApply}
+          onViewGig={(gig, tab) => {
+            setSelectedMyGig(gig)
+            setSelectedMyGigTab(tab || 'applicants')
+          }}
         />
       )
     }
