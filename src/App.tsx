@@ -2202,12 +2202,21 @@ function ProfilePage({
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
-  // Instagram Connection state
-  const [isInstagramConnected, setIsInstagramConnected] = useState(false)
-  const [instaHandle, setInstaHandle] = useState('')
-  const [instaFollowers, setInstaFollowers] = useState<string | null>(null)
-  const [showConnectModal, setShowConnectModal] = useState(false)
-  const [loadingConnect, setLoadingConnect] = useState(false)
+  // Instagram Connection state (real API — reads from Firestore userProfile)
+  const igData = userProfile?.instagram
+  const isInstagramConnected = !!igData?.handle || userProfile?.isInstagramConnected === true
+  const instaHandle = igData?.handle || ''
+  const instaMediaCount = igData?.mediaCount || 0
+  const [igConnecting, setIgConnecting] = useState(false)
+  const [igError, setIgError] = useState<string | null>(null)
+
+  // Instagram Business Login OAuth URL
+  const INSTAGRAM_APP_ID = '1361228946204623'
+  const IG_REDIRECT_URI = encodeURIComponent('https://ktest-nine.vercel.app/auth/instagram/callback')
+  const IG_SCOPES = 'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_messages,instagram_business_manage_comments'
+  const INSTAGRAM_AUTH_URL = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${IG_REDIRECT_URI}&scope=${IG_SCOPES}&response_type=code&state=${auth.currentUser?.uid || ''}`
+  const CLOUD_FUNCTION_URL = 'https://us-central1-kreatorkolkata.cloudfunctions.net/instagramCallback'
+
 
   // Portfolio Upload & Management state
   const [showAddPortfolioModal, setShowAddPortfolioModal] = useState(false)
@@ -2412,18 +2421,28 @@ function ProfilePage({
                 <InstagramIcon />
               </span>
               <span className="text-xs font-bold text-slate-700">{instaHandle}</span>
-              <span className="ml-auto text-xs font-black text-[#e4405f]">{instaFollowers} followers</span>
+              <span className="ml-auto text-xs font-black text-[#e4405f]">{instaMediaCount} posts · ✓ Connected</span>
+            </div>
+          ) : igConnecting ? (
+            <div className="w-full flex items-center gap-3 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-3 mb-4">
+              <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#e4405f] animate-spin flex-shrink-0" />
+              <span className="text-xs font-bold text-slate-600">Connecting your Instagram account...</span>
             </div>
           ) : (
-            <button 
-              onClick={() => setShowConnectModal(true)}
-              className="w-full flex items-center gap-2 bg-gradient-to-r from-slate-50 to-slate-100 hover:from-rose-50 hover:to-pink-50 border border-slate-200 hover:border-rose-100 rounded-2xl px-3 py-2.5 mb-4 transition duration-200 cursor-pointer"
+            <a
+              href={INSTAGRAM_AUTH_URL}
+              className="w-full flex items-center gap-2 bg-gradient-to-r from-slate-50 to-slate-100 hover:from-rose-50 hover:to-pink-50 border border-slate-200 hover:border-rose-100 rounded-2xl px-3 py-2.5 mb-4 transition duration-200 cursor-pointer no-underline"
             >
               <span className="text-slate-400 hover:text-[#e4405f]"><InstagramIcon /></span>
-              <span className="text-xs font-bold text-slate-600">connect Instagram <span className="text-[10px] text-slate-400 font-medium">(secure way)</span></span>
+              <span className="text-xs font-bold text-slate-600">Connect Instagram <span className="text-[10px] text-slate-400 font-medium">(Official Meta API)</span></span>
               <span className="ml-auto text-[10px] font-bold text-[#3b5bdb]">Connect →</span>
-            </button>
+            </a>
           )
+        )}
+        {igError && (
+          <div className="bg-red-50 border border-red-100 rounded-2xl px-3 py-2 mb-4 text-xs text-red-600 font-medium">
+            ⚠️ {igError}
+          </div>
         )}
 
         {/* Stats row */}
@@ -2751,100 +2770,8 @@ function ProfilePage({
           </div>
         </>
       )}
-      {/* Instagram Connect API Modal */}
-      {showConnectModal && (
-        <>
-          <div 
-            onClick={() => setShowConnectModal(false)}
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 transition-opacity" 
-          />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[340px] bg-white text-slate-800 rounded-3xl overflow-hidden shadow-2xl z-50 border border-slate-100 flex flex-col transition-all duration-300">
-            {/* Meta Header */}
-            <div className="bg-[#fafafa] border-b border-slate-100 py-3 px-5 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Meta Secure Link</span>
-              <button 
-                onClick={() => setShowConnectModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-            
-            {/* Content */}
-            <div className="p-5 flex flex-col gap-4">
-              <div className="text-center flex flex-col items-center">
-                <span className="text-3xl mb-2">🔐</span>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Official Instagram API</h3>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
-                  Enter your Instagram details to authorize Kreator Kolkata to read public stats (followers & media) via the official Meta Graph API.
-                </p>
-              </div>
 
-              {loadingConnect ? (
-                <div className="py-8 flex flex-col items-center justify-center gap-3">
-                  <div className="w-8 h-8 rounded-full border-3 border-slate-200 border-t-[#e4405f] animate-spin" />
-                  <div className="text-[10px] text-slate-500 font-bold animate-pulse">Establishing secure connection...</div>
-                </div>
-              ) : (
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    const data = new FormData(e.currentTarget)
-                    const username = data.get('username') as string
-                    if (!username) return
-                    
-                    setLoadingConnect(true)
-                    setTimeout(() => {
-                      setLoadingConnect(false)
-                      setIsInstagramConnected(true)
-                      setInstaHandle('@' + username.replace('@', ''))
-                      const randomFollowers = (Math.floor(Math.random() * 150) + 5) + 'K'
-                      setInstaFollowers(randomFollowers)
-                      setShowConnectModal(false)
-                    }, 2500)
-                  }}
-                  className="flex flex-col gap-3"
-                >
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Username</label>
-                    <input 
-                      required
-                      name="username"
-                      type="text" 
-                      placeholder="e.g. priya.creates" 
-                      className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-[#e4405f] focus:outline-none bg-slate-50/50"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Password</label>
-                    <input 
-                      required
-                      name="password"
-                      type="password" 
-                      placeholder="••••••••" 
-                      className="border border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-[#e4405f] focus:outline-none bg-slate-50/50"
-                    />
-                  </div>
-                  <div className="text-[9px] text-slate-400 bg-slate-50 p-2 rounded-lg border border-slate-100 flex items-start gap-1">
-                    <span>🛡️</span>
-                    <span>Your credentials are encrypted end-to-end and processed directly by Meta auth servers.</span>
-                  </div>
-                  <button 
-                    type="submit"
-                    className="w-full bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-xs font-bold py-2.5 rounded-xl transition shadow-sm shadow-blue-100 mt-2 cursor-pointer"
-                  >
-                    Authorize & Connect API
-                  </button>
-                </form>
-              )}
-            </div>
-            
-            <div className="bg-[#fafafa] border-t border-slate-100 py-2.5 text-center">
-              <span className="text-[8px] font-semibold text-slate-400 tracking-wider">🔒 SECURED BY META OAUTH 2.0</span>
-            </div>
-          </div>
-        </>
-      )}
+
 
       {/* Edit Profile Modal */}
       {isEditing && (
@@ -6565,6 +6492,11 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [introPage, setIntroPage] = useState(0)
 
+  // Instagram OAuth callback handler state
+  const [isIgConnecting, setIsIgConnecting] = useState(false)
+  const [igConnectSuccess, setIgConnectSuccess] = useState<string | null>(null)
+  const [igConnectError, setIgConnectError] = useState<string | null>(null)
+
   // Synchronized lists loaded from Firestore
   const [gigs, setGigs] = useState<Gig[]>(GIGS)
   const [creators, setCreators] = useState<Creator[]>(CREATORS)
@@ -6770,6 +6702,64 @@ export default function App() {
   const selectedCreator = creators.find(c => c.name.toLowerCase() === selectedCreatorName?.toLowerCase()) || CREATORS.find(c => c.name.toLowerCase() === selectedCreatorName?.toLowerCase()) || null
   const selectedBrand = brands.find(b => b.name.toLowerCase() === selectedBrandName?.toLowerCase()) || BRANDS.find(b => b.name.toLowerCase() === selectedBrandName?.toLowerCase()) || null
   const selectedMyGig = gigs.find(g => g.id === selectedMyGigId) || null
+
+  // Instagram OAuth callback handler effect
+  useEffect(() => {
+    const pathname = window.location.pathname
+    const searchParams = new URLSearchParams(window.location.search)
+    const code = searchParams.get('code')
+    const stateUid = searchParams.get('state')
+
+    if (pathname.includes('/auth/instagram/callback') && code) {
+      const handleIgCallback = async () => {
+        setIsIgConnecting(true)
+        setIgConnectError(null)
+        setIgConnectSuccess(null)
+        setActiveTab('profile')
+        
+        try {
+          // If state contains the user's uid, use it. Otherwise fall back to auth.currentUser?.uid.
+          const targetUid = stateUid || auth.currentUser?.uid
+          if (!targetUid) {
+            throw new Error("No authenticated user found. Please log in first.")
+          }
+
+          const response = await fetch(`https://us-central1-kreatorkolkata.cloudfunctions.net/instagramCallback?code=${code}&uid=${targetUid}`)
+          const data = await response.json()
+
+          if (!response.ok || data.error) {
+            throw new Error(data.details || data.error || "Instagram connection failed")
+          }
+
+          setIgConnectSuccess(`Successfully connected Instagram account @${data.username}!`)
+        } catch (err: any) {
+          console.error("Error connecting Instagram:", err)
+          setIgConnectError(err.message || "Failed to connect Instagram")
+        } finally {
+          setIsIgConnecting(false)
+          // Clean up the URL path and params to prevent infinite loop or bad routing
+          window.history.replaceState({}, document.title, '/')
+        }
+      }
+
+      handleIgCallback()
+    }
+  }, [isLoggedIn])
+
+  // Toast automatic clear effects
+  useEffect(() => {
+    if (igConnectSuccess) {
+      const t = setTimeout(() => setIgConnectSuccess(null), 5000)
+      return () => clearTimeout(t)
+    }
+  }, [igConnectSuccess])
+
+  useEffect(() => {
+    if (igConnectError) {
+      const t = setTimeout(() => setIgConnectError(null), 6000)
+      return () => clearTimeout(t)
+    }
+  }, [igConnectError])
 
   // Route state synchronizer effect
   useEffect(() => {
@@ -7188,6 +7178,42 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f0f4ff] flex justify-center items-start">
       <div className="w-full max-w-[430px] min-h-screen bg-[#f0f4ff] flex flex-col relative overflow-hidden">
+        {/* Instagram Connection Overlay */}
+        {isIgConnecting && (
+          <div className="absolute inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl shadow-xl mb-4 animate-bounce">
+              📸
+            </div>
+            <div className="w-8 h-8 rounded-full border-3 border-slate-200 border-t-[#e4405f] animate-spin mb-4" />
+            <h3 className="text-base font-display font-black text-slate-900 mb-1">Authenticating with Meta</h3>
+            <p className="text-xs text-slate-500 max-w-[240px] leading-relaxed">
+              Exchanging secure authorization codes and fetching your Instagram Business statistics...
+            </p>
+          </div>
+        )}
+
+        {/* Real-time Connection Success Toast */}
+        {igConnectSuccess && (
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-emerald-600 text-white rounded-2xl p-4 shadow-xl z-50 flex items-center justify-between gap-3 animate-slideDown">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">✓</span>
+              <span className="text-xs font-bold text-left">{igConnectSuccess}</span>
+            </div>
+            <button onClick={() => setIgConnectSuccess(null)} className="text-white hover:opacity-80 text-xs font-bold cursor-pointer">✕</button>
+          </div>
+        )}
+
+        {/* Real-time Connection Error Toast */}
+        {igConnectError && (
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-rose-600 text-white rounded-2xl p-4 shadow-xl z-50 flex items-center justify-between gap-3 animate-slideDown">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <span className="text-xs font-bold text-left">{igConnectError}</span>
+            </div>
+            <button onClick={() => setIgConnectError(null)} className="text-white hover:opacity-80 text-xs font-bold cursor-pointer">✕</button>
+          </div>
+        )}
+
         {isLoggedIn ? (
           userRole === 'admin' && adminViewMode === 'dashboard' ? (
             <AdminDashboardPage 
