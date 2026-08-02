@@ -1794,6 +1794,7 @@ function ExplorePage({
   onBellClick,
   unreadCount,
   onCreatorClick,
+  onBrandClick,
   activeFilter,
   setActiveFilter,
 }: {
@@ -1807,6 +1808,7 @@ function ExplorePage({
   onBellClick: () => void
   unreadCount: number
   onCreatorClick: (name: string) => void
+  onBrandClick: (brand: Brand) => void
   activeFilter: 'all' | 'creators' | 'brands' | 'gigs' | 'events'
   setActiveFilter: (filter: 'all' | 'creators' | 'brands' | 'gigs' | 'events') => void
 }) {
@@ -1900,14 +1902,18 @@ function ExplorePage({
               {filteredBrands.map(brand => {
                 const isFollowing = followedBrands.has(brand.id)
                 return (
-                  <div key={brand.id} className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3">
+                  <div 
+                    key={brand.id} 
+                    onClick={() => onBrandClick(brand)}
+                    className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
+                  >
                     <img src={brand.logo} alt={brand.name} className="w-11 h-11 rounded-xl object-cover border border-slate-100 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
                         <span className="text-xs font-bold text-slate-900 truncate">{brand.name}</span>
                         <button 
-                          onClick={() => toggleFollowBrand(brand.id)} 
-                          className={`text-[9px] font-bold px-2 py-0.5 rounded-lg transition ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm'}`}
+                          onClick={(e) => { e.stopPropagation(); toggleFollowBrand(brand.id); }} 
+                          className={`text-[9px] font-bold px-2 py-0.5 rounded-lg transition cursor-pointer ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm'}`}
                         >
                           {isFollowing ? 'Following' : 'Follow'}
                         </button>
@@ -2095,7 +2101,8 @@ function ExplorePage({
                 return (
                   <div 
                     key={brand.id} 
-                    className="min-w-[280px] w-[280px] h-[100px] bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3 flex-shrink-0 relative"
+                    onClick={() => onBrandClick(brand)}
+                    className="min-w-[280px] w-[280px] h-[100px] bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3 flex-shrink-0 relative cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
                   >
                     <img src={brand.logo} alt={brand.name} className="w-12 h-12 rounded-2xl object-cover border border-slate-100 flex-shrink-0" />
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -2246,7 +2253,11 @@ function ExplorePage({
           {filteredBrands.map(brand => {
             const isFollowing = followedBrands.has(brand.id)
             return (
-              <div key={brand.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 transition-transform active:scale-[0.99] flex gap-3">
+              <div 
+                key={brand.id} 
+                onClick={() => onBrandClick(brand)}
+                className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 transition-transform active:scale-[0.99] hover:border-slate-200 flex gap-3 cursor-pointer"
+              >
                 <img src={brand.logo} alt={brand.name} className="w-14 h-14 rounded-2xl object-cover border border-slate-100 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-0.5">
@@ -2259,8 +2270,8 @@ function ExplorePage({
                       )}
                     </div>
                     <button 
-                      onClick={() => toggleFollowBrand(brand.id)} 
-                      className={`text-[10px] font-bold px-3 py-1 rounded-xl transition ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
+                      onClick={(e) => { e.stopPropagation(); toggleFollowBrand(brand.id); }} 
+                      className={`text-[10px] font-bold px-3 py-1 rounded-xl transition cursor-pointer ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
                     >
                       {isFollowing ? 'Following' : 'Follow'}
                     </button>
@@ -3055,6 +3066,214 @@ function PublicProfilePage({
   )
 }
 
+// ── Public Brand Profile Page ────────────────────────────────────────────────
+
+function PublicBrandProfilePage({
+  brand,
+  onBack,
+  followedBrands,
+  toggleFollowBrand,
+  onMessageBrand,
+  onApply,
+}: {
+  brand: Brand
+  onBack: () => void
+  followedBrands: Set<number>
+  toggleFollowBrand: (id: number) => void
+  onMessageBrand: (brand: Brand) => void
+  onApply: (gig: Gig) => void
+}) {
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'about'>('campaigns')
+  const [copied, setCopied] = useState(false)
+
+  const isFollowing = followedBrands.has(brand.id)
+
+  const handleShare = () => {
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const brandGigs = GIGS.filter(g => g.brand && g.brand.toLowerCase() === brand.name.toLowerCase())
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-[#f8fafc] flex flex-col min-h-screen">
+      {/* Hero */}
+      <div className="relative">
+        <div className="h-32 w-full bg-gradient-to-r from-[#3b5bdb] via-[#7048e8] to-[#f76707]">
+          <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1.5px)', backgroundSize: '16px 16px' }} />
+        </div>
+        
+        <div className="absolute top-10 left-0 right-0 flex items-center justify-between px-5">
+          <button 
+            onClick={onBack}
+            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition cursor-pointer"
+          >
+            <ArrowLeftIcon />
+          </button>
+          <button 
+            onClick={handleShare}
+            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition relative cursor-pointer"
+          >
+            <ShareIcon />
+            {copied && (
+              <span className="absolute -bottom-8 right-0 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap shadow-md">
+                Link copied!
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div className="absolute -bottom-10 left-5">
+          <div className="relative">
+            <img 
+              src={brand.logo} 
+              alt={brand.name} 
+              className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-md shadow-slate-200" 
+            />
+            {brand.verified && (
+              <span className="absolute bottom-0.5 right-0.5 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h2 className="font-display text-xl font-black text-slate-900 leading-tight">{brand.name}</h2>
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
+              <span>Brand Account</span>
+              <span className="w-1 h-1 rounded-full bg-slate-300" />
+              <span className="text-[#3b5bdb] font-bold">{brand.industry}</span>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-500 leading-relaxed mb-4">
+          {brand.bio}
+        </p>
+
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-4">
+          <MapPinIcon /><span>{brand.location || 'Kolkata, WB'} · Brand Partner</span>
+        </div>
+
+        <div className="flex gap-3 mb-4">
+          <button 
+            onClick={() => toggleFollowBrand(brand.id)}
+            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${isFollowing ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-[#3b5bdb] text-white shadow-blue-100'}`}
+          >
+            {isFollowing ? '✓ Following' : 'Follow Brand'}
+          </button>
+          <button 
+            onClick={() => onMessageBrand(brand)}
+            className="flex-1 py-2.5 border border-slate-200 bg-white rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer"
+          >
+            💬 Chat Message
+          </button>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 pt-2">
+          {[
+            { label: 'Followers', value: '45K+', color: 'text-indigo-500' },
+            { label: 'Active Gigs', value: brandGigs.length, color: 'text-emerald-500' },
+            { label: 'Industry', value: brand.industry.split(' ')[0], color: 'text-rose-500' },
+            { label: 'Rating', value: '4.8 ★', color: 'text-amber-500' }
+          ].map(stat => (
+            <div key={stat.label} className="bg-slate-50 rounded-2xl py-3 px-1 text-center border border-slate-100 min-w-0">
+              <div className={`text-xs font-black leading-none mb-1 truncate ${stat.color}`}>{stat.value}</div>
+              <div className="text-[9px] text-slate-400 font-semibold truncate">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-5 mt-4 mb-3">
+        <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100 gap-1">
+          {[
+            { id: 'campaigns', label: `Campaigns (${brandGigs.length})` },
+            { id: 'about', label: 'About Brand' }
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${activeTab === tab.id ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-400'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'campaigns' && (
+        <div className="px-5 flex flex-col gap-3">
+          {brandGigs.map(gig => (
+            <div 
+              key={gig.id} 
+              onClick={() => onApply(gig)} 
+              className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 leading-snug mb-1">{gig.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">{gig.budget}</span>
+                  </div>
+                </div>
+                <span className="text-[9px] text-slate-400 font-bold bg-slate-50 px-2 py-0.5 rounded-full">{gig.location}</span>
+              </div>
+              <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed mb-3">{gig.description}</p>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <span className="text-[9px] text-slate-400 font-semibold">Deadline: {gig.deadline}</span>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onApply(gig); }}
+                  className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm cursor-pointer"
+                >
+                  Apply Now
+                </button>
+              </div>
+            </div>
+          ))}
+          {brandGigs.length === 0 && (
+            <div className="text-center py-10 text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-100 shadow-sm">No active campaigns right now.</div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'about' && (
+        <div className="px-5">
+          <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Overview</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">{brand.bio}</p>
+            </div>
+            <div className="border-t border-slate-50 pt-3 flex flex-col gap-2.5">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-medium">Industry</span>
+                <span className="text-slate-800 font-bold">{brand.industry}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-medium">Location</span>
+                <span className="text-slate-800 font-bold">{brand.location}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-medium">Website</span>
+                <span className="text-[#3b5bdb] font-bold cursor-pointer hover:underline">www.{brand.name.toLowerCase().replace(/\s+/g, '')}.com</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-medium">Verification Status</span>
+                <span className="text-emerald-600 font-bold flex items-center gap-1">✓ Verified Brand Partner</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Slidable Intro Pages ───────────────────────────────────────────────────
 
 const SLIDES = [
@@ -3518,6 +3737,7 @@ export default function App() {
   const [chats, setChats] = useState<ChatThread[]>(INITIAL_CHATS)
   const [activeChatId, setActiveChatId] = useState<number | null>(null)
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null)
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null)
   const [followedCreators, setFollowedCreators] = useState<Set<number>>(new Set())
   const [exploreFilter, setExploreFilter] = useState<'all' | 'creators' | 'brands' | 'gigs' | 'events'>('all')
 
@@ -3590,15 +3810,40 @@ export default function App() {
     setActiveTab('chat')
   }
 
+  const handleMessageBrand = (brand: Brand) => {
+    const existingThread = chats.find(c => c.name.toLowerCase() === brand.name.toLowerCase())
+    if (existingThread) {
+      handleOpenChat(existingThread.id)
+    } else {
+      const newThread = {
+        id: Date.now(),
+        name: brand.name,
+        avatar: brand.logo,
+        handle: 'Brand Account',
+        niche: brand.industry,
+        online: false,
+        verified: brand.verified,
+        unreadCount: 0,
+        messages: [
+          { id: Date.now(), text: `Hi ${brand.name}! I saw your brand profile and would love to collaborate on your campaigns.`, sender: 'me', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        ]
+      }
+      setChats(prev => [newThread, ...prev])
+      handleOpenChat(newThread.id)
+    }
+    setSelectedBrand(null)
+    setActiveTab('chat')
+  }
+
   const handleOpenChat = (id: number) => {
     setActiveChatId(id)
     setChats(prev => prev.map(c => c.id === id ? { ...c, unreadCount: 0 } : c))
   }
 
   const handleApply = (gig: Gig) => setSelectedGig(gig)
-  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setExploreFilter('all'); setActiveTab('home') }
+  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setSelectedBrand(null); setExploreFilter('all'); setActiveTab('home') }
 
-  const showNav = isLoggedIn && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null
+  const showNav = isLoggedIn && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
 
   const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
     touchStartX.current = e.touches[0].clientX
@@ -3643,6 +3888,18 @@ export default function App() {
         />
       )
     }
+    if (selectedBrand) {
+      return (
+        <PublicBrandProfilePage 
+          brand={selectedBrand}
+          onBack={() => setSelectedBrand(null)}
+          followedBrands={followedBrands}
+          toggleFollowBrand={toggleFollowBrand}
+          onMessageBrand={handleMessageBrand}
+          onApply={handleApply}
+        />
+      )
+    }
     if (activeTab === 'profile') return <ProfilePage onPostGig={() => { setPosting(true) }} onLogout={handleLogout} />
     if (activeTab === 'chat') {
       return (
@@ -3668,6 +3925,7 @@ export default function App() {
           onBellClick={() => setViewingNotifications(true)}
           unreadCount={unreadNotifications.size}
           onCreatorClick={handleOpenCreatorProfile}
+          onBrandClick={setSelectedBrand}
           activeFilter={exploreFilter}
           setActiveFilter={setExploreFilter}
         />
