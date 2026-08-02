@@ -2212,6 +2212,10 @@ function ProfilePage({
   const isInstagramConnected = !!igData?.handle || userProfile?.isInstagramConnected === true
   const instaHandle = igData?.handle || ''
   const instaMediaCount = igData?.mediaCount || 0
+  // Followers: use pre-formatted string from Firestore if available, else format raw number
+  const rawFollowers: number = igData?.followersCount || 0
+  const instaFollowers = igData?.followersFormatted ||
+    (rawFollowers >= 1000 ? `${(rawFollowers / 1000).toFixed(1).replace(/\.0$/, '')}K` : rawFollowers > 0 ? String(rawFollowers) : null)
   const [igConnecting, setIgConnecting] = useState(false)
   const [igError, setIgError] = useState<string | null>(null)
 
@@ -2424,7 +2428,9 @@ function ProfilePage({
                 <InstagramIcon />
               </span>
               <span className="text-xs font-bold text-slate-700">{instaHandle}</span>
-              <span className="ml-auto text-xs font-black text-[#e4405f]">{instaMediaCount} posts · ✓ Connected</span>
+              <span className="ml-auto text-xs font-black text-[#e4405f]">
+                {instaFollowers ? `${instaFollowers} followers · ✓` : '✓ Connected'}
+              </span>
             </div>
           ) : igConnecting ? (
             <div className="w-full flex items-center gap-3 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-3 mb-4">

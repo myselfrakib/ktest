@@ -91,7 +91,7 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
       `https://graph.instagram.com/v21.0/me`,
       {
         params: {
-          fields: "id,username,account_type,media_count,profile_picture_url,name",
+          fields: "id,username,account_type,media_count,followers_count,profile_picture_url,name",
           access_token: longLivedToken,
         },
       }
@@ -100,12 +100,20 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
     const profile = profileResponse.data;
 
     // ── Step 4: Save to Firestore ──
+    // Format followers count for display (e.g. 12400 → "12.4K")
+    const rawFollowers: number = profile.followers_count || 0;
+    const followersFormatted = rawFollowers >= 1000
+      ? `${(rawFollowers / 1000).toFixed(1).replace(/\.0$/, '')}K`
+      : String(rawFollowers);
+
     const instagramData = {
       igUserId: igUserId,
       handle: `@${profile.username}`,
       username: profile.username,
       accountType: profile.account_type || "BUSINESS",
       mediaCount: profile.media_count || 0,
+      followersCount: rawFollowers,
+      followersFormatted: followersFormatted,
       profilePicture: profile.profile_picture_url || null,
       displayName: profile.name || profile.username,
       accessToken: longLivedToken,
@@ -165,6 +173,8 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
       handle: instagramData.handle,
       username: profile.username,
       mediaCount: profile.media_count || 0,
+      followersCount: rawFollowers,
+      followersFormatted: followersFormatted,
       accountType: profile.account_type || "BUSINESS",
       displayName: profile.name || profile.username,
     });
@@ -177,5 +187,150 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
       error: "Instagram authentication failed",
       details: error.response?.data?.error_message || error.message,
     });
+  }
+});
+
+// ─── Meta signed_request parsing & signature verification ───────────────────
+function parseSignedRequest(signedRequest: string, secret: string) {
+  const parts = signedRequest.split(".", 2);
+  if (parts.length !== 2) {
+    throw new Error("Invalid signed request format");
+  }
+  const [encodedSig, payload] = parts;
+
+  // Decode the signature
+  const sig = Buffer.from(encodedSig.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+  
+  // Decode the payload
+  const data = JSON.parse(
+    Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8")
+  );
+
+  if (data.algorithm.toUpperCase() !== "HMAC-SHA256") {
+    throw new Error("Unknown algorithm. Expected HMAC-SHA256");
+  }
+
+  // Validate signature using SHA-256 HMAC
+  const expectedSig = crypto.createHmac("sha256", secret).update(payload).digest();
+  if (!crypto.timingSafeEqual(sig, expectedSig)) {
+    throw new Error("Invalid signature verification");
+  }
+
+  return data;
+}
+
+// ─── Deauthorize Callback ───────────────────────────────────────────────────
+import * as crypto from "crypto";
+
+export const instagramDeauthorize = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).send("Method Not Allowed");
+    return;
+  }
+
+  const signedRequest = req.body.signed_request;
+  if (!signedRequest) {
+    res.status(400).send("Missing signed_request parameter");
+    return;
+  }
+
+  try {
+    const data = parseSignedRequest(signedRequest, INSTAGRAM_APP_SECRET);
+    const igUserId = String(data.user_id);
+
+    // Find the user document that matches this igUserId and set isInstagramConnected = false
+    const creatorsSnap = await db.collection("creators").where("instagram.igUserId", "==", igUserId).get();
+    const brandsSnap = await db.collection("brands").where("instagram.igUserId", "==", igUserId).get();
+    const usersSnap = await db.collection("users").where("instagram.igUserId", "==", igUserId).get();
+
+    const batch = db.batch();
+
+    creatorsSnap.forEach((docSnap) => {
+      batch.update(docSnap.ref, {
+        isInstagramConnected: false,
+        "instagram.deauthorizedAt": new Date().toISOString(),
+      });
+    });
+
+    brandsSnap.forEach((docSnap) => {
+      batch.update(docSnap.ref, {
+        isInstagramConnected: false,
+        "instagram.deauthorizedAt": new Date().toISOString(),
+      });
+    });
+
+    usersSnap.forEach((docSnap) => {
+      batch.update(docSnap.ref, {
+        isInstagramConnected: false,
+        "instagram.deauthorizedAt": new Date().toISOString(),
+      });
+    });
+
+    await batch.commit();
+    res.status(200).send("Deauthorization processed successfully");
+  } catch (error: any) {
+    console.error("Deauthorization callback error:", error.message);
+    res.status(400).send(`Invalid request: ${error.message}`);
+  }
+});
+
+// ─── Data Deletion Request Callback ─────────────────────────────────────────
+export const instagramDeleteData = functions.https.onRequest(async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).send("Method Not Allowed");
+    return;
+  }
+
+  const signedRequest = req.body.signed_request;
+  if (!signedRequest) {
+    res.status(400).send("Missing signed_request parameter");
+    return;
+  }
+
+  try {
+    const data = parseSignedRequest(signedRequest, INSTAGRAM_APP_SECRET);
+    const igUserId = String(data.user_id);
+
+    // Delete/unlink instagram credentials from matched user profiles
+    const creatorsSnap = await db.collection("creators").where("instagram.igUserId", "==", igUserId).get();
+    const brandsSnap = await db.collection("brands").where("instagram.igUserId", "==", igUserId).get();
+    const usersSnap = await db.collection("users").where("instagram.igUserId", "==", igUserId).get();
+
+    const batch = db.batch();
+
+    creatorsSnap.forEach((docSnap) => {
+      batch.update(docSnap.ref, {
+        isInstagramConnected: false,
+        instagram: admin.firestore.FieldValue.delete(),
+        followers: "0",
+      });
+    });
+
+    brandsSnap.forEach((docSnap) => {
+      batch.update(docSnap.ref, {
+        isInstagramConnected: false,
+        instagram: admin.firestore.FieldValue.delete(),
+      });
+    });
+
+    usersSnap.forEach((docSnap) => {
+      batch.update(docSnap.ref, {
+        isInstagramConnected: false,
+        instagram: admin.firestore.FieldValue.delete(),
+      });
+    });
+
+    await batch.commit();
+
+    const confirmationCode = `del_${igUserId}_${Date.now()}`;
+    const statusUrl = `${APP_URL}/data-deletion-status?id=${confirmationCode}`;
+
+    res.status(200).json({
+      url: statusUrl,
+      confirmation_code: confirmationCode,
+    });
+  } catch (error: any) {
+    console.error("Data deletion callback error:", error.message);
+    res.status(400).send(`Invalid request: ${error.message}`);
   }
 });
