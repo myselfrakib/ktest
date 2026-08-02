@@ -1550,7 +1550,7 @@ function ProfilePage({
   onPostGig: () => void; 
   onLogout: () => void;
   userProfile: any;
-  userRole: 'creator' | 'brand' | 'admin' | null;
+  userRole: 'creator' | 'brand' | 'admin' | 'admin_pending' | null;
 }) {
   const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews' | 'about'>('portfolio')
   const [showLogoutToast, setShowLogoutToast] = useState(false)
@@ -2251,7 +2251,7 @@ function ProfileSetupPage({
   onComplete
 }: {
   userProfile: any;
-  userRole: 'creator' | 'brand' | 'admin' | null;
+  userRole: 'creator' | 'brand' | 'admin' | 'admin_pending' | null;
   onComplete: () => void;
 }) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -4828,6 +4828,48 @@ function AdminDashboardPage({
   )
 }
 
+function AdminPendingPage({
+  userProfile,
+  onLogout
+}: {
+  userProfile: any;
+  onLogout: () => void;
+}) {
+  return (
+    <div className="flex-1 bg-[#0a1628] min-h-screen text-slate-100 flex flex-col items-center justify-center p-6 text-center">
+      <div className="w-16 h-16 rounded-3xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-3xl mb-6 shadow-xl animate-pulse">
+        ⏳
+      </div>
+      <span className="text-[10px] font-extrabold uppercase px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-3">
+        ADMIN APPROVAL REQUIRED
+      </span>
+      <h2 className="text-xl font-black text-white mb-2">Account Pending Approval</h2>
+      <p className="text-xs text-slate-400 max-w-xs leading-relaxed mb-6">
+        Your admin account for <strong className="text-white">{userProfile?.email || 'admin'}</strong> has been registered in Firestore.
+      </p>
+
+      <div className="bg-[#0f1d38] rounded-2xl p-4 border border-slate-800 w-full max-w-sm text-left mb-6 flex flex-col gap-2">
+        <div className="text-[10px] font-bold text-slate-400 uppercase">Firestore Activation Info</div>
+        <div className="text-xs text-slate-300"><strong>Collection:</strong> <code className="bg-slate-900 px-1.5 py-0.5 rounded text-blue-400">admins</code></div>
+        <div className="text-xs text-slate-300"><strong>Document ID:</strong> <code className="bg-slate-900 px-1.5 py-0.5 rounded text-emerald-400 select-all">{userProfile?.uid || auth.currentUser?.uid}</code></div>
+        <div className="text-xs text-slate-300"><strong>Required Action:</strong> Set field <code className="bg-slate-900 px-1.5 py-0.5 rounded text-amber-400">isAdmin = true</code></div>
+      </div>
+
+      <div className="flex items-center gap-2 text-[11px] text-blue-400 font-medium mb-8 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
+        <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+        Listening for real-time Firestore database updates…
+      </div>
+
+      <button
+        onClick={onLogout}
+        className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition cursor-pointer border border-slate-700"
+      >
+        Sign Out 🚪
+      </button>
+    </div>
+  )
+}
+
 function AuthScreen({ 
   onBack, 
   onAuthSubmit 
@@ -5115,7 +5157,7 @@ export default function App() {
 
   // User Profile and Role State
   const [userProfile, setUserProfile] = useState<any>(null)
-  const [userRole, setUserRole] = useState<'creator' | 'brand' | 'admin' | null>(null)
+  const [userRole, setUserRole] = useState<'creator' | 'brand' | 'admin' | 'admin_pending' | null>(null)
 
   // Auth State changed hook
   useEffect(() => {
@@ -5135,10 +5177,8 @@ export default function App() {
               setUserRole('admin')
               setUserProfile(data)
             } else {
-              setUserRole(null)
-              setUserProfile(null)
-              alert('Admin account is pending approval.\n\nPlease update "isAdmin: true" on this document in Cloud Firestore to enable admin login.')
-              signOut(auth)
+              setUserRole('admin_pending')
+              setUserProfile(data)
             }
           }
         }, (err) => console.warn("Admin snapshot error:", err))
@@ -5419,14 +5459,12 @@ export default function App() {
           };
           console.log("[ADMIN REGISTRATION] Writing admin document to Firestore:", newAdmin);
           try {
-            await setDoc(doc(db, 'admins', userUid), newAdmin);
+            await setDoc(doc(db, 'admins', userUid), newAdmin, { merge: true });
             console.log("[ADMIN REGISTRATION SUCCESS] Successfully created doc in admins/", userUid);
-            alert(`Admin registration submitted for ${formattedEmail}!\n\nDocument ID (UID): ${userUid}\nStatus: Pending Approval (isAdmin = false).\n\nPlease open Cloud Firestore -> "admins" collection -> doc "${userUid}" -> set "isAdmin" to true.`);
           } catch (docErr: any) {
             console.error("[ADMIN REGISTRATION ERROR]", docErr);
             alert(`Failed to save admin record to Firestore: ${docErr.message || docErr}\n\nPlease check Cloud Firestore Security Rules in Firebase Console to ensure read/write permission on 'admins' collection!`);
           }
-          await signOut(auth);
         } else if (role === 'brand') {
           const newBrand = {
             id: Date.now(),
@@ -5578,6 +5616,11 @@ export default function App() {
               events={events} 
               creators={creators} 
               brands={brands} 
+              onLogout={handleLogout} 
+            />
+          ) : userRole === 'admin_pending' ? (
+            <AdminPendingPage 
+              userProfile={userProfile} 
               onLogout={handleLogout} 
             />
           ) : !userProfile ? (
