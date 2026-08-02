@@ -2058,7 +2058,11 @@ function ExplorePage({
             </div>
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
               {CREATORS.slice(0, 4).map(creator => (
-                <div key={creator.id} className="min-w-[150px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden flex-shrink-0">
+                <div 
+                  key={creator.id} 
+                  onClick={() => onCreatorClick(creator.name)}
+                  className="min-w-[150px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden flex-shrink-0 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
+                >
                   <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
                   <div className="relative mt-1 mb-2 z-10">
                     <img src={creator.avatar} alt={creator.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100" />
