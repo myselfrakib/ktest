@@ -835,6 +835,7 @@ function HomePage({
   onEventClick,
   onSearch,
   gigs = GIGS,
+  events = EVENTS,
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -845,6 +846,7 @@ function HomePage({
   onEventClick: () => void
   onSearch: (query: string) => void
   gigs?: Gig[]
+  events?: Event[]
 }) {
   const [activeFilter, setActiveFilter] = useState('All Gigs')
   const [activeNiche, setActiveNiche] = useState('All')
@@ -860,6 +862,10 @@ function HomePage({
     const matchType = activeFilter === 'All Gigs' || activeFilter === 'Collab' || g.type === activeFilter
     const matchNiche = activeNiche === 'All' || g.niche.includes(activeNiche) || g.tags.includes(activeNiche)
     return matchType && matchNiche
+  }).sort((a, b) => {
+    const aFeat = (a as any).isFeatured ? 1 : 0
+    const bFeat = (b as any).isFeatured ? 1 : 0
+    return bFeat - aFeat
   })
 
   return (
@@ -923,13 +929,18 @@ function HomePage({
           <button onClick={onEventClick} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
         </div>
         <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
-          {EVENTS.map(event => (
+          {events.map(event => (
             <div 
               key={event.id} 
               onClick={onEventClick}
-              className="min-w-[280px] w-[280px] h-[110px] rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer flex-shrink-0 bg-white transition-transform active:scale-[0.98]"
+              className="min-w-[280px] w-[280px] h-[110px] rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer flex-shrink-0 bg-white transition-transform active:scale-[0.98] relative"
             >
               <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+              {(event as any).isFeatured && (
+                <span className="absolute top-2 right-2 text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-md">
+                  ⭐ FEATURED
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -959,13 +970,16 @@ function HomePage({
 
       {/* Gig Cards */}
       <div className="px-5 flex flex-col gap-3">
-        {filteredGigs.map((gig, i) => (
-          <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] ${i === 0 ? 'border-2 border-[#3b5bdb]/30' : ''}`}>
-            {i === 0 && (
-              <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center gap-2">
-                <span className="text-white text-[11px] font-bold tracking-wide">⚡ Featured Gig</span>
-              </div>
-            )}
+        {filteredGigs.map((gig, i) => {
+          const isFeat = (gig as any).isFeatured || i === 0
+          return (
+            <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border cursor-pointer transition-transform active:scale-[0.98] ${isFeat ? 'border-2 border-[#3b5bdb] shadow-blue-100' : 'border-slate-100'}`}>
+              {isFeat && (
+                <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center justify-between">
+                  <span className="text-white text-[11px] font-bold tracking-wide">⚡ Featured Gig</span>
+                  <span className="text-[9px] font-black text-amber-300 bg-blue-900/40 px-2 py-0.5 rounded-full">⭐ FEATURED</span>
+                </div>
+              )}
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div 
@@ -1024,7 +1038,7 @@ function HomePage({
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   )
@@ -2958,12 +2972,18 @@ function ExplorePage({
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
               {events.map(event => {
                 const isRsvp = rsvpEvents.has(event.id)
+                const isFeat = (event as any).isFeatured || false
                 return (
-                  <div key={event.id} className="min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0" style={{ background: event.color }}>
+                  <div key={event.id} className={`min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0 ${isFeat ? 'ring-2 ring-amber-400' : ''}`} style={{ background: event.color }}>
                     <img src={event.image} alt={event.title} className="w-full h-[110px] object-cover opacity-30" />
                     <div className="absolute inset-0 p-4 flex flex-col justify-between">
                       <div className="flex items-start justify-between">
-                        <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/30">{event.tag}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/30">{event.tag}</span>
+                          {isFeat && (
+                            <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">⭐ FEATURED</span>
+                          )}
+                        </div>
                         <button 
                           onClick={(e) => { e.stopPropagation(); toggleRsvpEvent(event.id); }}
                           className="bg-white text-slate-800 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md active:scale-95 transition"
@@ -5484,10 +5504,10 @@ export default function App() {
 
   const showNav = isLoggedIn && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
 
-  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
   }
-  const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return
     const diff = touchStartX.current - e.changedTouches[0].clientX
     if (Math.abs(diff) > 50) {
@@ -5660,6 +5680,8 @@ export default function App() {
           setSearchQuery={setExploreSearchQuery}
           activeFilter={exploreFilter}
           setActiveFilter={setExploreFilter}
+          gigs={gigs}
+          events={events}
         />
       )
     }
@@ -5673,6 +5695,8 @@ export default function App() {
         onCreatorClick={handleOpenCreatorProfile}
         onEventClick={handleOpenEventsTab}
         onSearch={handleHomeSearch}
+        gigs={gigs}
+        events={events}
       />
     )
   }
