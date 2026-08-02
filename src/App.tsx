@@ -808,6 +808,7 @@ function HomePage({
   unreadCount,
   onCreatorClick,
   onEventClick,
+  onSearch,
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -816,9 +817,17 @@ function HomePage({
   unreadCount: number
   onCreatorClick: (name: string) => void
   onEventClick: () => void
+  onSearch: (query: string) => void
 }) {
   const [activeFilter, setActiveFilter] = useState('All Gigs')
   const [activeNiche, setActiveNiche] = useState('All')
+  const [localSearch, setLocalSearch] = useState('')
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSearch(localSearch)
+    }
+  }
 
   const filteredGigs = GIGS.filter(g => {
     const matchType = activeFilter === 'All Gigs' || activeFilter === 'Collab' || g.type === activeFilter
@@ -864,8 +873,15 @@ function HomePage({
       <div className="px-5 mb-5">
         <div className="flex gap-2">
           <div className="flex-1 flex items-center gap-2.5 bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-100">
-            <span className="text-slate-400"><SearchIcon /></span>
-            <input type="text" placeholder="Search gigs, creators, brands…" className="flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent font-medium" />
+            <span onClick={() => onSearch(localSearch)} className="text-slate-400 cursor-pointer"><SearchIcon /></span>
+            <input 
+              type="text" 
+              value={localSearch}
+              onChange={e => setLocalSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search gigs, creators, brands…" 
+              className="flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent font-medium" 
+            />
           </div>
           <button className="w-12 h-12 rounded-2xl bg-[#3b5bdb] flex items-center justify-center text-white shadow-md shadow-blue-200">
             <FilterIcon />
@@ -1915,6 +1931,8 @@ function ExplorePage({
   unreadCount,
   onCreatorClick,
   onBrandClick,
+  searchQuery,
+  setSearchQuery,
   activeFilter,
   setActiveFilter,
 }: {
@@ -1929,10 +1947,11 @@ function ExplorePage({
   unreadCount: number
   onCreatorClick: (name: string) => void
   onBrandClick: (brand: Brand) => void
+  searchQuery: string
+  setSearchQuery: (query: string) => void
   activeFilter: 'all' | 'creators' | 'brands' | 'gigs' | 'events'
   setActiveFilter: (filter: 'all' | 'creators' | 'brands' | 'gigs' | 'events') => void
 }) {
-  const [searchQuery, setSearchQuery] = useState('')
 
   const query = searchQuery.toLowerCase().trim()
   const filteredCreators = CREATORS.filter(c => 
@@ -3860,9 +3879,16 @@ export default function App() {
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null)
   const [followedCreators, setFollowedCreators] = useState<Set<number>>(new Set())
   const [exploreFilter, setExploreFilter] = useState<'all' | 'creators' | 'brands' | 'gigs' | 'events'>('all')
+  const [exploreSearchQuery, setExploreSearchQuery] = useState('')
 
   const handleOpenEventsTab = () => {
     setExploreFilter('events')
+    setActiveTab('explore')
+  }
+
+  const handleHomeSearch = (query: string) => {
+    setExploreSearchQuery(query)
+    setExploreFilter('all')
     setActiveTab('explore')
   }
 
@@ -3961,7 +3987,7 @@ export default function App() {
   }
 
   const handleApply = (gig: Gig) => setSelectedGig(gig)
-  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setSelectedBrand(null); setExploreFilter('all'); setActiveTab('home') }
+  const handleBack = () => { setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setSelectedBrand(null); setExploreFilter('all'); setExploreSearchQuery(''); setActiveTab('home') }
 
   const showNav = isLoggedIn && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
 
@@ -4046,6 +4072,8 @@ export default function App() {
           unreadCount={unreadNotifications.size}
           onCreatorClick={handleOpenCreatorProfile}
           onBrandClick={setSelectedBrand}
+          searchQuery={exploreSearchQuery}
+          setSearchQuery={setExploreSearchQuery}
           activeFilter={exploreFilter}
           setActiveFilter={setExploreFilter}
         />
@@ -4060,6 +4088,7 @@ export default function App() {
         unreadCount={unreadNotifications.size}
         onCreatorClick={handleOpenCreatorProfile}
         onEventClick={handleOpenEventsTab}
+        onSearch={handleHomeSearch}
       />
     )
   }
