@@ -909,10 +909,13 @@ function HomePage({
   onBellClick,
   unreadCount,
   onCreatorClick,
+  onBrandClick,
   onEventClick,
   onSearch,
   gigs = GIGS,
   events = EVENTS,
+  creators = CREATORS,
+  brands = BRANDS,
   userProfile,
   onProfileClick
 }: {
@@ -922,10 +925,13 @@ function HomePage({
   onBellClick: () => void
   unreadCount: number
   onCreatorClick: (name: string) => void
+  onBrandClick?: (brand: Brand) => void
   onEventClick: () => void
   onSearch: (query: string) => void
   gigs?: Gig[]
   events?: Event[]
+  creators?: Creator[]
+  brands?: Brand[]
   userProfile?: any
   onProfileClick?: () => void
 }) {
@@ -1030,6 +1036,42 @@ function HomePage({
         </div>
       </div>
 
+      {/* Featured Network Section */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between px-5 mb-2.5">
+          <h2 className="text-base font-bold text-slate-900">Featured Network 🌟</h2>
+          <span className="text-[11px] font-semibold text-slate-400">Creators & Brands</span>
+        </div>
+        <div className="flex gap-2.5 px-5 overflow-x-auto scrollbar-hide pb-1">
+          {creators.slice(0, 6).map(creator => (
+            <div 
+              key={creator.id} 
+              onClick={() => onCreatorClick(creator.name)}
+              className="flex items-center gap-2 bg-white rounded-full pl-1.5 pr-3.5 py-1.5 border border-slate-100 shadow-sm flex-shrink-0 cursor-pointer transition active:scale-95 hover:border-slate-200"
+            >
+              <img src={creator.avatar} alt={creator.name} className="w-7 h-7 rounded-full object-cover border border-[#e8edff]" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-slate-800 leading-none">{creator.name}</span>
+                <span className="text-[9px] text-[#3b5bdb] font-semibold leading-none mt-0.5">{creator.niche}</span>
+              </div>
+            </div>
+          ))}
+          {brands.slice(0, 4).map(brand => (
+            <div 
+              key={brand.id} 
+              onClick={() => onBrandClick && onBrandClick(brand)}
+              className="flex items-center gap-2 bg-[#f0f4ff] rounded-full pl-1.5 pr-3.5 py-1.5 border border-blue-100 shadow-sm flex-shrink-0 cursor-pointer transition active:scale-95 hover:border-blue-200"
+            >
+              <img src={brand.logo} alt={brand.name} className="w-7 h-7 rounded-full object-cover border border-white" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-[#3b5bdb] leading-none">{brand.name}</span>
+                <span className="text-[9px] text-slate-400 font-medium leading-none mt-0.5">{brand.industry}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Filters */}
       <div className="px-5 mb-3">
         <div className="flex items-center justify-between mb-3">
@@ -1056,6 +1098,15 @@ function HomePage({
       <div className="px-5 flex flex-col gap-3">
         {filteredGigs.map((gig, i) => {
           const isFeat = (gig as any).isFeatured || i === 0
+          const matchedCreator = creators.find(c => c.name.toLowerCase() === gig.creatorName.toLowerCase() || (c.handle && c.handle.toLowerCase() === gig.handle.toLowerCase()))
+          const matchedBrand = brands.find(b => b.name.toLowerCase() === (gig.brand || gig.creatorName).toLowerCase())
+          const displayAvatar = matchedCreator?.avatar || matchedBrand?.logo || gig.avatar
+          const displayName = matchedCreator?.name || matchedBrand?.name || gig.creatorName
+          const displayHandle = matchedCreator?.handle || gig.handle
+          const isVerified = matchedCreator?.verified || matchedBrand?.verified || gig.verified
+          const displayFollowers = matchedCreator?.followers || gig.followers
+          const hasInstagram = matchedCreator ? ((matchedCreator as any).isInstagramConnected === true || ((matchedCreator as any).isInstagramConnected !== false && displayFollowers && displayFollowers !== '0')) : true
+
           return (
             <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border cursor-pointer transition-transform active:scale-[0.98] ${isFeat ? 'border-2 border-[#3b5bdb] shadow-blue-100' : 'border-slate-100'}`}>
               {isFeat && (
@@ -1067,24 +1118,26 @@ function HomePage({
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div 
-                  onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
+                  onClick={e => { e.stopPropagation(); onCreatorClick(displayName) }}
                   className="flex items-center gap-3 cursor-pointer hover:opacity-85"
                 >
                   <div className="relative">
-                    <img src={gig.avatar} alt={gig.creatorName} className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]" />
-                    {gig.verified && (
+                    <img src={displayAvatar} alt={displayName} className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]" />
+                    {isVerified && (
                       <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center">
                         <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
                       </span>
                     )}
                   </div>
                   <div>
-                    <span className="text-sm font-bold text-slate-900">{gig.creatorName}</span>
+                    <span className="text-sm font-bold text-slate-900">{displayName}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-slate-400 font-medium">{gig.handle}</span>
-                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full">
-                        <InstagramIcon />{gig.followers}
-                      </span>
+                      <span className="text-[11px] text-slate-400 font-medium">{displayHandle}</span>
+                      {hasInstagram && (
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full">
+                          <InstagramIcon />{displayFollowers}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -5805,10 +5858,13 @@ export default function App() {
         onBellClick={() => setViewingNotifications(true)}
         unreadCount={unreadNotifications.size}
         onCreatorClick={handleOpenCreatorProfile}
+        onBrandClick={setSelectedBrand}
         onEventClick={handleOpenEventsTab}
         onSearch={handleHomeSearch}
         gigs={gigs}
         events={events}
+        creators={creators}
+        brands={brands}
         userProfile={userProfile}
         onProfileClick={() => setActiveTab('profile')}
       />
