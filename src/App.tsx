@@ -4465,45 +4465,31 @@ export default function App() {
 
   // Auth State changed hook
   useEffect(() => {
-    let unsubscribeProfile: (() => void) | null = null;
+    let unsubs: (() => void)[] = [];
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setIsLoggedIn(!!user)
-      if (unsubscribeProfile) {
-        unsubscribeProfile()
-        unsubscribeProfile = null
-      }
+      unsubs.forEach(un => un())
+      unsubs = []
 
       if (user) {
-        try {
-          const creatorRef = doc(db, 'creators', user.uid)
-          const creatorSnap = await getDoc(creatorRef)
-          if (creatorSnap.exists()) {
+        const creatorRef = doc(db, 'creators', user.uid)
+        const unsubCreator = onSnapshot(creatorRef, (snap) => {
+          if (snap.exists()) {
             setUserRole('creator')
-            unsubscribeProfile = onSnapshot(creatorRef, (snap) => {
-              if (snap.exists()) {
-                setUserProfile(snap.data())
-              }
-            })
-            return
+            setUserProfile(snap.data())
           }
+        })
+        unsubs.push(unsubCreator)
 
-          const brandRef = doc(db, 'brands', user.uid)
-          const brandSnap = await getDoc(brandRef)
-          if (brandSnap.exists()) {
+        const brandRef = doc(db, 'brands', user.uid)
+        const unsubBrand = onSnapshot(brandRef, (snap) => {
+          if (snap.exists()) {
             setUserRole('brand')
-            unsubscribeProfile = onSnapshot(brandRef, (snap) => {
-              if (snap.exists()) {
-                setUserProfile(snap.data())
-              }
-            })
-            return
+            setUserProfile(snap.data())
           }
-        } catch (err) {
-          console.error("Error loading user profile:", err)
-        }
-        setUserProfile(null)
-        setUserRole(null)
+        })
+        unsubs.push(unsubBrand)
       } else {
         setUserProfile(null)
         setUserRole(null)
@@ -4512,7 +4498,7 @@ export default function App() {
 
     return () => {
       unsubscribeAuth()
-      if (unsubscribeProfile) unsubscribeProfile()
+      unsubs.forEach(un => un())
     }
   }, [])
 
