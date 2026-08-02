@@ -2050,16 +2050,33 @@ function ProfilePage({
 
             <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] py-1 px-0.5">
               
-              {/* Profile Image Picker */}
-              <div className="flex flex-col items-center gap-2 mb-2">
-                <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-file-input')?.click()}>
-                  <img 
-                    src={previewUrl || avatar} 
-                    alt="Upload Preview" 
-                    className="w-20 h-20 rounded-full object-cover border-2 border-slate-100 hover:opacity-90 transition"
-                  />
-                  <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-white text-[10px] font-bold">Change</span>
+              {/* Framed Profile Image Picker */}
+              <div className="flex flex-col items-center gap-2.5 mb-2">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Photo Frame Preview
+                </div>
+                <div 
+                  className="relative group cursor-pointer" 
+                  onClick={() => document.getElementById('avatar-file-input')?.click()}
+                >
+                  <div className="p-1 rounded-full bg-gradient-to-tr from-[#3b5bdb] via-[#7048e8] to-[#f76707] shadow-md shadow-blue-200">
+                    <div className="w-20 h-20 rounded-full border-2 border-white overflow-hidden bg-slate-100 relative">
+                      <img 
+                        src={previewUrl || avatar} 
+                        alt="Upload Preview Frame" 
+                        className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                        <span className="text-white text-base">📷</span>
+                        <span className="text-white text-[9px] font-bold">Change</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#3b5bdb] text-white border-2 border-white flex items-center justify-center shadow-md group-hover:scale-110 transition">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
                   </div>
                 </div>
                 <input 
@@ -2080,7 +2097,7 @@ function ProfilePage({
                   onClick={() => document.getElementById('avatar-file-input')?.click()}
                   className="text-xs font-bold text-[#3b5bdb] hover:underline"
                 >
-                  {userRole === 'brand' ? 'Change Brand Logo' : 'Change Profile Picture'}
+                  {previewUrl ? 'Choose Different Photo' : (userRole === 'brand' ? 'Change Brand Logo' : 'Change Profile Picture')}
                 </button>
               </div>
 
@@ -2319,7 +2336,6 @@ function ProfileSetupPage({
         
         {/* Header */}
         <div className="text-center mt-4">
-          <span className="text-4xl">✨</span>
           <h2 className="text-2xl font-black text-slate-900 mt-2">Complete Your Profile</h2>
           <p className="text-xs text-slate-500 mt-1">
             Let others know who you are before entering the Kolkata network.
@@ -2329,21 +2345,40 @@ function ProfileSetupPage({
         {/* Card */}
         <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 flex flex-col gap-5">
           
-          {/* Avatar selector */}
-          <div className="flex flex-col items-center gap-2">
+          {/* Framed Photo Selector */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+              Photo Frame Preview
+            </div>
+
             <div 
               onClick={() => document.getElementById('setup-avatar-input')?.click()}
-              className="w-24 h-24 rounded-full border-4 border-[#e8edff] shadow-inner relative overflow-hidden group cursor-pointer"
+              className="relative group cursor-pointer"
             >
-              <img 
-                src={previewUrl || defaultAvatar} 
-                alt="Profile Avatar" 
-                className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
-                <span className="text-white text-[10px] font-black uppercase">Upload</span>
+              {/* Outer Framed Ring */}
+              <div className="p-1 rounded-full bg-gradient-to-tr from-[#3b5bdb] via-[#7048e8] to-[#f76707] shadow-md shadow-blue-200">
+                <div className="w-24 h-24 rounded-full border-2 border-white overflow-hidden bg-slate-100 relative">
+                  <img 
+                    src={previewUrl || defaultAvatar} 
+                    alt="Profile Avatar Frame Preview" 
+                    className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                    <span className="text-white text-lg">📷</span>
+                    <span className="text-white text-[9px] font-bold">Change</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Camera badge */}
+              <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#3b5bdb] text-white border-2 border-white flex items-center justify-center shadow-md group-hover:scale-110 transition">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
               </div>
             </div>
+
             <input 
               type="file" 
               id="setup-avatar-input" 
@@ -2357,9 +2392,28 @@ function ProfileSetupPage({
                 }
               }}
             />
-            <span className="text-xs text-slate-400 font-bold">
-              {userRole === 'brand' ? 'Upload Brand Logo' : 'Upload Profile Picture'}
-            </span>
+
+            <div className="flex items-center gap-2">
+              <button 
+                type="button"
+                onClick={() => document.getElementById('setup-avatar-input')?.click()}
+                className="text-xs font-bold text-[#3b5bdb] hover:underline"
+              >
+                {previewUrl ? 'Choose Different Photo' : (userRole === 'brand' ? 'Select Brand Logo' : 'Select Profile Photo')}
+              </button>
+              {previewUrl && (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setAvatarFile(null)
+                    setPreviewUrl(null)
+                  }}
+                  className="text-xs font-bold text-slate-400 hover:text-rose-500 transition"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Form fields */}
