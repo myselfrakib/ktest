@@ -2199,6 +2199,259 @@ function ProfilePage({
   )
 }
 
+function ProfileSetupPage({
+  userProfile,
+  userRole,
+  onComplete
+}: {
+  userProfile: any;
+  userRole: 'creator' | 'brand' | null;
+  onComplete: () => void;
+}) {
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [username, setUsername] = useState('')
+  const [bio, setBio] = useState('')
+  const [nicheOrIndustry, setNicheOrIndustry] = useState('')
+  const [location, setLocation] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (userProfile) {
+      if (userRole === 'creator') {
+        setUsername(userProfile.handle || '')
+        setNicheOrIndustry(userProfile.niche || 'Fashion & Lifestyle')
+      } else {
+        setUsername(userProfile.name?.toLowerCase().replace(/\s+/g, '') || '')
+        setNicheOrIndustry(userProfile.industry || 'Retail & Fashion')
+      }
+      setBio(userProfile.bio || '')
+      setLocation(userProfile.location || 'Kolkata, WB')
+    }
+  }, [userProfile, userRole])
+
+  useEffect(() => {
+    if (!username.trim()) {
+      setErrorMsg('')
+      return
+    }
+
+    const checkedUsername = username.trim().toLowerCase();
+    const queryHandle = userRole === 'creator' ? (checkedUsername.startsWith('@') ? checkedUsername : `@${checkedUsername}`) : checkedUsername;
+
+    const timer = setTimeout(async () => {
+      setIsCheckingUsername(true)
+      setErrorMsg('')
+      try {
+        const qCreators = query(collection(db, 'creators'), where('handle', '==', queryHandle))
+        const snapCreators = await getDocs(qCreators)
+        
+        const otherCreator = snapCreators.docs.find(d => d.id !== auth.currentUser?.uid)
+        
+        if (otherCreator) {
+          setErrorMsg('Username is already taken!')
+        } else {
+          setErrorMsg('')
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsCheckingUsername(false)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [username, userRole])
+
+  const handleFinish = async () => {
+    if (!auth.currentUser) return
+    if (errorMsg || !username.trim()) return
+
+    setSaving(true)
+    try {
+      let finalAvatarUrl = userRole === 'brand' ? userProfile.logo : userProfile.avatar
+
+      if (avatarFile) {
+        const storageRef = ref(storage, `profile_pics/${auth.currentUser.uid}`)
+        const uploadResult = await uploadBytes(storageRef, avatarFile)
+        finalAvatarUrl = await getDownloadURL(uploadResult.ref)
+      }
+
+      const cleanUsername = username.trim();
+      const finalUsername = userRole === 'creator' ? (cleanUsername.startsWith('@') ? cleanUsername : `@${cleanUsername}`) : cleanUsername;
+
+      if (userRole === 'brand') {
+        await updateDoc(doc(db, 'brands', auth.currentUser.uid), {
+          name: finalUsername,
+          bio: bio,
+          location: location,
+          industry: nicheOrIndustry,
+          logo: finalAvatarUrl,
+          setupComplete: true
+        })
+      } else {
+        await updateDoc(doc(db, 'creators', auth.currentUser.uid), {
+          handle: finalUsername,
+          bio: bio,
+          location: location,
+          niche: nicheOrIndustry,
+          avatar: finalAvatarUrl,
+          setupComplete: true
+        })
+      }
+      onComplete()
+    } catch (err: any) {
+      alert(err.message || 'Failed to complete profile setup')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const defaultAvatar = userRole === 'brand' 
+    ? 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=160&h=160&fit=crop&auto=format'
+    : 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format';
+
+  return (
+    <div className="flex-1 flex flex-col justify-start bg-slate-50 min-h-screen px-6 py-8">
+      <div className="w-full max-w-md mx-auto flex flex-col gap-6">
+        
+        {/* Header */}
+        <div className="text-center mt-4">
+          <span className="text-4xl">✨</span>
+          <h2 className="text-2xl font-black text-slate-900 mt-2">Complete Your Profile</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Let others know who you are before entering the Kolkata network.
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 flex flex-col gap-5">
+          
+          {/* Avatar selector */}
+          <div className="flex flex-col items-center gap-2">
+            <div 
+              onClick={() => document.getElementById('setup-avatar-input')?.click()}
+              className="w-24 h-24 rounded-full border-4 border-[#e8edff] shadow-inner relative overflow-hidden group cursor-pointer"
+            >
+              <img 
+                src={previewUrl || defaultAvatar} 
+                alt="Profile Avatar" 
+                className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                <span className="text-white text-[10px] font-black uppercase">Upload</span>
+              </div>
+            </div>
+            <input 
+              type="file" 
+              id="setup-avatar-input" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  setAvatarFile(file)
+                  setPreviewUrl(URL.createObjectURL(file))
+                }
+              }}
+            />
+            <span className="text-xs text-slate-400 font-bold">
+              {userRole === 'brand' ? 'Upload Brand Logo' : 'Upload Profile Picture'}
+            </span>
+          </div>
+
+          {/* Form fields */}
+          <div className="flex flex-col gap-4">
+            
+            {/* Username Input */}
+            <div className="flex flex-col gap-1.5 relative">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  {userRole === 'brand' ? 'Brand Username / Slug' : 'Creator Username'}
+                </label>
+                {isCheckingUsername && (
+                  <span className="text-[9px] text-[#3b5bdb] font-bold animate-pulse">Checking…</span>
+                )}
+                {errorMsg && (
+                  <span className="text-[10px] text-rose-500 font-bold transition-all">{errorMsg}</span>
+                )}
+                {!isCheckingUsername && !errorMsg && username.trim() && (
+                  <span className="text-[10px] text-emerald-600 font-bold">Username is available ✓</span>
+                )}
+              </div>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={`w-full px-4 py-3 rounded-2xl border bg-slate-50 text-sm outline-none transition ${errorMsg ? 'border-rose-300 focus:border-rose-400 focus:bg-rose-50/10' : 'border-slate-200 focus:border-[#3b5bdb] focus:bg-white'}`}
+                placeholder={userRole === 'brand' ? 'e.g. wowmomo' : 'e.g. priya.creates'}
+              />
+            </div>
+
+            {/* Profession / Niche Input */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                {userRole === 'brand' ? 'Industry' : 'Profession / Niche'}
+              </label>
+              <input
+                type="text"
+                value={nicheOrIndustry}
+                onChange={(e) => setNicheOrIndustry(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                placeholder={userRole === 'brand' ? 'e.g. Food & Beverage' : 'e.g. Video Editor / Influencer'}
+              />
+            </div>
+
+            {/* Place / Location Input */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Location (Place)</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                placeholder="e.g. Salt Lake, Kolkata"
+              />
+            </div>
+
+            {/* Bio / About Input */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Bio / About</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm outline-none focus:border-[#3b5bdb] focus:bg-white transition resize-none"
+                placeholder="Brief description about yourself or company..."
+              />
+            </div>
+
+          </div>
+
+          {/* Action Button */}
+          <button
+            onClick={handleFinish}
+            disabled={saving || isCheckingUsername || !!errorMsg || !username.trim()}
+            className="w-full bg-[#3b5bdb] text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-[#2b4ef7] active:scale-98 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            {saving ? (
+              <>
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
+                </svg>
+                Finishing Setup…
+              </>
+            ) : 'Finish Setup & Enter network →'}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ── Explore Page ────────────────────────────────────────────────────────────
 
 function ExplorePage({
@@ -4492,7 +4745,8 @@ export default function App() {
             logo: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=160&h=160&fit=crop&auto=format',
             bio: 'Bengal based brand. Exciting new campaigns coming soon.',
             location: 'Kolkata, WB',
-            verified: false
+            verified: false,
+            setupComplete: false
           };
           await setDoc(doc(db, 'brands', credential.user.uid), newBrand);
         } else {
@@ -4505,7 +4759,8 @@ export default function App() {
             niche: 'Fashion & Lifestyle',
             bio: 'Kreator Kolkata member',
             verified: false,
-            followers_count: 0
+            followers_count: 0,
+            setupComplete: false
           };
           await setDoc(doc(db, 'creators', credential.user.uid), newCreator);
         }
@@ -4622,41 +4877,56 @@ export default function App() {
     <div className="min-h-screen bg-[#f0f4ff] flex justify-center items-start">
       <div className="w-full max-w-[430px] min-h-screen bg-[#f0f4ff] flex flex-col relative overflow-hidden">
         {isLoggedIn ? (
-          <>
-            {renderMain()}
+          !userProfile ? (
+            <div className="flex-1 flex flex-col items-center justify-center bg-white p-6">
+              <div className="w-10 h-10 rounded-full border-4 border-slate-100 border-t-[#3b5bdb] animate-spin mb-4" />
+              <div className="text-sm font-bold text-slate-500 animate-pulse text-center">Loading Kolkata network profile…</div>
+            </div>
+          ) : userProfile.setupComplete === false ? (
+            <ProfileSetupPage 
+              userProfile={userProfile} 
+              userRole={userRole} 
+              onComplete={() => {
+                // updates automatically via real-time onSnapshot
+              }} 
+            />
+          ) : (
+            <>
+              {renderMain()}
 
-            {showNav && (
-              <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 px-6 pt-3 pb-6 flex items-center justify-around shadow-xl z-20">
-                {[
-                  { id: 'home', label: 'Home', icon: '⊞' },
-                  { id: 'explore', label: 'Explore', icon: '🧭' },
-                  { id: 'post', label: '', icon: '＋', special: true },
-                  { id: 'chat', label: 'Chat', icon: '💬' },
-                  { id: 'profile', label: 'Profile', icon: '👤' },
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => { 
-                      setActiveTab(tab.id); 
-                      if (tab.id === 'post') setPosting(true);
-                      if (tab.id === 'explore') setExploreFilter('all');
-                    }}
-                    className={`flex flex-col items-center gap-1 ${tab.special ? '-mt-6' : ''}`}
-                  >
-                    {tab.special ? (
-                      <span className="w-14 h-14 rounded-full bg-[#3b5bdb] flex items-center justify-center text-2xl text-white shadow-lg shadow-blue-300">{tab.icon}</span>
-                    ) : (
-                      <>
-                        <span className={`text-lg leading-none ${activeTab === tab.id ? 'opacity-100' : 'opacity-40'}`}>{tab.icon}</span>
-                        <span className={`text-[10px] font-bold ${activeTab === tab.id ? 'text-[#3b5bdb]' : 'text-slate-400'}`}>{tab.label}</span>
-                        {activeTab === tab.id && <span className="w-1 h-1 rounded-full bg-[#3b5bdb]" />}
-                      </>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
+              {showNav && (
+                <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 px-6 pt-3 pb-6 flex items-center justify-around shadow-xl z-20">
+                  {[
+                    { id: 'home', label: 'Home', icon: '⊞' },
+                    { id: 'explore', label: 'Explore', icon: '🧭' },
+                    { id: 'post', label: '', icon: '＋', special: true },
+                    { id: 'chat', label: 'Chat', icon: '💬' },
+                    { id: 'profile', label: 'Profile', icon: '👤' },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => { 
+                        setActiveTab(tab.id); 
+                        if (tab.id === 'post') setPosting(true);
+                        if (tab.id === 'explore') setExploreFilter('all');
+                      }}
+                      className={`flex flex-col items-center gap-1 ${tab.special ? '-mt-6' : ''}`}
+                    >
+                      {tab.special ? (
+                        <span className="w-14 h-14 rounded-full bg-[#3b5bdb] flex items-center justify-center text-2xl text-white shadow-lg shadow-blue-300">{tab.icon}</span>
+                      ) : (
+                        <>
+                          <span className={`text-lg leading-none ${activeTab === tab.id ? 'opacity-100' : 'opacity-40'}`}>{tab.icon}</span>
+                          <span className={`text-[10px] font-bold ${activeTab === tab.id ? 'text-[#3b5bdb]' : 'text-slate-400'}`}>{tab.label}</span>
+                          {activeTab === tab.id && <span className="w-1 h-1 rounded-full bg-[#3b5bdb]" />}
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )
         ) : (
           <div
             className="w-full min-h-screen relative overflow-hidden bg-white"
