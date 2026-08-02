@@ -1315,7 +1315,10 @@ function HomePage({
   }).sort((a, b) => {
     const aFeat = (a as any).isFeatured ? 1 : 0
     const bFeat = (b as any).isFeatured ? 1 : 0
-    return bFeat - aFeat
+    if (bFeat !== aFeat) {
+      return bFeat - aFeat
+    }
+    return (b.id || 0) - (a.id || 0)
   })
 
   return (
@@ -3601,7 +3604,14 @@ function ExplorePage({
     g.creatorName.toLowerCase().includes(query) || 
     g.niche.toLowerCase().includes(query) || 
     g.tags.some(t => t.toLowerCase().includes(query))
-  )
+  ).sort((a, b) => {
+    const aFeat = (a as any).isFeatured ? 1 : 0
+    const bFeat = (b as any).isFeatured ? 1 : 0
+    if (bFeat !== aFeat) {
+      return bFeat - aFeat
+    }
+    return (b.id || 0) - (a.id || 0)
+  })
   const filteredEvents = events.filter(e => 
     e.title.toLowerCase().includes(query) || 
     e.subtitle.toLowerCase().includes(query) || 
@@ -6314,7 +6324,7 @@ export default function App() {
         })
       } else {
         const list = snapshot.docs.map(doc => doc.data() as Gig)
-        list.sort((a, b) => a.id - b.id)
+        list.sort((a, b) => (b.id || 0) - (a.id || 0))
         setGigs(list)
       }
     }, (err) => console.warn("Gigs snapshot error:", err))
