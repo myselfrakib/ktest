@@ -23,7 +23,9 @@ import {
   orderBy,
   onSnapshot,
   updateDoc,
-  increment
+  increment,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore'
 import {
   ref,
@@ -150,6 +152,10 @@ const EVENTS = [
     tag: 'Networking',
     color: '#3b5bdb',
     image: 'https://images.unsplash.com/photo-1648440108249-30567222448a?w=400&h=200&fit=crop&auto=format',
+    description: 'Join Kolkata\'s premier creator networking meetup! Connect with top lifestyle, food, and tech creators, meet hiring brand managers, and participate in exclusive collab pitch sessions.',
+    organizer: 'Kreator Kolkata Community',
+    entryFee: 'Free RSVP',
+    speakers: ['Priya Sengupta', 'Souvik Chatterjee', 'Arjun Das']
   },
   {
     id: 2,
@@ -165,6 +171,10 @@ const EVENTS = [
     tag: 'Summit',
     color: '#f76707',
     image: 'https://images.unsplash.com/photo-1661061968438-97ab151ac32e?w=400&h=200&fit=crop&auto=format',
+    description: 'A 1-day summit designed for content creators and local Kolkata brands. Discover upcoming brand campaigns, attend workshops on monetization, and negotiate live collab contracts.',
+    organizer: 'Kreator Kolkata x Rang Bahar',
+    entryFee: 'Free RSVP',
+    speakers: ['Rang Bahar Marketing Lead', 'The Calcutta Table Founder', 'Tanisha Roy']
   },
 ]
 
@@ -1314,6 +1324,7 @@ function HomePage({
   onCreatorClick,
   onBrandClick,
   onEventClick,
+  onSelectEvent,
   onSearch,
   gigs = GIGS,
   events = EVENTS,
@@ -1330,6 +1341,7 @@ function HomePage({
   onCreatorClick: (name: string) => void
   onBrandClick?: (brand: Brand) => void
   onEventClick: () => void
+  onSelectEvent?: (event: Event) => void
   onSearch: (query: string) => void
   gigs?: Gig[]
   events?: Event[]
@@ -1428,7 +1440,7 @@ function HomePage({
           {events.map(event => (
             <div 
               key={event.id} 
-              onClick={onEventClick}
+              onClick={() => onSelectEvent ? onSelectEvent(event) : onEventClick()}
               className="min-w-[280px] w-[280px] h-[110px] rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer flex-shrink-0 bg-white transition-transform active:scale-[0.98] relative"
             >
               <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
@@ -3548,6 +3560,195 @@ function ProfileSetupPage({
   )
 }
 
+// ── View Event Page ─────────────────────────────────────────────────────────
+
+function ViewEventPage({
+  event,
+  onBack,
+  isRsvp,
+  toggleRsvpEvent,
+  userProfile
+}: {
+  event: Event
+  onBack: () => void
+  isRsvp: boolean
+  toggleRsvpEvent: (id: number) => void
+  userProfile?: any
+}) {
+  const [copied, setCopied] = useState(false)
+  const isFeat = (event as any).isFeatured || false
+
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const speakers = (event as any).speakers || ['Priya Sengupta', 'Souvik Chatterjee', 'Arjun Das']
+  const organizer = (event as any).organizer || 'Kreator Kolkata Community'
+  const description = (event as any).description || 'Join Kolkata’s premier creator networking meetup! Connect with top lifestyle, food, and tech creators, meet hiring brand managers, and participate in exclusive collab pitch sessions.'
+  const entryFee = (event as any).entryFee || 'Free RSVP'
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-32 bg-[#f8fafc]">
+      {/* Top Bar / Header */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full hover:bg-slate-200 transition cursor-pointer"
+        >
+          ← Back
+        </button>
+        <span className="text-xs font-bold text-slate-900 truncate max-w-[180px]">{event.title}</span>
+        <button 
+          onClick={handleShare}
+          className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition cursor-pointer relative"
+        >
+          <ShareIcon />
+          {copied && (
+            <span className="absolute -bottom-7 right-0 text-[9px] font-bold bg-slate-900 text-white px-2 py-0.5 rounded shadow whitespace-nowrap">
+              Copied Link!
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Hero Banner */}
+      <div className="relative h-[220px] w-full overflow-hidden bg-slate-900">
+        <img src={event.image} alt={event.title} className="w-full h-full object-cover opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+        
+        {/* Badges */}
+        <div className="absolute top-4 left-5 right-5 flex items-center justify-between z-10">
+          <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/30">
+            {event.tag}
+          </span>
+          {isFeat && (
+            <span className="bg-amber-500 text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+              ⭐ FEATURED EVENT
+            </span>
+          )}
+        </div>
+
+        {/* Date Stamp Overlay */}
+        <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between z-10">
+          <div>
+            <span className="text-amber-400 text-xs font-bold uppercase tracking-wider block mb-0.5">📅 Upcoming Event</span>
+            <h1 className="text-white font-display font-black text-xl leading-tight drop-shadow-md">{event.title}</h1>
+            <p className="text-slate-200 text-xs mt-0.5 font-medium">{event.subtitle}</p>
+          </div>
+          <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl px-3.5 py-1.5 text-center min-w-[56px] shadow-lg">
+            <span className="text-white font-display font-black text-xl leading-none block">{event.day}</span>
+            <span className="text-white/90 text-[10px] font-bold uppercase tracking-wider block">{event.month}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 pt-5 flex flex-col gap-5">
+        {/* Date, Time & Venue Card */}
+        <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-[#3b5bdb] flex-shrink-0">
+              <CalendarIcon />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-900">{event.date}</div>
+              <div className="text-[11px] text-slate-500 font-medium">{event.time} IST</div>
+            </div>
+          </div>
+          <div className="h-[1px] bg-slate-100 w-full" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-[#f76707] flex-shrink-0">
+              <MapPinIcon />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-900">{event.venue}</div>
+              <div className="text-[11px] text-slate-500 font-medium">{event.location}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* RSVP & Attendee Counter */}
+        <div className="bg-gradient-to-r from-[#3b5bdb]/10 to-[#3b5bdb]/5 rounded-3xl p-4 border border-[#3b5bdb]/20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2 overflow-hidden">
+              <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=60&h=60&fit=crop&auto=format" alt="" />
+              <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=60&h=60&fit=crop&auto=format" alt="" />
+              <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=60&h=60&fit=crop&auto=format" alt="" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-slate-900">{event.attendees + (isRsvp ? 1 : 0)} People Registered</div>
+              <div className="text-[10px] text-slate-500 font-medium">Join top Kolkata creators</div>
+            </div>
+          </div>
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${isRsvp ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-[#3b5bdb]'}`}>
+            {isRsvp ? '✓ RSVP Confirmed' : 'Spots Available'}
+          </span>
+        </div>
+
+        {/* Organized By */}
+        <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Organized By</div>
+            <div className="text-xs font-bold text-slate-900">{organizer}</div>
+          </div>
+          <span className="text-xs font-bold text-[#3b5bdb] bg-blue-50 px-3 py-1 rounded-full">
+            {entryFee}
+          </span>
+        </div>
+
+        {/* About Event Description */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+          <h3 className="text-sm font-bold text-slate-900 mb-2">About Event</h3>
+          <p className="text-xs text-slate-600 leading-relaxed font-normal whitespace-pre-line">
+            {description}
+          </p>
+        </div>
+
+        {/* Featured Guests / Speakers */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+          <h3 className="text-sm font-bold text-slate-900 mb-3">Featured Speakers & Hosts</h3>
+          <div className="flex flex-wrap gap-2">
+            {speakers.map((sp: string) => (
+              <span key={sp} className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200/80 flex items-center gap-1.5">
+                🎙️ {sp}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Bottom Bar CTA */}
+      <div className="fixed bottom-0 inset-x-0 max-w-[430px] mx-auto bg-white/90 backdrop-blur-lg border-t border-slate-100 p-4 z-40 shadow-2xl flex items-center justify-between gap-4">
+        <div>
+          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Registration</div>
+          <div className="text-sm font-bold text-slate-900">{entryFee}</div>
+        </div>
+        <button
+          onClick={() => toggleRsvpEvent(event.id)}
+          className={`flex-1 py-3.5 rounded-2xl font-bold text-xs shadow-lg transition active:scale-98 cursor-pointer flex items-center justify-center gap-2 ${
+            isRsvp 
+              ? 'bg-emerald-600 text-white shadow-emerald-200 hover:bg-emerald-700' 
+              : 'bg-[#3b5bdb] text-white shadow-blue-200 hover:bg-[#2b4ef7]'
+          }`}
+        >
+          {isRsvp ? (
+            <>
+              <span>✓ Attending (Registered)</span>
+            </>
+          ) : (
+            <>
+              <span>RSVP Now 🎉</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Explore Page ────────────────────────────────────────────────────────────
 
 function ExplorePage({
@@ -3571,7 +3772,8 @@ function ExplorePage({
   brands = BRANDS,
   events = EVENTS,
   userProfile,
-  onProfileClick
+  onProfileClick,
+  onSelectEvent
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -3594,6 +3796,7 @@ function ExplorePage({
   events?: Event[]
   userProfile?: any
   onProfileClick?: () => void
+  onSelectEvent?: (event: Event) => void
 }) {
 
   const userAvatar = userProfile?.avatar || userProfile?.logo || "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
@@ -3760,14 +3963,14 @@ function ExplorePage({
               {filteredEvents.map(event => {
                 const isRsvp = rsvpEvents.has(event.id)
                 return (
-                  <div key={event.id} className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+                  <div key={event.id} onClick={() => onSelectEvent && onSelectEvent(event)} className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex items-center justify-between cursor-pointer hover:border-slate-200 transition">
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 mb-0.5">{event.title}</h4>
                       <p className="text-[10px] text-slate-400">{event.date} · {event.venue}</p>
                     </div>
                     <button 
-                      onClick={() => toggleRsvpEvent(event.id)}
-                      className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition ${isRsvp ? 'bg-emerald-50 text-emerald-600' : 'bg-[#3b5bdb] text-white'}`}
+                      onClick={(e) => { e.stopPropagation(); toggleRsvpEvent(event.id); }}
+                      className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition cursor-pointer ${isRsvp ? 'bg-emerald-50 text-emerald-600' : 'bg-[#3b5bdb] text-white'}`}
                     >
                       {isRsvp ? 'Attending' : 'RSVP'}
                     </button>
@@ -4009,7 +4212,7 @@ function ExplorePage({
                 const isRsvp = rsvpEvents.has(event.id)
                 const isFeat = (event as any).isFeatured || false
                 return (
-                  <div key={event.id} className={`min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0 ${isFeat ? 'ring-2 ring-amber-400' : ''}`} style={{ background: event.color }}>
+                  <div key={event.id} onClick={() => onSelectEvent && onSelectEvent(event)} className={`min-w-[280px] rounded-3xl overflow-hidden shadow-md relative cursor-pointer flex-shrink-0 ${isFeat ? 'ring-2 ring-amber-400' : ''}`} style={{ background: event.color }}>
                     <img src={event.image} alt={event.title} className="w-full h-[110px] object-cover opacity-30" />
                     <div className="absolute inset-0 p-4 flex flex-col justify-between">
                       <div className="flex items-start justify-between">
@@ -4210,7 +4413,7 @@ function ExplorePage({
           {filteredEvents.map(event => {
             const isRsvp = rsvpEvents.has(event.id)
             return (
-              <div key={event.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col relative transition-transform active:scale-[0.99]">
+              <div key={event.id} onClick={() => onSelectEvent && onSelectEvent(event)} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col relative transition-transform active:scale-[0.99] cursor-pointer hover:border-slate-200">
                 <div className="relative h-[120px]">
                   <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
@@ -4241,8 +4444,8 @@ function ExplorePage({
                     </div>
                   </div>
                   <button
-                    onClick={() => toggleRsvpEvent(event.id)}
-                    className={`text-xs font-bold px-4 py-2.5 rounded-xl transition ${isRsvp ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
+                    onClick={(e) => { e.stopPropagation(); toggleRsvpEvent(event.id); }}
+                    className={`text-xs font-bold px-4 py-2.5 rounded-xl transition cursor-pointer ${isRsvp ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
                   >
                     {isRsvp ? '✓ Attending' : 'RSVP Now'}
                   </button>
@@ -6439,6 +6642,7 @@ export default function App() {
   const [selectedGigId, setSelectedGigId] = useState<number | null>(savedRoute.current?.selectedGigId || null)
   const [selectedCreatorName, setSelectedCreatorName] = useState<string | null>(savedRoute.current?.selectedCreatorName || null)
   const [selectedBrandName, setSelectedBrandName] = useState<string | null>(savedRoute.current?.selectedBrandName || null)
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(savedRoute.current?.selectedEventId || null)
   const [selectedMyGigId, setSelectedMyGigId] = useState<number | null>(savedRoute.current?.selectedMyGigId || null)
   const [selectedMyGigTab, setSelectedMyGigTab] = useState<'applicants' | 'edit'>(savedRoute.current?.selectedMyGigTab || 'applicants')
   const [posting, setPosting] = useState(savedRoute.current?.posting || false)
@@ -6456,6 +6660,7 @@ export default function App() {
 
   // Derived object states from IDs/names
   const selectedGig = gigs.find(g => g.id === selectedGigId) || null
+  const selectedEvent = events.find(e => e.id === selectedEventId) || EVENTS.find(e => e.id === selectedEventId) || null
   const selectedCreator = creators.find(c => c.name.toLowerCase() === selectedCreatorName?.toLowerCase()) || CREATORS.find(c => c.name.toLowerCase() === selectedCreatorName?.toLowerCase()) || null
   const selectedBrand = brands.find(b => b.name.toLowerCase() === selectedBrandName?.toLowerCase()) || BRANDS.find(b => b.name.toLowerCase() === selectedBrandName?.toLowerCase()) || null
   const selectedMyGig = gigs.find(g => g.id === selectedMyGigId) || null
@@ -6465,6 +6670,7 @@ export default function App() {
     const routeState = {
       activeTab,
       selectedGigId: selectedGigId,
+      selectedEventId: selectedEventId,
       selectedCreatorName: selectedCreatorName,
       selectedBrandName: selectedBrandName,
       selectedMyGigId: selectedMyGigId,
@@ -6478,7 +6684,7 @@ export default function App() {
     try {
       sessionStorage.setItem('kreator_route', JSON.stringify(routeState))
     } catch (e) {}
-  }, [activeTab, selectedGigId, selectedCreatorName, selectedBrandName, selectedMyGigId, selectedMyGigTab, posting, viewingNotifications, activeChatId, adminViewMode, exploreFilter])
+  }, [activeTab, selectedGigId, selectedEventId, selectedCreatorName, selectedBrandName, selectedMyGigId, selectedMyGigTab, posting, viewingNotifications, activeChatId, adminViewMode, exploreFilter])
 
   const handleOpenEventsTab = () => {
     setExploreFilter('events')
@@ -6507,12 +6713,29 @@ export default function App() {
     })
   }
 
-  const toggleRsvpEvent = (id: number) => {
+  const toggleRsvpEvent = async (id: number) => {
+    const isCurrentlyRsvp = rsvpEvents.has(id)
     setRsvpEvents(prev => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      isCurrentlyRsvp ? next.delete(id) : next.add(id)
       return next
     })
+
+    try {
+      const eventRef = doc(db, 'events', String(id))
+      await updateDoc(eventRef, {
+        attendees: increment(isCurrentlyRsvp ? -1 : 1)
+      })
+
+      if (auth.currentUser) {
+        const userRef = doc(db, 'users', auth.currentUser.uid)
+        await updateDoc(userRef, {
+          rsvps: isCurrentlyRsvp ? arrayRemove(id) : arrayUnion(id)
+        })
+      }
+    } catch (err) {
+      console.warn("Error syncing RSVP to Firestore:", err)
+    }
   }
 
   const toggleFollowCreator = (id: number) => {
@@ -6590,6 +6813,7 @@ export default function App() {
   const handleBack = () => { 
     setSelectedMyGigId(null)
     setSelectedGigId(null)
+    setSelectedEventId(null)
     setPosting(false)
     setGigPosted(false)
     setViewingNotifications(false)
@@ -6601,7 +6825,7 @@ export default function App() {
     setActiveTab('home') 
   }
 
-  const showNav = isLoggedIn && !selectedMyGig && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
+  const showNav = isLoggedIn && !selectedMyGig && !selectedGig && !selectedEvent && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
 
   const handleTouchStart = (e: any) => {
     touchStartX.current = e.touches[0].clientX
@@ -6762,6 +6986,17 @@ export default function App() {
         />
       )
     }
+    if (selectedEvent) {
+      return (
+        <ViewEventPage
+          event={selectedEvent}
+          onBack={() => setSelectedEventId(null)}
+          isRsvp={rsvpEvents.has(selectedEvent.id)}
+          toggleRsvpEvent={toggleRsvpEvent}
+          userProfile={userProfile}
+        />
+      )
+    }
     if (activeTab === 'profile') {
       return (
         <ProfilePage 
@@ -6813,6 +7048,7 @@ export default function App() {
           brands={brands}
           userProfile={userProfile}
           onProfileClick={() => setActiveTab('profile')}
+          onSelectEvent={(ev) => setSelectedEventId(ev.id)}
         />
       )
     }
@@ -6826,6 +7062,7 @@ export default function App() {
         onCreatorClick={handleOpenCreatorProfile}
         onBrandClick={(b) => setSelectedBrandName(b.name)}
         onEventClick={handleOpenEventsTab}
+        onSelectEvent={(ev) => setSelectedEventId(ev.id)}
         onSearch={handleHomeSearch}
         gigs={gigs}
         events={events}
