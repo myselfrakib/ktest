@@ -1725,6 +1725,75 @@ function ProfilePage({
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [loadingConnect, setLoadingConnect] = useState(false)
 
+  // Portfolio Upload & Management state
+  const [showAddPortfolioModal, setShowAddPortfolioModal] = useState(false)
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null)
+  const [portfolioPreviewUrl, setPortfolioPreviewUrl] = useState<string | null>(null)
+  const [portfolioLikes, setPortfolioLikes] = useState('1.5K')
+  const [uploadingPortfolio, setUploadingPortfolio] = useState(false)
+
+  const portfolioItems = userProfile?.portfolioItems || PORTFOLIO_ITEMS
+
+  const handleAddPortfolio = async () => {
+    if (!auth.currentUser) return
+    if (!portfolioFile && !portfolioPreviewUrl) {
+      alert('Please select an image file or enter an image URL')
+      return
+    }
+
+    setUploadingPortfolio(true)
+    try {
+      let finalUrl = portfolioPreviewUrl || ''
+
+      if (portfolioFile) {
+        const storageRef = ref(storage, `portfolio/${auth.currentUser.uid}/${Date.now()}`)
+        const uploadResult = await uploadBytes(storageRef, portfolioFile)
+        finalUrl = await getDownloadURL(uploadResult.ref)
+      }
+
+      const newItem = {
+        id: Date.now(),
+        img: finalUrl,
+        likes: portfolioLikes.trim() || '1.5K',
+        createdAt: new Date().toISOString()
+      }
+
+      const currentList = userProfile?.portfolioItems || PORTFOLIO_ITEMS
+      const updatedList = [newItem, ...currentList]
+
+      const docCollection = userRole === 'brand' ? 'brands' : 'creators'
+      await updateDoc(doc(db, docCollection, auth.currentUser.uid), {
+        portfolioItems: updatedList
+      })
+
+      setShowAddPortfolioModal(false)
+      setPortfolioFile(null)
+      setPortfolioPreviewUrl(null)
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload portfolio image')
+    } finally {
+      setUploadingPortfolio(false)
+    }
+  }
+
+  const handleDeletePortfolioItem = async (itemId: any) => {
+    if (!auth.currentUser) return
+    try {
+      const currentList = userProfile?.portfolioItems || PORTFOLIO_ITEMS
+      const updatedList = currentList.filter((item: any, idx: number) => {
+        const id = item.id || idx
+        return id !== itemId
+      })
+
+      const docCollection = userRole === 'brand' ? 'brands' : 'creators'
+      await updateDoc(doc(db, docCollection, auth.currentUser.uid), {
+        portfolioItems: updatedList
+      })
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove image')
+    }
+  }
+
   useEffect(() => {
     if (userRole === 'brand') {
       setActiveSection('gigs')
@@ -1902,21 +1971,67 @@ function ProfilePage({
       {/* Portfolio grid */}
       {activeSection === 'portfolio' && (
         <div className="px-5">
-          <div className="grid grid-cols-3 gap-2">
-            {PORTFOLIO_ITEMS.map(item => (
-              <div key={item.id} className="relative rounded-2xl overflow-hidden aspect-square bg-slate-100 group cursor-pointer">
-                <img src={item.img} alt="" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-active:opacity-100 transition flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">❤️ {item.likes}</span>
-                </div>
-                <div className="absolute bottom-1.5 right-1.5 bg-black/50 rounded-full px-1.5 py-0.5">
-                  <span className="text-white text-[9px] font-bold">❤️ {item.likes}</span>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-slate-700">Work Showcase ({portfolioItems.length})</span>
+            <button 
+              onClick={() => {
+                setPortfolioFile(null)
+                setPortfolioPreviewUrl(null)
+                setPortfolioLikes('1.5K')
+                setShowAddPortfolioModal(true)
+              }}
+              className="bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm shadow-blue-200 active:scale-95 transition cursor-pointer flex items-center gap-1"
+            >
+              <span>＋</span> Add Work Image
+            </button>
           </div>
-          <div className="text-center mt-4 mb-2">
-            <button className="text-xs font-bold text-[#3b5bdb]">View all on Instagram →</button>
+
+          <div className="grid grid-cols-3 gap-2">
+            {/* Upload Work Tile */}
+            <div 
+              onClick={() => {
+                setPortfolioFile(null)
+                setPortfolioPreviewUrl(null)
+                setPortfolioLikes('1.5K')
+                setShowAddPortfolioModal(true)
+              }}
+              className="relative rounded-2xl overflow-hidden aspect-square border-2 border-dashed border-[#3b5bdb]/40 bg-[#e8edff]/40 hover:bg-[#e8edff] transition cursor-pointer flex flex-col items-center justify-center text-center p-2 group"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#3b5bdb] text-white flex items-center justify-center text-lg font-bold shadow-md group-hover:scale-110 transition">
+                ＋
+              </div>
+              <span className="text-[10px] font-bold text-[#3b5bdb] mt-1">Upload Work</span>
+            </div>
+
+            {portfolioItems.map((item: any, idx: number) => {
+              const itemImg = typeof item === 'string' ? item : (item.img || item.url)
+              const itemLikes = typeof item === 'string' ? '1.5K' : (item.likes || '1.2K')
+              const itemId = item.id || idx
+
+              return (
+                <div key={itemId} className="relative rounded-2xl overflow-hidden aspect-square bg-slate-100 group cursor-pointer shadow-sm border border-slate-100">
+                  <img src={itemImg} alt="Portfolio work" className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex flex-col justify-between p-1.5 z-10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeletePortfolioItem(itemId)
+                      }}
+                      title="Remove image"
+                      className="self-end bg-red-600/90 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold hover:bg-red-600 transition cursor-pointer shadow-md"
+                    >
+                      ✕
+                    </button>
+                    <div className="text-center text-white text-[9px] font-bold">
+                      ❤️ {itemLikes}
+                    </div>
+                  </div>
+                  <div className="absolute bottom-1.5 right-1.5 bg-black/50 backdrop-blur-xs rounded-full px-1.5 py-0.5 group-hover:opacity-0 transition">
+                    <span className="text-white text-[9px] font-bold">❤️ {itemLikes}</span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -2402,6 +2517,129 @@ function ProfilePage({
         </div>
       )}
 
+      {/* Add Portfolio Image Modal */}
+      {showAddPortfolioModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Add Portfolio Showcase Image</h3>
+                <p className="text-[10px] text-slate-400 font-medium">Showcase your past work, shoots, and content to brands</p>
+              </div>
+              <button 
+                onClick={() => setShowAddPortfolioModal(false)} 
+                className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-95 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {/* Live Preview Card */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Glassmorphism Card Preview
+                </div>
+                <div className="w-40 h-40 rounded-2xl overflow-hidden aspect-square bg-slate-100 relative shadow-md border-2 border-slate-100 group">
+                  {portfolioPreviewUrl ? (
+                    <img src={portfolioPreviewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                      <span className="text-3xl mb-1">🖼️</span>
+                      <span className="text-[10px] font-semibold">Select image below</span>
+                    </div>
+                  )}
+                  {portfolioPreviewUrl && (
+                    <div className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-xs rounded-full px-2 py-0.5">
+                      <span className="text-white text-[9px] font-bold">❤️ {portfolioLikes || '1.5K'}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Upload controls */}
+              <div className="flex flex-col gap-3">
+                <div 
+                  onClick={() => document.getElementById('portfolio-file-input')?.click()}
+                  className="bg-blue-50/70 hover:bg-blue-50 border-2 border-dashed border-[#3b5bdb]/30 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 cursor-pointer transition"
+                >
+                  <span className="text-xl">📁</span>
+                  <span className="text-xs font-bold text-[#3b5bdb]">
+                    {portfolioFile ? portfolioFile.name : 'Choose Image File from Device'}
+                  </span>
+                  <span className="text-[10px] text-slate-400">PNG, JPG, WEBP up to 10MB</span>
+                  <input 
+                    type="file" 
+                    id="portfolio-file-input" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setPortfolioFile(file)
+                        setPortfolioPreviewUrl(URL.createObjectURL(file))
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="relative flex items-center justify-center my-1">
+                  <div className="border-t border-slate-100 w-full" />
+                  <span className="bg-white px-2 text-[10px] font-bold text-slate-400 uppercase absolute">Or Image URL</span>
+                </div>
+
+                <div>
+                  <input 
+                    type="url" 
+                    value={portfolioPreviewUrl && !portfolioFile ? portfolioPreviewUrl : ''}
+                    onChange={(e) => {
+                      setPortfolioFile(null)
+                      setPortfolioPreviewUrl(e.target.value)
+                    }}
+                    placeholder="https://images.unsplash.com/your-image.jpg"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Likes / Tag Badge (Optional)</label>
+                  <input 
+                    type="text" 
+                    value={portfolioLikes}
+                    onChange={(e) => setPortfolioLikes(e.target.value)}
+                    placeholder="e.g. 2.4K or Featured"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => setShowAddPortfolioModal(false)}
+                  disabled={uploadingPortfolio}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleAddPortfolio}
+                  disabled={uploadingPortfolio || (!portfolioFile && !portfolioPreviewUrl)}
+                  className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-2xl shadow-md shadow-blue-200 active:scale-98 transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {uploadingPortfolio ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
+                      </svg>
+                      Uploading…
+                    </>
+                  ) : 'Add to Portfolio'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -3866,7 +4104,9 @@ function PublicProfilePage({
     ]
   }
 
-  const portfolio = getPortfolioItems(creator.id)
+  const livePortfolio = (creator as any).portfolioItems && (creator as any).portfolioItems.length > 0
+    ? (creator as any).portfolioItems.map((item: any) => typeof item === 'string' ? item : (item.img || item.url))
+    : getPortfolioItems(creator.id)
   const reviews = getReviews(creator.name)
 
   return (
@@ -3982,7 +4222,7 @@ function PublicProfilePage({
 
       {activeTab === 'portfolio' && (
         <div className="grid grid-cols-2 gap-3 px-5">
-          {portfolio.map((img, i) => (
+          {livePortfolio.map((img: string, i: number) => (
             <div key={i} className="aspect-square bg-slate-200 rounded-3xl overflow-hidden shadow-sm border border-slate-100">
               <img src={img} alt="portfolio item" className="w-full h-full object-cover" />
             </div>
@@ -5665,10 +5905,10 @@ export default function App() {
 
   const showNav = isLoggedIn && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: any) => {
     touchStartX.current = e.touches[0].clientX
   }
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = (e: any) => {
     if (touchStartX.current === null) return
     const diff = touchStartX.current - e.changedTouches[0].clientX
     if (Math.abs(diff) > 50) {
