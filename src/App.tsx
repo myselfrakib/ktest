@@ -453,6 +453,11 @@ const INITIAL_CHATS = [
 type ChatThread = typeof INITIAL_CHATS[0]
 type ChatMessage = typeof INITIAL_CHATS[0]['messages'][0]
 
+// ── Instagram API Constants ────────────────────────────────────────────────
+const INSTAGRAM_APP_ID = '1361228946204623'
+const IG_SCOPES = 'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_messages,instagram_business_manage_comments'
+const CLOUD_FUNCTION_URL = 'https://instagramcallback-zoelsnl3gq-uc.a.run.app'
+
 // ── Icons ──────────────────────────────────────────────────────────────────
 
 function BookmarkIcon({ filled }: { filled: boolean }) {
@@ -2211,11 +2216,9 @@ function ProfilePage({
   const [igError, setIgError] = useState<string | null>(null)
 
   // Instagram Business Login OAuth URL
-  const INSTAGRAM_APP_ID = '1361228946204623'
-  const IG_REDIRECT_URI = encodeURIComponent('https://ktest-nine.vercel.app/auth/instagram/callback')
-  const IG_SCOPES = 'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_messages,instagram_business_manage_comments'
-  const INSTAGRAM_AUTH_URL = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${IG_REDIRECT_URI}&scope=${IG_SCOPES}&response_type=code&state=${auth.currentUser?.uid || ''}`
-  const CLOUD_FUNCTION_URL = 'https://us-central1-kreatorkolkata.cloudfunctions.net/instagramCallback'
+  // Dynamically use current origin as the redirect URI (e.g. https://kreatorkolkata.vercel.app/ or https://ktest-nine.vercel.app/)
+  const dynamicRedirectUri = window.location.origin + '/'
+  const INSTAGRAM_AUTH_URL = `https://api.instagram.com/oauth/authorize?client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(dynamicRedirectUri)}&scope=${IG_SCOPES}&response_type=code&state=${auth.currentUser?.uid || ''}`
 
 
   // Portfolio Upload & Management state
@@ -6710,7 +6713,7 @@ export default function App() {
     const code = searchParams.get('code')
     const stateUid = searchParams.get('state')
 
-    if (pathname.includes('/auth/instagram/callback') && code) {
+    if (code) {
       const handleIgCallback = async () => {
         setIsIgConnecting(true)
         setIgConnectError(null)
@@ -6724,7 +6727,9 @@ export default function App() {
             throw new Error("No authenticated user found. Please log in first.")
           }
 
-          const response = await fetch(`https://us-central1-kreatorkolkata.cloudfunctions.net/instagramCallback?code=${code}&uid=${targetUid}`)
+          // Dynamically pass the exact landing page URL to the Cloud Function
+          const currentRedirectUri = window.location.origin + pathname
+          const response = await fetch(`${CLOUD_FUNCTION_URL}?code=${code}&uid=${targetUid}&redirect_uri=${encodeURIComponent(currentRedirectUri)}`)
           const data = await response.json()
 
           if (!response.ok || data.error) {

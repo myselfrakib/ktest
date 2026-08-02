@@ -27,8 +27,8 @@ const REDIRECT_URI = `${APP_URL}/auth/instagram/callback`;
 //   7. Returns success JSON to the frontend
 
 export const instagramCallback = functions.https.onRequest(async (req, res) => {
-  // CORS headers for cross-origin calls from Vercel
-  res.set("Access-Control-Allow-Origin", APP_URL);
+  // CORS headers allowing requests from any of the Vercel app domains
+  res.set("Access-Control-Allow-Origin", "*");
   res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type");
 
@@ -37,23 +37,9 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
     return;
   }
 
-  // Handle Meta Webhook Verification (GET request from Meta dashboard)
-  const hubMode = req.query["hub.mode"] as string | undefined;
-  const hubChallenge = req.query["hub.challenge"] as string | undefined;
-  const hubVerifyToken = req.query["hub.verify_token"] as string | undefined;
-
-  if (hubMode === "subscribe" && hubChallenge) {
-    const MY_VERIFY_TOKEN = "kreator_kolkata_secure_token";
-    if (hubVerifyToken === MY_VERIFY_TOKEN) {
-      res.status(200).send(hubChallenge);
-    } else {
-      res.status(403).send("Verification token mismatch");
-    }
-    return;
-  }
-
   const code = req.query.code as string | undefined;
   const uid = req.query.uid as string | undefined;
+  const clientRedirectUri = req.query.redirect_uri as string | undefined;
 
   if (!code || !uid) {
     res.status(400).json({
@@ -62,13 +48,16 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
     return;
   }
 
+  // Use the redirect URI supplied by the client, or fallback to default
+  const targetRedirectUri = clientRedirectUri || REDIRECT_URI;
+
   try {
     // ── Step 1: Exchange authorization code for short-lived access token ──
     const tokenParams = new URLSearchParams();
     tokenParams.append("client_id", INSTAGRAM_APP_ID);
     tokenParams.append("client_secret", INSTAGRAM_APP_SECRET);
     tokenParams.append("grant_type", "authorization_code");
-    tokenParams.append("redirect_uri", REDIRECT_URI);
+    tokenParams.append("redirect_uri", targetRedirectUri);
     tokenParams.append("code", code);
 
     const tokenResponse = await axios.post(
