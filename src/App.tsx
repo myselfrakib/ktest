@@ -1645,24 +1645,22 @@ function GigPostedSuccess({ onBack }: { onBack: () => void }) {
 
 // ── Profile Page ───────────────────────────────────────────────────────────
 
-const MY_POSTED_GIGS = [
+const MY_POSTED_GIGS: Gig[] = [
   {
+    ...GIGS[0],
     id: 101,
     title: 'Brand Collab for Ethnic Fashion Launch',
     type: 'Paid',
     budget: '₹8,000 – ₹15,000',
     applicants: 12,
-    status: 'Active',
-    daysLeft: 9,
   },
   {
+    ...GIGS[1],
     id: 102,
     title: 'Looking for Lifestyle Photographer',
     type: 'Barter',
     budget: 'Products + Credit',
     applicants: 4,
-    status: 'Active',
-    daysLeft: 3,
   },
 ]
 
@@ -1722,16 +1720,60 @@ function ProfilePage({
   onLogout,
   userProfile,
   userRole,
-  onSwitchToAdmin
+  onSwitchToAdmin,
+  gigs = [],
+  onViewGig
 }: { 
   onPostGig: () => void; 
   onLogout: () => void;
   userProfile: any;
   userRole: 'creator' | 'brand' | 'admin' | 'admin_pending' | null;
   onSwitchToAdmin?: () => void;
+  gigs?: Gig[];
+  onViewGig?: (gig: Gig) => void;
 }) {
   const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews' | 'about'>('portfolio')
   const [showLogoutToast, setShowLogoutToast] = useState(false)
+
+  // Edit Gig State
+  const [editingGig, setEditingGig] = useState<Gig | null>(null)
+  const [editGigTitle, setEditGigTitle] = useState('')
+  const [editGigBudget, setEditGigBudget] = useState('')
+  const [editGigType, setEditGigType] = useState('Paid')
+  const [editGigLocation, setEditGigLocation] = useState('')
+  const [editGigDescription, setEditGigDescription] = useState('')
+  const [editGigDeadline, setEditGigDeadline] = useState('')
+  const [savingGig, setSavingGig] = useState(false)
+
+  const handleOpenEditGig = (gig: Gig) => {
+    setEditingGig(gig)
+    setEditGigTitle(gig.title)
+    setEditGigBudget(gig.budget)
+    setEditGigType(gig.type)
+    setEditGigLocation(gig.location)
+    setEditGigDescription(gig.description || '')
+    setEditGigDeadline(gig.deadline || 'Aug 30, 2026')
+  }
+
+  const handleSaveEditedGig = async () => {
+    if (!editingGig) return
+    setSavingGig(true)
+    try {
+      await updateDoc(doc(db, 'gigs', String(editingGig.id)), {
+        title: editGigTitle,
+        budget: editGigBudget,
+        type: editGigType,
+        location: editGigLocation,
+        description: editGigDescription,
+        deadline: editGigDeadline
+      })
+      setEditingGig(null)
+    } catch (err: any) {
+      alert(err.message || 'Failed to update gig details in database')
+    } finally {
+      setSavingGig(false)
+    }
+  }
 
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false)
@@ -2064,39 +2106,62 @@ function ProfilePage({
       {/* My Gigs */}
       {activeSection === 'gigs' && (
         <div className="px-5 flex flex-col gap-3">
-          {MY_POSTED_GIGS.map(g => (
+          {(gigs.filter(g => {
+            const isOwner = (userProfile?.name && g.creatorName?.toLowerCase() === userProfile.name.toLowerCase()) ||
+                            (userProfile?.name && g.brand?.toLowerCase() === userProfile.name.toLowerCase()) ||
+                            (userProfile?.handle && g.handle?.toLowerCase() === userProfile.handle.toLowerCase())
+            return isOwner
+          }).length > 0 
+            ? gigs.filter(g => {
+                const isOwner = (userProfile?.name && g.creatorName?.toLowerCase() === userProfile.name.toLowerCase()) ||
+                                (userProfile?.name && g.brand?.toLowerCase() === userProfile.name.toLowerCase()) ||
+                                (userProfile?.handle && g.handle?.toLowerCase() === userProfile.handle.toLowerCase())
+                return isOwner
+              })
+            : MY_POSTED_GIGS
+          ).map(g => (
             <div key={g.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 pr-3">
                   <h4 className="text-sm font-bold text-slate-900 leading-snug mb-1">{g.title}</h4>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[g.type]}`}>{g.type}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[g.type] || 'bg-slate-100'}`}>{g.type}</span>
                     <span className="text-[10px] text-slate-400 font-medium">{g.budget}</span>
                   </div>
                 </div>
-                <div className={`px-2.5 py-1 rounded-xl text-[10px] font-bold flex-shrink-0 ${g.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                  {g.status}
+                <div className={`px-2.5 py-1 rounded-xl text-[10px] font-bold flex-shrink-0 ${(g as any).status === 'Closed' ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700'}`}>
+                  {(g as any).status || 'Active'}
                 </div>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                    <UsersIcon /><span>{g.applicants} applied</span>
+                    <UsersIcon /><span>{g.applicants || 0} applied</span>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-slate-400 font-medium">
-                    <CalendarIcon /><span>{g.daysLeft}d left</span>
+                    <CalendarIcon /><span>{(g as any).daysLeft || 5}d left</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="text-xs font-bold text-slate-500 border border-slate-200 px-3 py-1.5 rounded-xl">Edit</button>
-                  <button className="text-xs font-bold text-[#3b5bdb] bg-[#e8edff] px-3 py-1.5 rounded-xl">View ({g.applicants})</button>
+                  <button 
+                    onClick={() => handleOpenEditGig(g)}
+                    className="text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => onViewGig && onViewGig(g)}
+                    className="text-xs font-bold text-white bg-[#3b5bdb] hover:bg-[#2b4ef7] px-3.5 py-1.5 rounded-xl shadow-sm shadow-blue-200 transition cursor-pointer active:scale-95 flex items-center gap-1"
+                  >
+                    View ({g.applicants || 0}) ↗
+                  </button>
                 </div>
               </div>
             </div>
           ))}
           <button
             onClick={onPostGig}
-            className="w-full bg-blue-50 hover:bg-blue-100 rounded-2xl py-4 flex items-center justify-center gap-2 text-sm font-bold text-[#3b5bdb] transition-all cursor-pointer"
+            className="w-full bg-blue-50 hover:bg-blue-100 rounded-2xl py-4 flex items-center justify-center gap-2 text-sm font-bold text-[#3b5bdb] transition-all cursor-pointer shadow-sm"
           >
             <span className="w-5 h-5 rounded-lg bg-[#3b5bdb]/10 flex items-center justify-center text-sm font-extrabold text-[#3b5bdb]">＋</span>
             Post a New Gig
@@ -2659,6 +2724,125 @@ function ProfilePage({
                       Uploading…
                     </>
                   ) : 'Add to Portfolio'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Gig Modal */}
+      {editingGig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Edit Posted Gig</h3>
+                <p className="text-[10px] text-slate-400 font-medium">Update gig title, budget, requirements, and deadline</p>
+              </div>
+              <button 
+                onClick={() => setEditingGig(null)} 
+                className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-95 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Gig Title</label>
+                <input 
+                  type="text" 
+                  value={editGigTitle}
+                  onChange={(e) => setEditGigTitle(e.target.value)}
+                  placeholder="e.g. Ethnic Fashion Launch Reel Shoots"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Type</label>
+                  <select 
+                    value={editGigType}
+                    onChange={(e) => setEditGigType(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  >
+                    <option value="Paid">Paid</option>
+                    <option value="Barter">Barter</option>
+                    <option value="PR Package">PR Package</option>
+                    <option value="Event RSVP">Event RSVP</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Location</label>
+                  <input 
+                    type="text" 
+                    value={editGigLocation}
+                    onChange={(e) => setEditGigLocation(e.target.value)}
+                    placeholder="e.g. Salt Lake, Kolkata"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Budget / Offer</label>
+                  <input 
+                    type="text" 
+                    value={editGigBudget}
+                    onChange={(e) => setEditGigBudget(e.target.value)}
+                    placeholder="e.g. ₹5,000 – ₹10,000"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Deadline</label>
+                  <input 
+                    type="text" 
+                    value={editGigDeadline}
+                    onChange={(e) => setEditGigDeadline(e.target.value)}
+                    placeholder="e.g. Aug 30, 2026"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Description / Deliverables</label>
+                <textarea 
+                  rows={3}
+                  value={editGigDescription}
+                  onChange={(e) => setEditGigDescription(e.target.value)}
+                  placeholder="Details about expectations, reels, posts..."
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => setEditingGig(null)}
+                  disabled={savingGig}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveEditedGig}
+                  disabled={savingGig || !editGigTitle.trim()}
+                  className="flex-1 py-3 bg-[#3b5bdb] text-[#ffffff] text-xs font-bold rounded-2xl shadow-md shadow-blue-200 active:scale-98 transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingGig ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
+                      </svg>
+                      Saving…
+                    </>
+                  ) : 'Save Gig Changes'}
                 </button>
               </div>
             </div>
@@ -6074,6 +6258,8 @@ export default function App() {
           userProfile={userProfile}
           userRole={userRole}
           onSwitchToAdmin={() => setAdminViewMode('dashboard')}
+          gigs={gigs}
+          onViewGig={handleApply}
         />
       )
     }
