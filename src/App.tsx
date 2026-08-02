@@ -5393,18 +5393,36 @@ export default function App() {
     
     try {
       if (mode === 'signup') {
-        const credential = await createUserWithEmailAndPassword(auth, formattedEmail, pass);
+        let userUid = '';
+        try {
+          const credential = await createUserWithEmailAndPassword(auth, formattedEmail, pass);
+          userUid = credential.user.uid;
+        } catch (authErr: any) {
+          if (authErr.code === 'auth/email-already-in-use') {
+            const cred = await signInWithEmailAndPassword(auth, formattedEmail, pass);
+            userUid = cred.user.uid;
+          } else {
+            throw authErr;
+          }
+        }
+
         if (role === 'admin') {
           const newAdmin = {
             id: Date.now(),
+            uid: userUid,
             name: name || 'Admin User',
             email: formattedEmail,
-            isAdmin: false, // Default false until manually changed to true in DB
+            role: 'admin',
+            isAdmin: false, // Must be set to true in Firestore DB to log in
             setupComplete: true,
             createdAt: new Date().toISOString()
           };
-          await setDoc(doc(db, 'admins', credential.user.uid), newAdmin);
-          alert('Admin account submitted successfully!\n\nStatus: Pending Approval (isAdmin = false).\nPlease set "isAdmin: true" on this document in Cloud Firestore "admins" collection to activate.');
+          console.log("[ADMIN REGISTRATION] Writing admin document to Firestore:", newAdmin);
+          await setDoc(doc(db, 'admins', userUid), newAdmin);
+          console.log("[ADMIN REGISTRATION] Successfully created doc in admins/", userUid);
+          
+          alert(`Admin registration submitted for ${formattedEmail}!\n\nDocument ID: ${userUid}\nStatus: Pending Approval (isAdmin = false).\n\nPlease open Cloud Firestore -> "admins" collection -> doc "${userUid}" -> set "isAdmin" to true.`);
+          await signOut(auth);
         } else if (role === 'brand') {
           const newBrand = {
             id: Date.now(),
@@ -5416,7 +5434,7 @@ export default function App() {
             verified: false,
             setupComplete: false
           };
-          await setDoc(doc(db, 'brands', credential.user.uid), newBrand);
+          await setDoc(doc(db, 'brands', userUid), newBrand);
         } else {
           const newCreator = {
             id: Date.now(),
@@ -5430,13 +5448,18 @@ export default function App() {
             followers_count: 0,
             setupComplete: false
           };
-          await setDoc(doc(db, 'creators', credential.user.uid), newCreator);
+          await setDoc(doc(db, 'creators', userUid), newCreator);
         }
       } else {
         await signInWithEmailAndPassword(auth, formattedEmail, pass);
       }
     } catch (err: any) {
-      alert(err.message || 'Authentication failed');
+      console.error("[AUTH ERROR]", err);
+      if (err.code === 'permission-denied' || err.message?.includes('permission')) {
+        alert("Firestore Permission Error: Cloud Firestore rules blocked creating doc in 'admins' collection. Please check security rules in Firebase Console!");
+      } else {
+        alert(err.message || 'Authentication failed');
+      }
     }
   }
 
