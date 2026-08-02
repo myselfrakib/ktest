@@ -1102,9 +1102,38 @@ function PostGigPage({ onBack, onPosted }: { onBack: () => void; onPosted: () =>
     }
   }
 
-  const handlePost = () => {
+  const handlePost = async () => {
     setSubmitting(true)
-    setTimeout(() => { setSubmitting(false); onPosted() }, 1600)
+    try {
+      const newGigId = Date.now()
+      const newGig: Gig = {
+        id: newGigId,
+        creatorName: brand || 'Kreator Brand',
+        handle: `@${(brand || 'brand').toLowerCase().replace(/\s+/g, '')}`,
+        avatar: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format',
+        followers: '50K',
+        niche: niche || 'Retail & Fashion',
+        title: title || 'New Campaign Gig',
+        type: (gigType as any) || 'Paid',
+        budget: budget || '₹5,000 – ₹10,000',
+        tags: selectedTags.length ? selectedTags : ['Campaign', 'Collab'],
+        location: location || 'Kolkata, WB',
+        verified: true,
+        applicants: 0,
+        description: description || 'New gig posted on Kreator Kolkata.',
+        deliverables: deliverables.length ? deliverables : ['1 Reel', '2 Stories'],
+        deadline: deadline || 'Aug 30, 2026',
+        brand: brand || 'Verified Brand',
+        brandLogo: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=60&h=60&fit=crop&auto=format'
+      }
+
+      await setDoc(doc(db, 'gigs', String(newGigId)), newGig)
+      onPosted()
+    } catch (err: any) {
+      alert(err.message || 'Failed to post gig to database')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100
