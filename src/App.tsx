@@ -1521,6 +1521,14 @@ function ProfilePage({
   const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews' | 'about'>('portfolio')
   const [showLogoutToast, setShowLogoutToast] = useState(false)
 
+  // Profile Edit State
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [editLocation, setEditLocation] = useState('')
+  const [editNiche, setEditNiche] = useState('')
+  const [saving, setSaving] = useState(false)
+
   // Instagram Connection state
   const [isInstagramConnected, setIsInstagramConnected] = useState(false)
   const [instaHandle, setInstaHandle] = useState('')
@@ -1605,7 +1613,16 @@ function ProfilePage({
 
       {/* Edit profile + Share profile buttons */}
       <div className="flex justify-end gap-2 px-5 pt-3 pb-0">
-        <button className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
+        <button 
+          onClick={() => {
+            setEditName(name)
+            setEditBio(bio)
+            setEditLocation(userProfile?.location || 'Kolkata, WB')
+            setEditNiche(userProfile?.niche || userProfile?.industry || 'Lifestyle & Fashion')
+            setIsEditing(true)
+          }}
+          className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors"
+        >
           <EditIcon /> Edit Profile
         </button>
         <button className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
@@ -2006,6 +2023,122 @@ function ProfilePage({
             </div>
           </div>
         </>
+      )}
+
+      {/* Edit Profile Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Edit Profile</h3>
+              <button 
+                onClick={() => setIsEditing(false)} 
+                className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-95 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] py-1 px-0.5">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  {userRole === 'brand' ? 'Brand / Company Name' : 'Display Name'}
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  placeholder="Enter name"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  {userRole === 'brand' ? 'Industry' : 'Niche / Specialty'}
+                </label>
+                <input
+                  type="text"
+                  value={editNiche}
+                  onChange={(e) => setEditNiche(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  placeholder={userRole === 'brand' ? 'e.g. Retail, Food, Tech' : 'e.g. Lifestyle & Fashion'}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Location</label>
+                <input
+                  type="text"
+                  value={editLocation}
+                  onChange={(e) => setEditLocation(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                  placeholder="e.g. Kolkata, WB"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">About / Bio</label>
+                <textarea
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition resize-none"
+                  placeholder="Tell us about yourself or your brand..."
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-3 border-t border-slate-100">
+              <button 
+                onClick={() => setIsEditing(false)} 
+                disabled={saving}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-2xl active:scale-98 transition cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={async () => {
+                  if (!auth.currentUser) return
+                  setSaving(true)
+                  try {
+                    if (userRole === 'brand') {
+                      await updateDoc(doc(db, 'brands', auth.currentUser.uid), {
+                        name: editName,
+                        bio: editBio,
+                        location: editLocation,
+                        industry: editNiche
+                      })
+                    } else {
+                      await updateDoc(doc(db, 'creators', auth.currentUser.uid), {
+                        name: editName,
+                        bio: editBio,
+                        location: editLocation,
+                        niche: editNiche
+                      })
+                    }
+                    setIsEditing(false)
+                  } catch (err: any) {
+                    alert(err.message || 'Failed to update profile')
+                  } finally {
+                    setSaving(false)
+                  }
+                }}
+                disabled={saving || !editName.trim()}
+                className="flex-1 py-3 bg-[#3b5bdb] text-white text-sm font-bold rounded-2xl shadow-md shadow-blue-200 active:scale-98 transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-70"
+              >
+                {saving ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
+                    </svg>
+                    Saving…
+                  </>
+                ) : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
@@ -4025,23 +4158,38 @@ export default function App() {
 
   // Auth State changed hook
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeProfile: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       setIsLoggedIn(!!user)
+      if (unsubscribeProfile) {
+        unsubscribeProfile()
+        unsubscribeProfile = null
+      }
+
       if (user) {
         try {
           const creatorRef = doc(db, 'creators', user.uid)
           const creatorSnap = await getDoc(creatorRef)
           if (creatorSnap.exists()) {
-            setUserProfile(creatorSnap.data())
             setUserRole('creator')
+            unsubscribeProfile = onSnapshot(creatorRef, (snap) => {
+              if (snap.exists()) {
+                setUserProfile(snap.data())
+              }
+            })
             return
           }
 
           const brandRef = doc(db, 'brands', user.uid)
           const brandSnap = await getDoc(brandRef)
           if (brandSnap.exists()) {
-            setUserProfile(brandSnap.data())
             setUserRole('brand')
+            unsubscribeProfile = onSnapshot(brandRef, (snap) => {
+              if (snap.exists()) {
+                setUserProfile(snap.data())
+              }
+            })
             return
           }
         } catch (err) {
@@ -4054,7 +4202,11 @@ export default function App() {
         setUserRole(null)
       }
     })
-    return unsubscribe
+
+    return () => {
+      unsubscribeAuth()
+      if (unsubscribeProfile) unsubscribeProfile()
+    }
   }, [])
 
   // Database Syncer and Seeder
