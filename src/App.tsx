@@ -4479,7 +4479,7 @@ export default function App() {
             setUserRole('creator')
             setUserProfile(snap.data())
           }
-        })
+        }, (err) => console.warn("Creator snapshot error:", err))
         unsubs.push(unsubCreator)
 
         const brandRef = doc(db, 'brands', user.uid)
@@ -4488,7 +4488,7 @@ export default function App() {
             setUserRole('brand')
             setUserProfile(snap.data())
           }
-        })
+        }, (err) => console.warn("Brand snapshot error:", err))
         unsubs.push(unsubBrand)
       } else {
         setUserProfile(null)
@@ -4514,7 +4514,7 @@ export default function App() {
         list.sort((a, b) => a.id - b.id)
         setGigs(list)
       }
-    })
+    }, (err) => console.warn("Gigs snapshot error:", err))
 
     const unsubscribeCreators = onSnapshot(collection(db, 'creators'), (snapshot) => {
       if (snapshot.empty) {
@@ -4526,7 +4526,7 @@ export default function App() {
         list.sort((a, b) => a.id - b.id)
         setCreators(list)
       }
-    })
+    }, (err) => console.warn("Creators snapshot error:", err))
 
     const unsubscribeBrands = onSnapshot(collection(db, 'brands'), (snapshot) => {
       if (snapshot.empty) {
@@ -4538,7 +4538,7 @@ export default function App() {
         list.sort((a, b) => a.id - b.id)
         setBrands(list)
       }
-    })
+    }, (err) => console.warn("Brands snapshot error:", err))
 
     const unsubscribeEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
       if (snapshot.empty) {
@@ -4550,7 +4550,7 @@ export default function App() {
         list.sort((a, b) => a.id - b.id)
         setEvents(list)
       }
-    })
+    }, (err) => console.warn("Events snapshot error:", err))
 
     const unsubscribeChats = onSnapshot(collection(db, 'chats'), (snapshot) => {
       if (snapshot.empty) {
@@ -4562,7 +4562,7 @@ export default function App() {
         list.sort((a, b) => b.id - a.id)
         setChats(list)
       }
-    })
+    }, (err) => console.warn("Chats snapshot error:", err))
 
     return () => {
       unsubscribeGigs()
