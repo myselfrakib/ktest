@@ -15,6 +15,7 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
   addDoc,
   getDocs,
   query,
@@ -1506,8 +1507,18 @@ function ChevronRightIcon() {
   )
 }
 
-function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout: () => void }) {
-  const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews'>('portfolio')
+function ProfilePage({ 
+  onPostGig, 
+  onLogout,
+  userProfile,
+  userRole
+}: { 
+  onPostGig: () => void; 
+  onLogout: () => void;
+  userProfile: any;
+  userRole: 'creator' | 'brand' | null;
+}) {
+  const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews' | 'about'>('portfolio')
   const [showLogoutToast, setShowLogoutToast] = useState(false)
 
   // Instagram Connection state
@@ -1516,6 +1527,46 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
   const [instaFollowers, setInstaFollowers] = useState<string | null>(null)
   const [showConnectModal, setShowConnectModal] = useState(false)
   const [loadingConnect, setLoadingConnect] = useState(false)
+
+  useEffect(() => {
+    if (userRole === 'brand') {
+      setActiveSection('gigs')
+    } else {
+      setActiveSection('portfolio')
+    }
+  }, [userRole])
+
+  // Profile data mappings
+  const name = userProfile?.name || "Priya Sengupta"
+  const handleOrIndustry = userProfile?.handle || userProfile?.industry || "@priya.creates"
+  const avatar = userProfile?.avatar || userProfile?.logo || "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format"
+  const bio = userProfile?.bio || "Creating real, aesthetic content from the heart of Kolkata 🌸 Open to brand collabs, co-shoots & community events."
+
+  const stats = userRole === 'brand'
+    ? [
+        { label: 'Active Gigs', value: '3' },
+        { label: 'Applicants', value: '24' },
+        { label: 'Avg Rating', value: '4.8 ★' },
+        { label: 'Category', value: 'Brand' }
+      ]
+    : [
+        { label: 'Collabs', value: '18' },
+        { label: 'Gigs Posted', value: '6' },
+        { label: 'Avg. ER', value: '4.8%' },
+        { label: 'Rating', value: '4.9 ★' },
+      ];
+
+  const tabs = userRole === 'brand'
+    ? [
+        { id: 'gigs', label: 'Campaigns' },
+        { id: 'about', label: 'About Us' }
+      ]
+    : [
+        { id: 'portfolio', label: 'Portfolio' },
+        { id: 'gigs', label: 'My Gigs' },
+        { id: 'saved', label: 'Saved' },
+        { id: 'reviews', label: 'Reviews' },
+      ];
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
@@ -1539,13 +1590,15 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
         <div className="absolute -bottom-12 left-5">
           <div className="relative">
             <img
-              src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format"
-              alt="Priya Sengupta"
+              src={avatar}
+              alt={name}
               className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
             />
-            <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </span>
+            {userProfile?.verified && (
+              <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -1563,49 +1616,50 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
       {/* Name & bio */}
       <div className="px-5 pt-10 pb-4">
         <div className="flex items-center gap-2 mb-0.5">
-          <h2 className="font-display text-2xl font-black text-slate-900">Priya Sengupta</h2>
-          <span className="text-[#3b5bdb] text-sm">✓</span>
+          <h2 className="font-display text-2xl font-black text-slate-900">{name}</h2>
+          {userProfile?.verified && <span className="text-[#3b5bdb] text-sm">✓</span>}
         </div>
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm text-slate-500 font-medium">@priya.creates</span>
-          <span className="w-1 h-1 rounded-full bg-slate-300" />
-          <span className="text-xs font-semibold text-[#f76707] bg-amber-50 px-2 py-0.5 rounded-full">Lifestyle & Fashion</span>
+          <span className="text-sm text-slate-500 font-medium">{handleOrIndustry}</span>
+          {userRole !== 'brand' && (
+            <>
+              <span className="w-1 h-1 rounded-full bg-slate-300" />
+              <span className="text-xs font-semibold text-[#f76707] bg-amber-50 px-2 py-0.5 rounded-full">{userProfile?.niche || 'Lifestyle & Fashion'}</span>
+            </>
+          )}
         </div>
         <p className="text-sm text-slate-600 leading-relaxed mb-3">
-          Creating real, aesthetic content from the heart of Kolkata 🌸 Open to brand collabs, co-shoots & community events.
+          {bio}
         </p>
         <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-3">
-          <MapPinIcon /><span>Kolkata, West Bengal · Joined Jan 2026</span>
+          <MapPinIcon /><span>{userProfile?.location || 'Kolkata, West Bengal'} · Joined Aug 2026</span>
         </div>
 
         {/* Instagram row */}
-        {isInstagramConnected ? (
-          <div className="flex items-center gap-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-2.5 mb-4">
-            <span className="text-[#e4405f]">
-              <InstagramIcon />
-            </span>
-            <span className="text-xs font-bold text-slate-700">{instaHandle}</span>
-            <span className="ml-auto text-xs font-black text-[#e4405f]">{instaFollowers} followers</span>
-          </div>
-        ) : (
-          <button 
-            onClick={() => setShowConnectModal(true)}
-            className="w-full flex items-center gap-2 bg-gradient-to-r from-slate-50 to-slate-100 hover:from-rose-50 hover:to-pink-50 border border-slate-200 hover:border-rose-100 rounded-2xl px-3 py-2.5 mb-4 transition duration-200 cursor-pointer"
-          >
-            <span className="text-slate-400 hover:text-[#e4405f]"><InstagramIcon /></span>
-            <span className="text-xs font-bold text-slate-600">connect Instagram <span className="text-[10px] text-slate-400 font-medium">(secure way)</span></span>
-            <span className="ml-auto text-[10px] font-bold text-[#3b5bdb]">Connect →</span>
-          </button>
+        {userRole !== 'brand' && (
+          isInstagramConnected ? (
+            <div className="flex items-center gap-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-2.5 mb-4">
+              <span className="text-[#e4405f]">
+                <InstagramIcon />
+              </span>
+              <span className="text-xs font-bold text-slate-700">{instaHandle}</span>
+              <span className="ml-auto text-xs font-black text-[#e4405f]">{instaFollowers} followers</span>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowConnectModal(true)}
+              className="w-full flex items-center gap-2 bg-gradient-to-r from-slate-50 to-slate-100 hover:from-rose-50 hover:to-pink-50 border border-slate-200 hover:border-rose-100 rounded-2xl px-3 py-2.5 mb-4 transition duration-200 cursor-pointer"
+            >
+              <span className="text-slate-400 hover:text-[#e4405f]"><InstagramIcon /></span>
+              <span className="text-xs font-bold text-slate-600">connect Instagram <span className="text-[10px] text-slate-400 font-medium">(secure way)</span></span>
+              <span className="ml-auto text-[10px] font-bold text-[#3b5bdb]">Connect →</span>
+            </button>
+          )
         )}
 
         {/* Stats row */}
         <div className="grid grid-cols-4 gap-2">
-          {[
-            { label: 'Collabs', value: '18' },
-            { label: 'Gigs Posted', value: '6' },
-            { label: 'Avg. ER', value: '4.8%' },
-            { label: 'Rating', value: '4.9 ★' },
-          ].map(s => (
+          {stats.map(s => (
             <div key={s.label} className="bg-white rounded-2xl py-3 px-2 text-center shadow-sm border border-slate-100">
               <div className="text-base font-black text-slate-900 leading-none mb-1">{s.value}</div>
               <div className="text-[9px] text-slate-400 font-semibold leading-tight">{s.label}</div>
@@ -1614,19 +1668,13 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
         </div>
       </div>
 
-
       {/* Section tabs */}
       <div className="px-5 mb-4">
         <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100 gap-1">
-          {([
-            { id: 'portfolio', label: 'Portfolio' },
-            { id: 'gigs', label: 'My Gigs' },
-            { id: 'saved', label: 'Saved' },
-            { id: 'reviews', label: 'Reviews' },
-          ] as const).map(s => (
+          {tabs.map(s => (
             <button
               key={s.id}
-              onClick={() => setActiveSection(s.id)}
+              onClick={() => setActiveSection(s.id as any)}
               className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition ${activeSection === s.id ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-400'}`}
             >
               {s.label}
@@ -1768,6 +1816,32 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
               <p className="text-xs text-slate-600 leading-relaxed">{r.text}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* About Us (for Brands) */}
+      {activeSection === 'about' && (
+        <div className="px-5">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Company Description</h4>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                {userProfile?.bio || 'No description provided.'}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Location</h4>
+              <p className="text-sm text-slate-700">
+                {userProfile?.location || 'Kolkata, WB'}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Industry</h4>
+              <p className="text-sm text-slate-700">
+                {userProfile?.industry || 'Retail & Fashion'}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -3665,9 +3739,10 @@ function AuthScreen({
   onAuthSubmit 
 }: { 
   onBack: () => void; 
-  onAuthSubmit: (email: string, pass: string, mode: 'login' | 'signup', name: string) => void 
+  onAuthSubmit: (email: string, pass: string, mode: 'login' | 'signup', name: string, role?: 'creator' | 'brand') => void 
 }) {
   const [mode, setMode] = useState<'signup' | 'login'>('signup')
+  const [role, setRole] = useState<'creator' | 'brand'>('creator')
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
   const [password, setPassword] = useState('')
@@ -3807,12 +3882,42 @@ function AuthScreen({
           ))}
         </div>
 
+        {/* role selection (only for signup) */}
+        {mode === 'signup' && (
+          <div style={{
+            display: 'flex',
+            background: '#e8eaf5',
+            borderRadius: 14,
+            padding: 4,
+            marginBottom: 16,
+          }}>
+            {(['creator', 'brand'] as const).map((r) => (
+              <button key={r} onClick={() => setRole(r)} style={{
+                flex: 1,
+                padding: '9px 0',
+                borderRadius: 11,
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: "'Instrument Sans', sans-serif",
+                fontSize: 12,
+                fontWeight: 600,
+                background: role === r ? '#fff' : 'transparent',
+                color: role === r ? '#0a1628' : '#adb3cc',
+                boxShadow: role === r ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.2s',
+              }}>
+                {r === 'creator' ? 'I am a Creator' : 'I am a Brand'}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* inputs */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {mode === 'signup' && (
             <input
               type="text"
-              placeholder="Your name"
+              placeholder={role === 'brand' ? 'Company / Brand name' : 'Your name'}
               value={name}
               onChange={(e) => setName(e.target.value)}
               style={field}
@@ -3860,7 +3965,7 @@ function AuthScreen({
 
         {/* cta */}
         <button
-          onClick={() => onAuthSubmit(contact, password, mode, name)}
+          onClick={() => onAuthSubmit(contact, password, mode, name, role)}
           style={{
             marginTop: 24,
             width: '100%',
@@ -3914,10 +4019,40 @@ export default function App() {
   const [brands, setBrands] = useState<Brand[]>(BRANDS)
   const [events, setEvents] = useState<Event[]>(EVENTS)
 
+  // User Profile and Role State
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [userRole, setUserRole] = useState<'creator' | 'brand' | null>(null)
+
   // Auth State changed hook
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setIsLoggedIn(!!user)
+      if (user) {
+        try {
+          const creatorRef = doc(db, 'creators', user.uid)
+          const creatorSnap = await getDoc(creatorRef)
+          if (creatorSnap.exists()) {
+            setUserProfile(creatorSnap.data())
+            setUserRole('creator')
+            return
+          }
+
+          const brandRef = doc(db, 'brands', user.uid)
+          const brandSnap = await getDoc(brandRef)
+          if (brandSnap.exists()) {
+            setUserProfile(brandSnap.data())
+            setUserRole('brand')
+            return
+          }
+        } catch (err) {
+          console.error("Error loading user profile:", err)
+        }
+        setUserProfile(null)
+        setUserRole(null)
+      } else {
+        setUserProfile(null)
+        setUserRole(null)
+      }
     })
     return unsubscribe
   }, [])
@@ -4134,7 +4269,7 @@ export default function App() {
     touchStartX.current = null
   }
 
-  const handleAuthSubmit = async (email: string, pass: string, mode: 'login' | 'signup', name: string) => {
+  const handleAuthSubmit = async (email: string, pass: string, mode: 'login' | 'signup', name: string, role?: 'creator' | 'brand') => {
     let formattedEmail = email.trim();
     if (!formattedEmail.includes('@')) {
       formattedEmail = `${formattedEmail.replace(/\s+/g, '')}@kreator.com`;
@@ -4143,18 +4278,31 @@ export default function App() {
     try {
       if (mode === 'signup') {
         const credential = await createUserWithEmailAndPassword(auth, formattedEmail, pass);
-        const newCreator = {
-          id: Date.now(),
-          name: name || 'New Creator',
-          handle: `@${(name || 'creator').toLowerCase().replace(/\s+/g, '')}`,
-          avatar: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format',
-          followers: '0',
-          niche: 'Fashion & Lifestyle',
-          bio: 'Kreator Kolkata member',
-          verified: false,
-          followers_count: 0
-        };
-        await setDoc(doc(db, 'creators', credential.user.uid), newCreator);
+        if (role === 'brand') {
+          const newBrand = {
+            id: Date.now(),
+            name: name || 'New Brand',
+            industry: 'Retail & Fashion',
+            logo: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=160&h=160&fit=crop&auto=format',
+            bio: 'Bengal based brand. Exciting new campaigns coming soon.',
+            location: 'Kolkata, WB',
+            verified: false
+          };
+          await setDoc(doc(db, 'brands', credential.user.uid), newBrand);
+        } else {
+          const newCreator = {
+            id: Date.now(),
+            name: name || 'New Creator',
+            handle: `@${(name || 'creator').toLowerCase().replace(/\s+/g, '')}`,
+            avatar: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format',
+            followers: '0',
+            niche: 'Fashion & Lifestyle',
+            bio: 'Kreator Kolkata member',
+            verified: false,
+            followers_count: 0
+          };
+          await setDoc(doc(db, 'creators', credential.user.uid), newCreator);
+        }
       } else {
         await signInWithEmailAndPassword(auth, formattedEmail, pass);
       }
@@ -4206,7 +4354,16 @@ export default function App() {
         />
       )
     }
-    if (activeTab === 'profile') return <ProfilePage onPostGig={() => { setPosting(true) }} onLogout={handleLogout} />
+    if (activeTab === 'profile') {
+      return (
+        <ProfilePage 
+          onPostGig={() => { setPosting(true) }} 
+          onLogout={handleLogout} 
+          userProfile={userProfile}
+          userRole={userRole}
+        />
+      )
+    }
     if (activeTab === 'chat') {
       return (
         <ChatPage 
