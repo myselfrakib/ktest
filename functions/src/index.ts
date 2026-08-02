@@ -37,6 +37,21 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
     return;
   }
 
+  // Handle Meta Webhook Verification (GET request from Meta dashboard)
+  const hubMode = req.query["hub.mode"] as string | undefined;
+  const hubChallenge = req.query["hub.challenge"] as string | undefined;
+  const hubVerifyToken = req.query["hub.verify_token"] as string | undefined;
+
+  if (hubMode === "subscribe" && hubChallenge) {
+    const MY_VERIFY_TOKEN = "kreator_kolkata_secure_token";
+    if (hubVerifyToken === MY_VERIFY_TOKEN) {
+      res.status(200).send(hubChallenge);
+    } else {
+      res.status(403).send("Verification token mismatch");
+    }
+    return;
+  }
+
   const code = req.query.code as string | undefined;
   const uid = req.query.uid as string | undefined;
 
