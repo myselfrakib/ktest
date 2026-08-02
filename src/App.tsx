@@ -1545,12 +1545,14 @@ function ProfilePage({
   onPostGig, 
   onLogout,
   userProfile,
-  userRole
+  userRole,
+  onSwitchToAdmin
 }: { 
   onPostGig: () => void; 
   onLogout: () => void;
   userProfile: any;
   userRole: 'creator' | 'brand' | 'admin' | 'admin_pending' | null;
+  onSwitchToAdmin?: () => void;
 }) {
   const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews' | 'about'>('portfolio')
   const [showLogoutToast, setShowLogoutToast] = useState(false)
@@ -1649,6 +1651,14 @@ function ProfilePage({
 
       {/* Edit profile + Share profile buttons */}
       <div className="flex justify-end gap-2 px-5 pt-3 pb-0">
+        {userRole === 'admin' && onSwitchToAdmin && (
+          <button 
+            onClick={onSwitchToAdmin}
+            className="flex items-center gap-1.5 border border-slate-800 bg-[#0a1628] text-white rounded-xl px-3 py-2 text-xs font-bold shadow-md cursor-pointer hover:bg-slate-900 transition-colors"
+          >
+            <span>⚡</span> Admin Dashboard
+          </button>
+        )}
         <button 
           onClick={() => {
             setEditName(name)
@@ -4264,14 +4274,34 @@ function AdminDashboardPage({
   events,
   creators,
   brands,
-  onLogout
+  onLogout,
+  onSwitchToPlatform
 }: {
   gigs: Gig[];
   events: Event[];
   creators: Creator[];
   brands: Brand[];
   onLogout: () => void;
+  onSwitchToPlatform?: () => void;
 }) {
+
+  // ... (inside JSX header around line 4423)
+        <div className="flex items-center gap-2">
+          {onSwitchToPlatform && (
+            <button 
+              onClick={onSwitchToPlatform}
+              className="text-xs font-bold bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
+            >
+              <span>📱</span> User View
+            </button>
+          )}
+          <button 
+            onClick={onLogout}
+            className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl transition cursor-pointer"
+          >
+            Logout 🚪
+          </button>
+        </div>
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'gigs' | 'admins' | 'users'>('overview')
   const [showCreateEventModal, setShowCreateEventModal] = useState(false)
   const [adminsList, setAdminsList] = useState<any[]>([])
@@ -4410,12 +4440,22 @@ function AdminDashboardPage({
             <p className="text-[10px] text-slate-400 font-medium mt-0.5">Kreator Kolkata Management</p>
           </div>
         </div>
-        <button 
-          onClick={onLogout}
-          className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl transition cursor-pointer"
-        >
-          Logout 🚪
-        </button>
+        <div className="flex items-center gap-2">
+          {onSwitchToPlatform && (
+            <button 
+              onClick={onSwitchToPlatform}
+              className="text-xs font-bold bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
+            >
+              <span>📱</span> User View
+            </button>
+          )}
+          <button 
+            onClick={onLogout}
+            className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl transition cursor-pointer"
+          >
+            Logout 🚪
+          </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -5158,6 +5198,7 @@ export default function App() {
   // User Profile and Role State
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userRole, setUserRole] = useState<'creator' | 'brand' | 'admin' | 'admin_pending' | null>(null)
+  const [adminViewMode, setAdminViewMode] = useState<'dashboard' | 'platform'>('dashboard')
 
   // Auth State changed hook
   useEffect(() => {
@@ -5555,6 +5596,7 @@ export default function App() {
           onLogout={handleLogout} 
           userProfile={userProfile}
           userRole={userRole}
+          onSwitchToAdmin={() => setAdminViewMode('dashboard')}
         />
       )
     }
@@ -5610,13 +5652,14 @@ export default function App() {
     <div className="min-h-screen bg-[#f0f4ff] flex justify-center items-start">
       <div className="w-full max-w-[430px] min-h-screen bg-[#f0f4ff] flex flex-col relative overflow-hidden">
         {isLoggedIn ? (
-          userRole === 'admin' ? (
+          userRole === 'admin' && adminViewMode === 'dashboard' ? (
             <AdminDashboardPage 
               gigs={gigs} 
               events={events} 
               creators={creators} 
               brands={brands} 
               onLogout={handleLogout} 
+              onSwitchToPlatform={() => setAdminViewMode('platform')}
             />
           ) : userRole === 'admin_pending' ? (
             <AdminPendingPage 
@@ -5638,6 +5681,21 @@ export default function App() {
             />
           ) : (
             <>
+              {userRole === 'admin' && adminViewMode === 'platform' && (
+                <div className="bg-[#0a1628] text-white px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 border-b border-slate-800 shadow-md">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[11px] font-bold text-slate-200">Admin Mode Active (User View)</span>
+                  </div>
+                  <button
+                    onClick={() => setAdminViewMode('dashboard')}
+                    className="bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-[10px] font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm cursor-pointer active:scale-95"
+                  >
+                    <span>⚡</span> Dashboard →
+                  </button>
+                </div>
+              )}
+
               {renderMain()}
 
               {showNav && (
