@@ -24,7 +24,12 @@ import {
   onSnapshot,
   updateDoc
 } from 'firebase/firestore'
-import { auth, db } from './firebase'
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from 'firebase/storage'
+import { auth, db, storage } from './firebase'
 
 const GIGS = [
   {
@@ -1528,6 +1533,8 @@ function ProfilePage({
   const [editLocation, setEditLocation] = useState('')
   const [editNiche, setEditNiche] = useState('')
   const [saving, setSaving] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // Instagram Connection state
   const [isInstagramConnected, setIsInstagramConnected] = useState(false)
@@ -1619,6 +1626,8 @@ function ProfilePage({
             setEditBio(bio)
             setEditLocation(userProfile?.location || 'Kolkata, WB')
             setEditNiche(userProfile?.niche || userProfile?.industry || 'Lifestyle & Fashion')
+            setSelectedFile(null)
+            setPreviewUrl(null)
             setIsEditing(true)
           }}
           className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors"
@@ -2040,6 +2049,41 @@ function ProfilePage({
             </div>
 
             <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] py-1 px-0.5">
+              
+              {/* Profile Image Picker */}
+              <div className="flex flex-col items-center gap-2 mb-2">
+                <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-file-input')?.click()}>
+                  <img 
+                    src={previewUrl || avatar} 
+                    alt="Upload Preview" 
+                    className="w-20 h-20 rounded-full object-cover border-2 border-slate-100 hover:opacity-90 transition"
+                  />
+                  <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white text-[10px] font-bold">Change</span>
+                  </div>
+                </div>
+                <input 
+                  type="file" 
+                  id="avatar-file-input" 
+                  accept="image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setSelectedFile(file)
+                      setPreviewUrl(URL.createObjectURL(file))
+                    }
+                  }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => document.getElementById('avatar-file-input')?.click()}
+                  className="text-xs font-bold text-[#3b5bdb] hover:underline"
+                >
+                  {userRole === 'brand' ? 'Change Brand Logo' : 'Change Profile Picture'}
+                </button>
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   {userRole === 'brand' ? 'Brand / Company Name' : 'Display Name'}
@@ -2102,19 +2146,29 @@ function ProfilePage({
                   if (!auth.currentUser) return
                   setSaving(true)
                   try {
+                    let finalAvatarUrl = userProfile?.avatar || userProfile?.logo || null
+                    
+                    if (selectedFile) {
+                      const storageRef = ref(storage, `profile_pics/${auth.currentUser.uid}`)
+                      const uploadResult = await uploadBytes(storageRef, selectedFile)
+                      finalAvatarUrl = await getDownloadURL(uploadResult.ref)
+                    }
+
                     if (userRole === 'brand') {
                       await updateDoc(doc(db, 'brands', auth.currentUser.uid), {
                         name: editName,
                         bio: editBio,
                         location: editLocation,
-                        industry: editNiche
+                        industry: editNiche,
+                        logo: finalAvatarUrl
                       })
                     } else {
                       await updateDoc(doc(db, 'creators', auth.currentUser.uid), {
                         name: editName,
                         bio: editBio,
                         location: editLocation,
-                        niche: editNiche
+                        niche: editNiche,
+                        avatar: finalAvatarUrl
                       })
                     }
                     setIsEditing(false)
