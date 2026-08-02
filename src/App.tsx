@@ -1461,7 +1461,7 @@ function HomePage({
       {/* Gig Cards */}
       <div className="px-5 flex flex-col gap-3">
         {filteredGigs.map((gig, i) => {
-          const isFeat = (gig as any).isFeatured || i === 0
+          const isFeat = !!(gig as any).isFeatured
           const isOwner = !!(userProfile && (
             (auth.currentUser && (gig as any).userId === auth.currentUser.uid) ||
             (userProfile.name && userProfile.name.toLowerCase() === gig.creatorName?.toLowerCase()) ||
