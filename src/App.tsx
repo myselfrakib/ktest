@@ -5210,9 +5210,12 @@ export default function App() {
       unsubs = []
 
       if (user) {
+        let foundProfile = false;
+
         const adminRef = doc(db, 'admins', user.uid)
         const unsubAdmin = onSnapshot(adminRef, (snap) => {
           if (snap.exists()) {
+            foundProfile = true
             const data = snap.data()
             if (data.isAdmin === true) {
               setUserRole('admin')
@@ -5228,6 +5231,7 @@ export default function App() {
         const creatorRef = doc(db, 'creators', user.uid)
         const unsubCreator = onSnapshot(creatorRef, (snap) => {
           if (snap.exists()) {
+            foundProfile = true
             setUserRole('creator')
             setUserProfile(snap.data())
           }
@@ -5237,11 +5241,38 @@ export default function App() {
         const brandRef = doc(db, 'brands', user.uid)
         const unsubBrand = onSnapshot(brandRef, (snap) => {
           if (snap.exists()) {
+            foundProfile = true
             setUserRole('brand')
             setUserProfile(snap.data())
           }
         }, (err) => console.warn("Brand snapshot error:", err))
         unsubs.push(unsubBrand)
+
+        // Fallback: If no document exists in admins, creators, or brands after 1.8s,
+        // auto-initialize a creator profile for this user so they are never stuck!
+        const timer = setTimeout(async () => {
+          if (!foundProfile) {
+            console.log("[AUTH FALLBACK] Auto-initializing profile doc for UID:", user.uid);
+            const defaultCreator = {
+              id: Date.now(),
+              name: user.displayName || user.email?.split('@')[0] || 'Kreator Member',
+              handle: `@${(user.displayName || user.email?.split('@')[0] || 'kreator').toLowerCase().replace(/\s+/g, '')}`,
+              avatar: 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format',
+              followers: '0',
+              niche: 'Fashion & Lifestyle',
+              bio: 'Kreator Kolkata member',
+              verified: false,
+              followers_count: 0,
+              setupComplete: false
+            };
+            try {
+              await setDoc(doc(db, 'creators', user.uid), defaultCreator, { merge: true });
+            } catch (err) {
+              console.warn("[AUTH FALLBACK ERROR]", err);
+            }
+          }
+        }, 1800);
+        unsubs.push(() => clearTimeout(timer));
       } else {
         setUserProfile(null)
         setUserRole(null)
@@ -5667,9 +5698,17 @@ export default function App() {
               onLogout={handleLogout} 
             />
           ) : !userProfile ? (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white p-6">
+            <div className="flex-1 flex flex-col items-center justify-center bg-white p-6 text-center">
               <div className="w-10 h-10 rounded-full border-4 border-slate-100 border-t-[#3b5bdb] animate-spin mb-4" />
-              <div className="text-sm font-bold text-slate-500 animate-pulse text-center">Loading Kolkata network profile…</div>
+              <div className="text-sm font-bold text-slate-700 animate-pulse mb-1">Loading Kolkata network profile…</div>
+              <p className="text-xs text-slate-400 max-w-xs mb-6">Connecting to live Cloud Firestore database...</p>
+              
+              <button 
+                onClick={handleLogout}
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 underline transition cursor-pointer"
+              >
+                Stuck loading? Sign Out 🚪
+              </button>
             </div>
           ) : userProfile.setupComplete === false ? (
             <ProfileSetupPage 
