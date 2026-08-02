@@ -6348,22 +6348,61 @@ export default function App() {
   }, [])
   const touchStartX = useRef<number | null>(null)
 
-  const [activeTab, setActiveTab] = useState('home')
-  const [selectedGig, setSelectedGig] = useState<Gig | null>(null)
-  const [posting, setPosting] = useState(false)
+  // Route restoration & Session storage persistence
+  const getInitialRouteState = () => {
+    try {
+      const saved = sessionStorage.getItem('kreator_route')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {}
+    return null
+  }
+
+  const savedRoute = useRef(getInitialRouteState())
+
+  const [activeTab, setActiveTab] = useState(savedRoute.current?.activeTab || 'home')
+  const [selectedGigId, setSelectedGigId] = useState<number | null>(savedRoute.current?.selectedGigId || null)
+  const [selectedCreatorName, setSelectedCreatorName] = useState<string | null>(savedRoute.current?.selectedCreatorName || null)
+  const [selectedBrandName, setSelectedBrandName] = useState<string | null>(savedRoute.current?.selectedBrandName || null)
+  const [selectedMyGigId, setSelectedMyGigId] = useState<number | null>(savedRoute.current?.selectedMyGigId || null)
+  const [selectedMyGigTab, setSelectedMyGigTab] = useState<'applicants' | 'edit'>(savedRoute.current?.selectedMyGigTab || 'applicants')
+  const [posting, setPosting] = useState(savedRoute.current?.posting || false)
   const [gigPosted, setGigPosted] = useState(false)
   const [savedGigs, setSavedGigs] = useState<Set<number>>(new Set([2, 5]))
   const [followedBrands, setFollowedBrands] = useState<Set<number>>(new Set([1]))
   const [rsvpEvents, setRsvpEvents] = useState<Set<number>>(new Set([1]))
-  const [viewingNotifications, setViewingNotifications] = useState(false)
+  const [viewingNotifications, setViewingNotifications] = useState(savedRoute.current?.viewingNotifications || false)
   const [unreadNotifications, setUnreadNotifications] = useState<Set<number>>(new Set([1, 2]))
   const [chats, setChats] = useState<ChatThread[]>(INITIAL_CHATS)
-  const [activeChatId, setActiveChatId] = useState<number | null>(null)
-  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null)
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null)
+  const [activeChatId, setActiveChatId] = useState<number | null>(savedRoute.current?.activeChatId || null)
   const [followedCreators, setFollowedCreators] = useState<Set<number>>(new Set())
-  const [exploreFilter, setExploreFilter] = useState<'all' | 'creators' | 'brands' | 'gigs' | 'events'>('all')
+  const [exploreFilter, setExploreFilter] = useState<'all' | 'creators' | 'brands' | 'gigs' | 'events'>(savedRoute.current?.exploreFilter || 'all')
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
+
+  // Derived object states from IDs/names
+  const selectedGig = gigs.find(g => g.id === selectedGigId) || null
+  const selectedCreator = creators.find(c => c.name.toLowerCase() === selectedCreatorName?.toLowerCase()) || CREATORS.find(c => c.name.toLowerCase() === selectedCreatorName?.toLowerCase()) || null
+  const selectedBrand = brands.find(b => b.name.toLowerCase() === selectedBrandName?.toLowerCase()) || BRANDS.find(b => b.name.toLowerCase() === selectedBrandName?.toLowerCase()) || null
+  const selectedMyGig = gigs.find(g => g.id === selectedMyGigId) || null
+
+  // Route state synchronizer effect
+  useEffect(() => {
+    const routeState = {
+      activeTab,
+      selectedGigId: selectedGigId,
+      selectedCreatorName: selectedCreatorName,
+      selectedBrandName: selectedBrandName,
+      selectedMyGigId: selectedMyGigId,
+      selectedMyGigTab,
+      posting,
+      viewingNotifications,
+      activeChatId,
+      adminViewMode,
+      exploreFilter
+    }
+    try {
+      sessionStorage.setItem('kreator_route', JSON.stringify(routeState))
+    } catch (e) {}
+  }, [activeTab, selectedGigId, selectedCreatorName, selectedBrandName, selectedMyGigId, selectedMyGigTab, posting, viewingNotifications, activeChatId, adminViewMode, exploreFilter])
 
   const handleOpenEventsTab = () => {
     setExploreFilter('events')
@@ -6411,7 +6450,7 @@ export default function App() {
   const handleOpenCreatorProfile = (name: string) => {
     const creator = creators.find(c => c.name.toLowerCase() === name.toLowerCase()) || CREATORS.find(c => c.name.toLowerCase() === name.toLowerCase())
     if (creator) {
-      setSelectedCreator(creator)
+      setSelectedCreatorName(creator.name)
     }
   }
 
@@ -6436,7 +6475,7 @@ export default function App() {
       setChats(prev => [newThread, ...prev])
       handleOpenChat(newThread.id)
     }
-    setSelectedCreator(null)
+    setSelectedCreatorName(null)
     setActiveTab('chat')
   }
 
@@ -6461,7 +6500,7 @@ export default function App() {
       setChats(prev => [newThread, ...prev])
       handleOpenChat(newThread.id)
     }
-    setSelectedBrand(null)
+    setSelectedBrandName(null)
     setActiveTab('chat')
   }
 
@@ -6470,11 +6509,21 @@ export default function App() {
     setChats(prev => prev.map(c => c.id === id ? { ...c, unreadCount: 0 } : c))
   }
 
-  const [selectedMyGig, setSelectedMyGig] = useState<Gig | null>(null)
-  const [selectedMyGigTab, setSelectedMyGigTab] = useState<'applicants' | 'edit'>('applicants')
+  const handleApply = (gig: Gig) => setSelectedGigId(gig.id)
 
-  const handleApply = (gig: Gig) => setSelectedGig(gig)
-  const handleBack = () => { setSelectedMyGig(null); setSelectedGig(null); setPosting(false); setGigPosted(false); setViewingNotifications(false); setActiveChatId(null); setSelectedCreator(null); setSelectedBrand(null); setExploreFilter('all'); setExploreSearchQuery(''); setActiveTab('home') }
+  const handleBack = () => { 
+    setSelectedMyGigId(null)
+    setSelectedGigId(null)
+    setPosting(false)
+    setGigPosted(false)
+    setViewingNotifications(false)
+    setActiveChatId(null)
+    setSelectedCreatorName(null)
+    setSelectedBrandName(null)
+    setExploreFilter('all')
+    setExploreSearchQuery('')
+    setActiveTab('home') 
+  }
 
   const showNav = isLoggedIn && !selectedMyGig && !selectedGig && !posting && !gigPosted && !viewingNotifications && activeChatId === null && selectedCreator === null && selectedBrand === null
 
@@ -6583,7 +6632,7 @@ export default function App() {
         <ViewMyGigPage 
           gig={selectedMyGig} 
           initialTab={selectedMyGigTab}
-          onBack={() => setSelectedMyGig(null)} 
+          onBack={() => setSelectedMyGigId(null)} 
           onOpenChat={(applicantName, avatar) => {
             handleMessageCreator({ 
               id: Date.now(), 
@@ -6617,7 +6666,7 @@ export default function App() {
       return (
         <PublicProfilePage 
           creator={selectedCreator}
-          onBack={() => setSelectedCreator(null)}
+          onBack={() => setSelectedCreatorName(null)}
           followedCreators={followedCreators}
           toggleFollowCreator={toggleFollowCreator}
           onMessageCreator={handleMessageCreator}
@@ -6628,7 +6677,7 @@ export default function App() {
       return (
         <PublicBrandProfilePage 
           brand={selectedBrand}
-          onBack={() => setSelectedBrand(null)}
+          onBack={() => setSelectedBrandName(null)}
           followedBrands={followedBrands}
           toggleFollowBrand={toggleFollowBrand}
           onMessageBrand={handleMessageBrand}
@@ -6647,7 +6696,7 @@ export default function App() {
           onSwitchToAdmin={() => setAdminViewMode('dashboard')}
           gigs={gigs}
           onViewGig={(gig, tab) => {
-            setSelectedMyGig(gig)
+            setSelectedMyGigId(gig.id)
             setSelectedMyGigTab(tab || 'applicants')
           }}
         />
@@ -6677,7 +6726,7 @@ export default function App() {
           onBellClick={() => setViewingNotifications(true)}
           unreadCount={unreadNotifications.size}
           onCreatorClick={handleOpenCreatorProfile}
-          onBrandClick={setSelectedBrand}
+          onBrandClick={(b) => setSelectedBrandName(b.name)}
           searchQuery={exploreSearchQuery}
           setSearchQuery={setExploreSearchQuery}
           activeFilter={exploreFilter}
@@ -6699,7 +6748,7 @@ export default function App() {
         onBellClick={() => setViewingNotifications(true)}
         unreadCount={unreadNotifications.size}
         onCreatorClick={handleOpenCreatorProfile}
-        onBrandClick={setSelectedBrand}
+        onBrandClick={(b) => setSelectedBrandName(b.name)}
         onEventClick={handleOpenEventsTab}
         onSearch={handleHomeSearch}
         gigs={gigs}
