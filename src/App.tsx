@@ -2093,28 +2093,33 @@ function ExplorePage({
               {BRANDS.map(brand => {
                 const isFollowing = followedBrands.has(brand.id)
                 return (
-                  <div key={brand.id} className="min-w-[150px] w-[150px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col flex-shrink-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-xl object-cover border border-slate-100 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-bold text-slate-900 truncate">{brand.name}</span>
-                          {brand.verified && (
-                            <span className="w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center flex-shrink-0">
-                              <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
-                            </span>
-                          )}
+                  <div 
+                    key={brand.id} 
+                    className="min-w-[280px] w-[280px] h-[100px] bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3 flex-shrink-0 relative"
+                  >
+                    <img src={brand.logo} alt={brand.name} className="w-12 h-12 rounded-2xl object-cover border border-slate-100 flex-shrink-0" />
+                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="text-xs font-bold text-slate-900 truncate">{brand.name}</span>
+                            {brand.verified && (
+                              <span className="w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                              </span>
+                            )}
+                          </div>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); toggleFollowBrand(brand.id); }} 
+                            className={`text-[9px] font-bold px-2 py-0.5 rounded-lg transition-all flex-shrink-0 cursor-pointer ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
+                          >
+                            {isFollowing ? 'Following' : 'Follow'}
+                          </button>
                         </div>
-                        <div className="text-[9px] text-slate-400 font-bold uppercase">{brand.industry}</div>
+                        <div className="text-[9px] text-slate-400 font-bold uppercase leading-none">{brand.industry}</div>
                       </div>
+                      <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed mb-0">{brand.bio}</p>
                     </div>
-                    <p className="text-[10px] text-slate-500 line-clamp-2 min-h-[30px] leading-relaxed mb-3">{brand.bio}</p>
-                    <button 
-                      onClick={() => toggleFollowBrand(brand.id)} 
-                      className={`w-full text-[9px] font-bold py-1.5 rounded-lg transition mt-auto ${isFollowing ? 'bg-slate-100 text-slate-500' : 'bg-[#3b5bdb] text-white shadow-sm shadow-blue-100'}`}
-                    >
-                      {isFollowing ? 'Following' : 'Follow'}
-                    </button>
                   </div>
                 )
               })}
