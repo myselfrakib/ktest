@@ -1747,34 +1747,42 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
         </div>
       </div>
 
-      {/* Custom Logout Toast Overlay */}
+      {/* Custom Logout Centered Modal / Toast */}
       {showLogoutToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-[390px] bg-slate-900 text-white rounded-2xl p-4 shadow-2xl z-50 border border-slate-800 flex flex-col gap-3 transition-all duration-300">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🚪</span>
-            <div className="flex-1">
-              <h4 className="text-sm font-bold">Are you sure to logout?</h4>
-              <p className="text-[11px] text-slate-300">You will need to sign back in to access your profile.</p>
+        <>
+          {/* Backdrop overlay */}
+          <div 
+            onClick={() => setShowLogoutToast(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 transition-opacity" 
+          />
+          {/* Centered Modal Card */}
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[340px] bg-slate-900 text-white rounded-3xl p-5 shadow-2xl z-50 border border-slate-800 flex flex-col gap-4 transition-all duration-300">
+            <div className="flex flex-col items-center text-center gap-3">
+              <span className="text-3xl bg-slate-800 w-14 h-14 rounded-full flex items-center justify-center">🚪</span>
+              <div className="flex flex-col gap-1">
+                <h4 className="text-base font-bold text-slate-100">Are you sure to logout?</h4>
+                <p className="text-xs text-slate-400">You will need to sign back in to access your profile.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 text-xs font-bold pt-1">
+              <button 
+                onClick={() => setShowLogoutToast(false)}
+                className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowLogoutToast(false)
+                  onLogout()
+                }}
+                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
+              >
+                Yes, Log Out
+              </button>
             </div>
           </div>
-          <div className="flex justify-end gap-2 text-xs font-bold pt-1">
-            <button 
-              onClick={() => setShowLogoutToast(false)}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={() => {
-                setShowLogoutToast(false)
-                onLogout()
-              }}
-              className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
-            >
-              Yes, Log Out
-            </button>
-          </div>
-        </div>
+        </>
       )}
 
     </div>
