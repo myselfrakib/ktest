@@ -294,6 +294,12 @@ const TYPE_COLORS: Record<string, string> = {
   Collab: 'bg-amber-100 text-amber-700',
 }
 
+const formatLocation = (loc?: string) => {
+  if (!loc) return 'Kolkata'
+  const cleaned = loc.replace(/,\s*(kol|kolkata|wb)\b/gi, '').trim()
+  return cleaned || loc
+}
+
 type Gig = typeof GIGS[0]
 type Creator = typeof CREATORS[0]
 type Brand = typeof BRANDS[0]
@@ -631,7 +637,7 @@ function ApplyPage({ gig, onBack }: { gig: Gig; onBack: () => void }) {
             <div className="border-t border-slate-100 pt-3">
               <h2 className="font-bold text-slate-900 text-base leading-snug mb-1">{gig.title}</h2>
               <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
-                <MapPinIcon /><span>{gig.location}</span>
+                <MapPinIcon /><span>{formatLocation(gig.location)}</span>
               </div>
             </div>
           </div>
@@ -1033,7 +1039,7 @@ function HomePage({
                 <div className="flex items-center gap-3">
                   <div className="text-right">
                     <div className="text-[10px] text-slate-400 font-medium">{gig.applicants} applied</div>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{gig.location}</span></div>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{formatLocation(gig.location)}</span></div>
                   </div>
                   <button
                     onClick={e => { e.stopPropagation(); onApply(gig) }}
@@ -3175,7 +3181,7 @@ function ExplorePage({
                   <div className="flex items-center gap-3">
                     <div className="text-right">
                       <div className="text-[10px] text-slate-400 font-medium">{gig.applicants} applied</div>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{gig.location}</span></div>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{formatLocation(gig.location)}</span></div>
                     </div>
                     <button
                       onClick={e => { e.stopPropagation(); onApply(gig) }}
