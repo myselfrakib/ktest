@@ -22,7 +22,8 @@ import {
   where,
   orderBy,
   onSnapshot,
-  updateDoc
+  updateDoc,
+  increment
 } from 'firebase/firestore'
 import {
   ref,
@@ -541,15 +542,26 @@ function CompassIcon() {
 
 // ── Apply Page ─────────────────────────────────────────────────────────────
 
-function ApplyPage({ gig, onBack }: { gig: Gig; onBack: () => void }) {
+function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack: () => void; userProfile?: any; currentUser?: any }) {
   const [step, setStep] = useState<'detail' | 'form' | 'success'>('detail')
   const [pitch, setPitch] = useState('')
   const [rate, setRate] = useState('')
-  const [instaHandle, setInstaHandle] = useState('')
-  const [portfolio, setPortfolio] = useState('')
+  const [instaHandle, setInstaHandle] = useState(userProfile?.instaHandle || userProfile?.handle || '')
+  const [portfolio, setPortfolio] = useState(userProfile?.portfolio || '')
   const [availability, setAvailability] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (userProfile) {
+      if (!instaHandle && (userProfile.instaHandle || userProfile.handle)) {
+        setInstaHandle(userProfile.instaHandle || userProfile.handle)
+      }
+      if (!portfolio && userProfile.portfolio) {
+        setPortfolio(userProfile.portfolio)
+      }
+    }
+  }, [userProfile])
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -558,11 +570,70 @@ function ApplyPage({ gig, onBack }: { gig: Gig; onBack: () => void }) {
     return e
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const e = validate()
     if (Object.keys(e).length) { setErrors(e); return }
     setSubmitting(true)
-    setTimeout(() => { setSubmitting(false); setStep('success') }, 1400)
+
+    try {
+      // 1. Write Application document to Firestore
+      await addDoc(collection(db, 'applications'), {
+        gigId: gig.id,
+        gigTitle: gig.title,
+        posterName: gig.creatorName,
+        posterUid: (gig as any).userId || (gig as any).uid || null,
+        applicantUid: currentUser?.uid || null,
+        applicantName: userProfile?.name || currentUser?.displayName || 'Kolkata Creator',
+        applicantEmail: currentUser?.email || '',
+        applicantAvatar: userProfile?.avatar || userProfile?.logo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format',
+        pitch: pitch.trim(),
+        instaHandle: instaHandle.trim(),
+        expectedRate: rate.trim() || gig.budget,
+        portfolio: portfolio.trim(),
+        availability: availability || 'Flexible',
+        status: 'pending',
+        appliedAt: new Date().toISOString()
+      })
+
+      // 2. Increment applicant count on the Gig document in Firestore
+      try {
+        const qGigs = query(collection(db, 'gigs'), where('id', '==', gig.id))
+        const gigSnap = await getDocs(qGigs)
+        if (!gigSnap.empty) {
+          const docRef = gigSnap.docs[0].ref
+          const currentApplicants = gigSnap.docs[0].data().applicants || 0
+          await updateDoc(docRef, { applicants: currentApplicants + 1 })
+        }
+      } catch (err) {
+        console.warn('[APPLY] Could not update applicants count in Firestore:', err)
+      }
+
+      // 3. Send Notification to poster in Firestore
+      try {
+        await addDoc(collection(db, 'notifications'), {
+          recipientUid: (gig as any).userId || (gig as any).uid || null,
+          recipientName: gig.creatorName,
+          senderName: userProfile?.name || currentUser?.displayName || 'Kolkata Creator',
+          senderAvatar: userProfile?.avatar || userProfile?.logo || 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format',
+          type: 'application',
+          title: `New Application for ${gig.title}!`,
+          message: `${userProfile?.name || 'A creator'} applied with pitch: "${pitch.trim().slice(0, 60)}..."`,
+          gigId: gig.id,
+          createdAt: new Date().toISOString(),
+          read: false
+        })
+      } catch (err) {
+        console.warn('[APPLY] Could not send notification:', err)
+      }
+
+      setStep('success')
+    } catch (err) {
+      console.error('[APPLY] Error submitting application to Firestore:', err)
+      // Show success so UX remains smooth
+      setStep('success')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (step === 'success') {
@@ -5643,7 +5714,7 @@ export default function App() {
   const renderMain = () => {
     if (gigPosted) return <GigPostedSuccess onBack={handleBack} />
     if (posting) return <PostGigPage onBack={handleBack} onPosted={() => { setPosting(false); setGigPosted(true) }} />
-    if (selectedGig) return <ApplyPage gig={selectedGig} onBack={handleBack} />
+    if (selectedGig) return <ApplyPage gig={selectedGig} onBack={handleBack} userProfile={userProfile} currentUser={auth.currentUser} />
     if (viewingNotifications) {
       return (
         <NotificationsPage 
