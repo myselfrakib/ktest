@@ -3586,7 +3586,9 @@ function ViewEventPage({
     }
   }
 
-  const speakers = (event as any).speakers || ['Priya Sengupta', 'Souvik Chatterjee', 'Arjun Das']
+  const speakers = Array.isArray((event as any).speakers) && (event as any).speakers.length > 0 
+    ? (event as any).speakers 
+    : []
   const organizer = (event as any).organizer || 'Kreator Kolkata Community'
   const description = (event as any).description || 'Join Kolkata’s premier creator networking meetup! Connect with top lifestyle, food, and tech creators, meet hiring brand managers, and participate in exclusive collab pitch sessions.'
   const entryFee = (event as any).entryFee || 'Free RSVP'
@@ -3711,11 +3713,15 @@ function ViewEventPage({
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
           <h3 className="text-sm font-bold text-slate-900 mb-3">Featured Speakers & Hosts</h3>
           <div className="flex flex-wrap gap-2">
-            {speakers.map((sp: string) => (
-              <span key={sp} className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200/80 flex items-center gap-1.5">
-                🎙️ {sp}
-              </span>
-            ))}
+            {speakers.length > 0 ? (
+              speakers.map((sp: string) => (
+                <span key={sp} className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200/80 flex items-center gap-1.5">
+                  🎙️ {sp}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-slate-400 italic font-medium">No featured speakers specified yet</span>
+            )}
           </div>
         </div>
       </div>
@@ -5587,6 +5593,10 @@ function AdminDashboardPage({
   const [eventImage, setEventImage] = useState('')
   const [eventFile, setEventFile] = useState<File | null>(null)
   const [eventPreviewUrl, setEventPreviewUrl] = useState<string | null>(null)
+  const [eventDescription, setEventDescription] = useState('')
+  const [eventOrganizer, setEventOrganizer] = useState('Kreator Kolkata Community')
+  const [eventEntryFee, setEventEntryFee] = useState('Free RSVP')
+  const [eventSpeakers, setEventSpeakers] = useState('')
   const [creatingEvent, setCreatingEvent] = useState(false)
 
   // Listen to admins collection
@@ -5655,6 +5665,8 @@ function AdminDashboardPage({
       const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
       const monthStr = isNaN(dObj.getMonth()) ? 'AUG' : months[dObj.getMonth()]
 
+      const parsedSpeakers = eventSpeakers.split(',').map(s => s.trim()).filter(Boolean)
+
       const newEv: Event = {
         id: newId,
         title: eventTitle.trim(),
@@ -5669,6 +5681,10 @@ function AdminDashboardPage({
         tag: eventTag.trim() || 'Networking',
         color: '#3b5bdb',
         image: finalCover,
+        description: eventDescription.trim() || 'Join Kolkata’s top content creators and industry professionals for an engaging event filled with learning, networking, and collaboration.',
+        organizer: eventOrganizer.trim() || 'Kreator Kolkata Community',
+        entryFee: eventEntryFee.trim() || 'Free RSVP',
+        speakers: parsedSpeakers.length > 0 ? parsedSpeakers : ['Kreator Kolkata Team'],
         ...( { isFeatured: true } as any )
       }
 
@@ -5684,6 +5700,10 @@ function AdminDashboardPage({
       setEventImage('')
       setEventFile(null)
       setEventPreviewUrl(null)
+      setEventDescription('')
+      setEventOrganizer('Kreator Kolkata Community')
+      setEventEntryFee('Free RSVP')
+      setEventSpeakers('')
     } catch (err: any) {
       alert(err.message || 'Failed to create event')
     } finally {
@@ -6107,6 +6127,51 @@ function AdminDashboardPage({
                   value={eventTag}
                   onChange={e => setEventTag(e.target.value)}
                   placeholder="e.g. Networking, Summit, Party"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">About Event (Description)</label>
+                <textarea 
+                  rows={3}
+                  value={eventDescription}
+                  onChange={e => setEventDescription(e.target.value)}
+                  placeholder="Detailed overview of agenda, topics, and attendee guidelines..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb] resize-none font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Organized By / Host</label>
+                  <input 
+                    type="text" 
+                    value={eventOrganizer}
+                    onChange={e => setEventOrganizer(e.target.value)}
+                    placeholder="e.g. Kreator Kolkata Community"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Entry Fee / Ticket</label>
+                  <input 
+                    type="text" 
+                    value={eventEntryFee}
+                    onChange={e => setEventEntryFee(e.target.value)}
+                    placeholder="e.g. Free RSVP or ₹499"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Featured Speakers & Hosts (Comma Separated)</label>
+                <input 
+                  type="text" 
+                  value={eventSpeakers}
+                  onChange={e => setEventSpeakers(e.target.value)}
+                  placeholder="e.g. Priya Sengupta, Souvik Chatterjee, Arjun Das"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
                 />
               </div>
