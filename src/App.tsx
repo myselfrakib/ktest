@@ -1635,8 +1635,12 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
               </div>
             </div>
           ))}
-          <button onClick={onPostGig} className="w-full border-2 border-dashed border-[#3b5bdb]/30 rounded-2xl py-4 text-sm font-bold text-[#3b5bdb]/60 text-center">
-            + Post a New Gig
+          <button
+            onClick={onPostGig}
+            className="w-full border-2 border-dashed border-blue-200 hover:border-blue-400 bg-blue-50/30 hover:bg-blue-50 rounded-2xl py-4 flex items-center justify-center gap-2 text-sm font-bold text-[#3b5bdb] transition-all cursor-pointer"
+          >
+            <span className="w-5 h-5 rounded-lg bg-[#3b5bdb]/10 flex items-center justify-center text-sm font-extrabold text-[#3b5bdb]">＋</span>
+            Post a New Gig
           </button>
         </div>
       )}
