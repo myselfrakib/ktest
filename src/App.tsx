@@ -3685,7 +3685,7 @@ function ExplorePage({
                       onClick={(e) => { e.stopPropagation(); onCreatorClick(creator.name) }} 
                       className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[9px] font-bold py-1.5 rounded-lg transition cursor-pointer"
                     >
-                      Collab
+                      View Profile
                     </button>
                   </div>
                 )
@@ -4080,7 +4080,7 @@ function ExplorePage({
                   onClick={(e) => { e.stopPropagation(); onCreatorClick(creator.name) }}
                   className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[10px] font-bold py-2 rounded-xl transition cursor-pointer"
                 >
-                  Collab Pitch
+                  View Profile
                 </button>
               </div>
             )
