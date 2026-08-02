@@ -1187,29 +1187,45 @@ const NICHE_OPTIONS = ['Fashion & Lifestyle', 'Food & Travel', 'Photography', 'V
 const TAG_OPTIONS = ['Reel', 'Story', 'Feed Post', 'YouTube', 'Collab', 'Street', 'Review', 'Production', 'BTS', 'Podcast']
 const LOCATION_OPTIONS = ['North Kolkata', 'South Kolkata', 'Salt Lake', 'New Town', 'Park Street', 'Howrah', 'Remote / Anywhere']
 
-function PostGigPage({ onBack, onPosted }: { onBack: () => void; onPosted: () => void }) {
+function PostGigPage({ 
+  onBack, 
+  onPosted,
+  userProfile,
+  userRole
+}: { 
+  onBack: () => void; 
+  onPosted: () => void;
+  userProfile?: any;
+  userRole?: any;
+}) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [submitting, setSubmitting] = useState(false)
 
   // Step 1
   const [title, setTitle] = useState('')
   const [gigType, setGigType] = useState('')
-  const [niche, setNiche] = useState('')
+  const [niche, setNiche] = useState(userProfile?.niche || userProfile?.industry || '')
   const [description, setDescription] = useState('')
 
   // Step 2
   const [budget, setBudget] = useState('')
   const [budgetNote, setBudgetNote] = useState('')
   const [deadline, setDeadline] = useState('')
-  const [location, setLocation] = useState('')
+  const [location, setLocation] = useState(userProfile?.location || 'Kolkata, WB')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [deliverable, setDeliverable] = useState('')
   const [deliverables, setDeliverables] = useState<string[]>([])
 
   // Step 3
-  const [brand, setBrand] = useState('')
+  const [brand, setBrand] = useState(userProfile?.name || '')
   const [contactMode, setContactMode] = useState('')
   const [minFollowers, setMinFollowers] = useState('')
+
+  useEffect(() => {
+    if (userProfile?.name && !brand) {
+      setBrand(userProfile.name)
+    }
+  }, [userProfile])
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -1257,25 +1273,34 @@ function PostGigPage({ onBack, onPosted }: { onBack: () => void; onPosted: () =>
     setSubmitting(true)
     try {
       const newGigId = Date.now()
+
+      const posterName = brand.trim() || userProfile?.name || (userRole === 'brand' ? 'Kreator Brand' : 'Kreator Creator')
+      const posterHandle = userProfile?.handle || `@${posterName.toLowerCase().replace(/\s+/g, '')}`
+      const posterAvatar = userProfile?.avatar || userProfile?.logo || (userRole === 'brand' 
+        ? 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format'
+        : 'https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format')
+      const posterFollowers = userProfile?.followers || (userRole === 'brand' ? '45K' : '18.5K')
+      const posterVerified = userProfile?.verified ?? true
+
       const newGig: Gig = {
         id: newGigId,
-        creatorName: brand || 'Kreator Brand',
-        handle: `@${(brand || 'brand').toLowerCase().replace(/\s+/g, '')}`,
-        avatar: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format',
-        followers: '50K',
-        niche: niche || 'Retail & Fashion',
+        creatorName: posterName,
+        handle: posterHandle,
+        avatar: posterAvatar,
+        followers: posterFollowers,
+        niche: niche || userProfile?.niche || userProfile?.industry || 'Retail & Fashion',
         title: title || 'New Campaign Gig',
         type: (gigType as any) || 'Paid',
         budget: budget || '₹5,000 – ₹10,000',
         tags: selectedTags.length ? selectedTags : ['Campaign', 'Collab'],
-        location: location || 'Kolkata, WB',
-        verified: true,
+        location: location || userProfile?.location || 'Kolkata, WB',
+        verified: posterVerified,
         applicants: 0,
         description: description || 'New gig posted on Kreator Kolkata.',
         deliverables: deliverables.length ? deliverables : ['1 Reel', '2 Stories'],
         deadline: deadline || 'Aug 30, 2026',
-        brand: brand || 'Verified Brand',
-        brandLogo: 'https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=60&h=60&fit=crop&auto=format'
+        brand: posterName,
+        brandLogo: posterAvatar
       }
 
       await setDoc(doc(db, 'gigs', String(newGigId)), newGig)
@@ -6006,7 +6031,7 @@ export default function App() {
 
   const renderMain = () => {
     if (gigPosted) return <GigPostedSuccess onBack={handleBack} />
-    if (posting) return <PostGigPage onBack={handleBack} onPosted={() => { setPosting(false); setGigPosted(true) }} />
+    if (posting) return <PostGigPage userProfile={userProfile} userRole={userRole} onBack={handleBack} onPosted={() => { setPosting(false); setGigPosted(true) }} />
     if (selectedGig) return <ApplyPage gig={selectedGig} onBack={handleBack} userProfile={userProfile} currentUser={auth.currentUser} />
     if (viewingNotifications) {
       return (
