@@ -5418,10 +5418,14 @@ export default function App() {
             createdAt: new Date().toISOString()
           };
           console.log("[ADMIN REGISTRATION] Writing admin document to Firestore:", newAdmin);
-          await setDoc(doc(db, 'admins', userUid), newAdmin);
-          console.log("[ADMIN REGISTRATION] Successfully created doc in admins/", userUid);
-          
-          alert(`Admin registration submitted for ${formattedEmail}!\n\nDocument ID: ${userUid}\nStatus: Pending Approval (isAdmin = false).\n\nPlease open Cloud Firestore -> "admins" collection -> doc "${userUid}" -> set "isAdmin" to true.`);
+          try {
+            await setDoc(doc(db, 'admins', userUid), newAdmin);
+            console.log("[ADMIN REGISTRATION SUCCESS] Successfully created doc in admins/", userUid);
+            alert(`Admin registration submitted for ${formattedEmail}!\n\nDocument ID (UID): ${userUid}\nStatus: Pending Approval (isAdmin = false).\n\nPlease open Cloud Firestore -> "admins" collection -> doc "${userUid}" -> set "isAdmin" to true.`);
+          } catch (docErr: any) {
+            console.error("[ADMIN REGISTRATION ERROR]", docErr);
+            alert(`Failed to save admin record to Firestore: ${docErr.message || docErr}\n\nPlease check Cloud Firestore Security Rules in Firebase Console to ensure read/write permission on 'admins' collection!`);
+          }
           await signOut(auth);
         } else if (role === 'brand') {
           const newBrand = {
