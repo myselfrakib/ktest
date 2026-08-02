@@ -2667,32 +2667,37 @@ function ExplorePage({
           <div>
             <h3 className="px-5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Creators ({filteredCreators.length})</h3>
             <div className="grid grid-cols-2 gap-3 px-5">
-              {filteredCreators.map(creator => (
-                <div 
-                  key={creator.id} 
-                  onClick={() => onCreatorClick(creator.name)}
-                  className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden transition-transform active:scale-[0.98] cursor-pointer hover:border-slate-200"
-                >
-                  <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
-                  <div className="relative mt-1 mb-2 z-10">
-                    <img src={creator.avatar} alt={creator.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
-                    {creator.verified && (
-                      <span className="absolute bottom-0 right-0 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
-                        <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+              {filteredCreators.map(creator => {
+                const hasInstagram = (creator as any).isInstagramConnected === true || ((creator as any).isInstagramConnected !== false && creator.followers && creator.followers !== '0')
+                return (
+                  <div 
+                    key={creator.id} 
+                    onClick={() => onCreatorClick(creator.name)}
+                    className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden transition-transform active:scale-[0.98] cursor-pointer hover:border-slate-200"
+                  >
+                    <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
+                    <div className="relative mt-1 mb-2 z-10">
+                      <img src={creator.avatar} alt={creator.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md" />
+                      {creator.verified && (
+                        <span className="absolute bottom-0 right-0 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                          <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
+                    <div className="text-[9px] text-slate-400 font-medium mb-1">{creator.handle}</div>
+                    {hasInstagram && (
+                      <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 mb-1">
+                        <InstagramIcon />{creator.followers}
                       </span>
                     )}
+                    <div className="text-[9px] text-slate-500 font-semibold truncate max-w-full mb-3">{creator.niche}</div>
+                    <button className="w-full mt-auto bg-[#3b5bdb]/10 text-[#3b5bdb] text-[9px] font-bold py-1.5 rounded-lg transition">
+                      Collab
+                    </button>
                   </div>
-                  <div className="text-[11px] font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
-                  <div className="text-[9px] text-slate-400 font-medium mb-1">{creator.handle}</div>
-                  <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 mb-1">
-                    <InstagramIcon />{creator.followers}
-                  </span>
-                  <div className="text-[9px] text-slate-500 font-semibold truncate max-w-full mb-3">{creator.niche}</div>
-                  <button className="w-full mt-auto bg-[#3b5bdb]/10 text-[#3b5bdb] text-[9px] font-bold py-1.5 rounded-lg transition">
-                    Collab
-                  </button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
@@ -2866,29 +2871,34 @@ function ExplorePage({
               <button onClick={() => setActiveFilter('creators')} className="text-xs font-semibold text-[#3b5bdb]">See all →</button>
             </div>
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
-              {creators.slice(0, 4).map(creator => (
-                <div 
-                  key={creator.id} 
-                  onClick={() => onCreatorClick(creator.name)}
-                  className="min-w-[150px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden flex-shrink-0 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
-                >
-                  <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
-                  <div className="relative mt-1 mb-2 z-10">
-                    <img src={creator.avatar} alt={creator.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100" />
-                    {creator.verified && (
-                      <span className="absolute bottom-0 right-0 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
-                        <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+              {creators.slice(0, 4).map(creator => {
+                const hasInstagram = (creator as any).isInstagramConnected === true || ((creator as any).isInstagramConnected !== false && creator.followers && creator.followers !== '0')
+                return (
+                  <div 
+                    key={creator.id} 
+                    onClick={() => onCreatorClick(creator.name)}
+                    className="min-w-[150px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden flex-shrink-0 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
+                  >
+                    <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
+                    <div className="relative mt-1 mb-2 z-10">
+                      <img src={creator.avatar} alt={creator.name} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100" />
+                      {creator.verified && (
+                        <span className="absolute bottom-0 right-0 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                          <svg width="6" height="6" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
+                    <div className="text-[9px] text-slate-400 font-medium mb-2">{creator.handle}</div>
+                    {hasInstagram && (
+                      <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2.5 py-0.5 rounded-full flex items-center gap-0.5">
+                        <InstagramIcon />{creator.followers}
                       </span>
                     )}
+                    <span className="text-[9px] text-slate-500 font-semibold mt-1 truncate max-w-full">{creator.niche}</span>
                   </div>
-                  <div className="text-[11px] font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
-                  <div className="text-[9px] text-slate-400 font-medium mb-2">{creator.handle}</div>
-                  <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2.5 py-0.5 rounded-full flex items-center gap-0.5">
-                    <InstagramIcon />{creator.followers}
-                  </span>
-                  <span className="text-[9px] text-slate-500 font-semibold mt-1 truncate max-w-full">{creator.niche}</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
@@ -3027,33 +3037,40 @@ function ExplorePage({
 
       {!isSearching && activeFilter === 'creators' && (
         <div className="grid grid-cols-2 gap-3 px-5">
-          {filteredCreators.map(creator => (
-            <div key={creator.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden transition-transform active:scale-[0.98]">
-              <div className="absolute top-0 inset-x-0 h-12 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
-              <div className="relative mt-2 mb-2 z-10">
-                <img src={creator.avatar} alt={creator.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100" />
-                {creator.verified && (
-                  <span className="absolute bottom-0 right-0 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                    <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
-                  </span>
-                )}
+          {filteredCreators.map(creator => {
+            const hasInstagram = (creator as any).isInstagramConnected === true || ((creator as any).isInstagramConnected !== false && creator.followers && creator.followers !== '0')
+            return (
+              <div key={creator.id} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col items-center text-center relative overflow-hidden transition-transform active:scale-[0.98]">
+                <div className="absolute top-0 inset-x-0 h-12 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
+                <div className="relative mt-2 mb-2 z-10">
+                  <img src={creator.avatar} alt={creator.name} className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100" />
+                  {creator.verified && (
+                    <span className="absolute bottom-0 right-0 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                      <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
+                <div className="text-[10px] text-slate-400 font-medium mb-2">{creator.handle}</div>
+                <div className="flex gap-1.5 items-center mb-3">
+                  {hasInstagram && (
+                    <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                      <InstagramIcon />{creator.followers}
+                    </span>
+                  )}
+                  {creator.engagement && (
+                    <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                      {creator.engagement} ER
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-500 line-clamp-2 min-h-[28px] leading-relaxed mb-4 px-1">{creator.bio}</div>
+                <button className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[10px] font-bold py-2 rounded-xl transition">
+                  Collab Pitch
+                </button>
               </div>
-              <div className="text-xs font-bold text-slate-900 leading-tight truncate w-full px-1">{creator.name}</div>
-              <div className="text-[10px] text-slate-400 font-medium mb-2">{creator.handle}</div>
-              <div className="flex gap-1.5 items-center mb-3">
-                <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                  <InstagramIcon />{creator.followers}
-                </span>
-                <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                  {creator.engagement} ER
-                </span>
-              </div>
-              <div className="text-[10px] text-slate-500 line-clamp-2 min-h-[28px] leading-relaxed mb-4 px-1">{creator.bio}</div>
-              <button className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[10px] font-bold py-2 rounded-xl transition">
-                Collab Pitch
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
