@@ -2089,7 +2089,7 @@ function ExplorePage({
               {BRANDS.map(brand => {
                 const isFollowing = followedBrands.has(brand.id)
                 return (
-                  <div key={brand.id} className="min-w-[200px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col flex-shrink-0">
+                  <div key={brand.id} className="min-w-[150px] w-[150px] bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col flex-shrink-0">
                     <div className="flex items-center gap-3 mb-2">
                       <img src={brand.logo} alt={brand.name} className="w-10 h-10 rounded-xl object-cover border border-slate-100 flex-shrink-0" />
                       <div className="min-w-0">
