@@ -1471,12 +1471,7 @@ function ChevronRightIcon() {
 
 function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout: () => void }) {
   const [activeSection, setActiveSection] = useState<'portfolio' | 'gigs' | 'saved' | 'reviews'>('portfolio')
-
-  const handleLogoutClick = () => {
-    if (window.confirm('Are you sure you want to log out of Kreator Kolkata?')) {
-      onLogout()
-    }
-  }
+  const [showLogoutToast, setShowLogoutToast] = useState(false)
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
@@ -1488,19 +1483,11 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
         </div>
         {/* Settings + Share row */}
         <div className="absolute top-10 left-0 right-0 flex items-center justify-between px-5">
-          <button 
-            onClick={handleLogoutClick}
-            title="Log Out"
-            className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 cursor-pointer"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
+          <button className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 text-white cursor-pointer hover:bg-white/30 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-          </button>
-          <button className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 text-white">
-            <ShareIcon />
           </button>
         </div>
 
@@ -1519,21 +1506,13 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
         </div>
       </div>
 
-      {/* Edit profile + Log Out buttons */}
+      {/* Edit profile + Share profile buttons */}
       <div className="flex justify-end gap-2 px-5 pt-3 pb-0">
-        <button className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm">
+        <button className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
           <EditIcon /> Edit Profile
         </button>
-        <button
-          onClick={handleLogoutClick}
-          className="flex items-center gap-1.5 border border-red-200 bg-red-50 hover:bg-red-100 rounded-xl px-3 py-2 text-xs font-bold text-red-600 shadow-sm transition-colors cursor-pointer"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-          Log Out
+        <button className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
+          <ShareIcon /> Share Profile
         </button>
       </div>
 
@@ -1744,7 +1723,15 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
             { icon: '🌐', label: 'Connected Accounts', sub: 'Instagram, YouTube' },
             { icon: '🚪', label: 'Log Out', sub: '', danger: true },
           ].map((item, i) => (
-            <button key={i} className="w-full flex items-center gap-3 px-4 py-3.5 text-left">
+            <button 
+              key={i} 
+              onClick={() => {
+                if (item.danger) {
+                  setShowLogoutToast(true)
+                }
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-slate-50 transition-colors cursor-pointer"
+            >
               <span className="text-lg leading-none w-6 text-center flex-shrink-0">{item.icon}</span>
               <div className="flex-1">
                 <div className={`text-sm font-semibold ${item.danger ? 'text-red-500' : 'text-slate-800'}`}>{item.label}</div>
@@ -1755,6 +1742,36 @@ function ProfilePage({ onPostGig, onLogout }: { onPostGig: () => void; onLogout:
           ))}
         </div>
       </div>
+
+      {/* Custom Logout Toast Overlay */}
+      {showLogoutToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-[390px] bg-slate-900 text-white rounded-2xl p-4 shadow-2xl z-50 border border-slate-800 flex flex-col gap-3 transition-all duration-300">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🚪</span>
+            <div className="flex-1">
+              <h4 className="text-sm font-bold">Are you sure to logout?</h4>
+              <p className="text-[11px] text-slate-300">You will need to sign back in to access your profile.</p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 text-xs font-bold pt-1">
+            <button 
+              onClick={() => setShowLogoutToast(false)}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={() => {
+                setShowLogoutToast(false)
+                onLogout()
+              }}
+              className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
+            >
+              Yes, Log Out
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   )
