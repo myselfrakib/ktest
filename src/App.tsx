@@ -554,6 +554,54 @@ function CompassIcon() {
     </svg>
   )
 }
+// Helper function to format deadline date string to dd-mm-yy format
+function formatDeadline(dateStr: string): string {
+  if (!dateStr) return '';
+  
+  // 1. Check if the string matches ISO date (YYYY-MM-DD)
+  const isoMatch = dateStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return `${day}-${month}-${year.slice(-2)}`;
+  }
+
+  // 2. Try parsing with standard Date parser
+  const parsedDate = new Date(dateStr);
+  if (!isNaN(parsedDate.getTime()) && !/^[0-9]+$/.test(dateStr)) {
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const year = String(parsedDate.getFullYear()).slice(-2);
+    return `${day}-${month}-${year}`;
+  }
+
+  // 3. Fallback manual regex parser for formats like "Aug 20, 2026" or "4th august 2026"
+  const cleanStr = dateStr.toLowerCase().replace(/st|nd|rd|th/g, '').trim();
+  
+  const monthsMap: Record<string, string> = {
+    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+    january: '01', february: '02', march: '03', april: '04', june: '06',
+    july: '07', august: '08', september: '09', october: '10', november: '11', december: '12'
+  };
+
+  const m1 = cleanStr.match(/([a-z]+)\s+(\d+),?\s+(\d+)/);
+  if (m1) {
+    const month = monthsMap[m1[1].slice(0, 3)] || '08';
+    const day = m1[2].padStart(2, '0');
+    const year = m1[3].slice(-2);
+    return `${day}-${month}-${year}`;
+  }
+
+  const m2 = cleanStr.match(/(\d+)\s+([a-z]+)\s+(\d+)/);
+  if (m2) {
+    const day = m2[1].padStart(2, '0');
+    const month = monthsMap[m2[2].slice(0, 3)] || '08';
+    const year = m2[3].slice(-2);
+    return `${day}-${month}-${year}`;
+  }
+
+  return dateStr;
+}
 
 // ── Apply Page ─────────────────────────────────────────────────────────────
 
@@ -760,7 +808,7 @@ function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack
             <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
               <div className="flex items-center justify-center gap-1 mb-0.5">
                 <CalendarIcon />
-                <span className="text-[11px] font-black text-slate-900">{gig.deadline}</span>
+                <span className="text-[11px] font-black text-slate-900">{formatDeadline(gig.deadline)}</span>
               </div>
               <div className="text-[10px] text-slate-400 font-medium">Deadline</div>
             </div>
@@ -1079,7 +1127,7 @@ function ViewMyGigPage({
               <div className="text-[9px] text-slate-400 font-semibold">Deal Type</div>
             </div>
             <div className="bg-slate-50 rounded-2xl py-2 px-1">
-              <div className="text-xs font-black text-emerald-600">{gig.deadline ? gig.deadline.split(',')[0] : 'Aug 30'}</div>
+              <div className="text-xs font-black text-emerald-600">{formatDeadline(gig.deadline) || '30-08-26'}</div>
               <div className="text-[9px] text-slate-400 font-semibold">Deadline</div>
             </div>
           </div>
@@ -5274,7 +5322,7 @@ function PublicBrandProfilePage({
               </div>
               <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed mb-3">{gig.description}</p>
               <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <span className="text-[9px] text-slate-400 font-semibold">Deadline: {gig.deadline}</span>
+                <span className="text-[9px] text-slate-400 font-semibold">Deadline: {formatDeadline(gig.deadline)}</span>
                 <button 
                   onClick={(e) => { e.stopPropagation(); onApply(gig); }}
                   className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm cursor-pointer"
