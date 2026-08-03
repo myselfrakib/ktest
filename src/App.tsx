@@ -1705,7 +1705,7 @@ function HomePage({
                     onClick={e => { e.stopPropagation(); onApply(gig) }}
                     className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
                   >
-                    Apply ↗
+                    {poster.isOwner ? 'View Applications' : 'Apply ↗'}
                   </button>
                 </div>
               </div>
@@ -4125,25 +4125,28 @@ function ExplorePage({
           <div>
             <h3 className="px-5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Gigs ({filteredGigs.length})</h3>
             <div className="flex flex-col gap-3 px-5">
-              {filteredGigs.map(gig => (
-                <div key={gig.id} onClick={() => onApply(gig)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer flex justify-between items-center">
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-bold text-slate-900 truncate mb-1">{gig.title}</h4>
-                    <div className="flex items-center gap-2">
-                      <span 
-                        onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
-                        className="text-[10px] text-slate-500 hover:text-[#3b5bdb] hover:underline"
-                      >
-                        {gig.creatorName}
-                      </span>
-                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">{formatBudget(gig.budget, gig.type)}</span>
+              {filteredGigs.map(gig => {
+                const poster = resolveGigPosterDetails(gig, userProfile, creators, brands)
+                return (
+                  <div key={gig.id} onClick={() => onApply(gig)} className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer flex justify-between items-center">
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-slate-900 truncate mb-1">{gig.title}</h4>
+                      <div className="flex items-center gap-2">
+                        <span 
+                          onClick={e => { e.stopPropagation(); onCreatorClick(poster.name) }}
+                          className="text-[10px] text-slate-500 hover:text-[#3b5bdb] hover:underline"
+                        >
+                          {poster.name}
+                        </span>
+                        <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">{formatBudget(gig.budget, gig.type)}</span>
+                      </div>
                     </div>
+                    <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3">
+                      {poster.isOwner ? 'View Applications' : 'Apply'}
+                    </button>
                   </div>
-                  <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3">
-                    Apply
-                  </button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
@@ -4385,7 +4388,7 @@ function ExplorePage({
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-800">{formatBudget(gig.budget, gig.type)}</span>
                       <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm">
-                        Apply
+                        {poster.isOwner ? 'View Applications' : 'Apply'}
                       </button>
                     </div>
                   </div>
@@ -4533,72 +4536,77 @@ function ExplorePage({
 
       {!isSearching && activeFilter === 'gigs' && (
         <div className="flex flex-col gap-3 px-5">
-          {filteredGigs.map((gig, i) => (
-            <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] ${i === 0 ? 'border-2 border-[#3b5bdb]/30' : ''}`}>
-              {i === 0 && (
-                <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center gap-2">
-                  <span className="text-white text-[11px] font-bold tracking-wide">⚡ Featured Gig</span>
-                </div>
-              )}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div 
-                    onClick={e => { e.stopPropagation(); onCreatorClick(gig.creatorName) }}
-                    className="flex items-center gap-3 cursor-pointer hover:opacity-85"
-                  >
-                    <div className="relative">
-                      <img src={gig.avatar} alt={gig.creatorName} className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]" />
-                      {gig.verified && (
-                        <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
-                          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-slate-900">{gig.creatorName}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-400 font-medium">{gig.handle}</span>
-                        <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full">
-                          <InstagramIcon />{gig.followers}
-                        </span>
+          {filteredGigs.map((gig, i) => {
+            const poster = resolveGigPosterDetails(gig, userProfile, creators, brands)
+            return (
+              <div key={gig.id} onClick={() => onApply(gig)} className={`bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] ${i === 0 ? 'border-2 border-[#3b5bdb]/30' : ''}`}>
+                {i === 0 && (
+                  <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center gap-2">
+                    <span className="text-white text-[11px] font-bold tracking-wide">⚡ Featured Gig</span>
+                  </div>
+                )}
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div 
+                      onClick={e => { e.stopPropagation(); onCreatorClick(poster.name) }}
+                      className="flex items-center gap-3 cursor-pointer hover:opacity-85"
+                    >
+                      <div className="relative">
+                        <img src={poster.avatar} alt={poster.name} className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]" />
+                        {poster.verified && (
+                          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#3b5bdb] rounded-full flex items-center justify-center border border-white">
+                            <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-slate-900">{poster.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-slate-400 font-medium">{poster.handle}</span>
+                          {poster.followers && poster.followers !== '0' && (
+                            <span className="flex items-center gap-0.5 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full">
+                              <InstagramIcon />{poster.followers}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <button
-                    onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
-                    className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center"
-                  >
-                    <BookmarkIcon filled={savedGigs.has(gig.id)} />
-                  </button>
-                </div>
-                <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">{gig.title}</h3>
-                <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
-                  {gig.tags.map(t => (
-                    <span key={t} className="text-[10px] text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{t}</span>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[11px] text-slate-400 font-medium mb-0.5">Budget / Offer</div>
-                    <div className="text-sm font-bold text-slate-800">{formatBudget(gig.budget, gig.type)}</div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="text-[10px] text-slate-400 font-medium">{gig.applicants} applied</div>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{formatLocation(gig.location)}</span></div>
-                    </div>
                     <button
-                      onClick={e => { e.stopPropagation(); onApply(gig) }}
-                      className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
+                      onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
+                      className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center"
                     >
-                      Apply ↗
+                      <BookmarkIcon filled={savedGigs.has(gig.id)} />
                     </button>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">{gig.title}</h3>
+                  <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+                    {gig.tags.map(t => (
+                      <span key={t} className="text-[10px] text-slate-500 font-medium bg-slate-100 px-2 py-0.5 rounded-full">{t}</span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[11px] text-slate-400 font-medium mb-0.5">Budget / Offer</div>
+                      <div className="text-sm font-bold text-slate-800">{formatBudget(gig.budget, gig.type)}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-400 font-medium">{gig.applicants} applied</div>
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500"><MapPinIcon /><span className="font-medium">{formatLocation(gig.location)}</span></div>
+                      </div>
+                      <button
+                        onClick={e => { e.stopPropagation(); onApply(gig) }}
+                        className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
+                      >
+                        {poster.isOwner ? 'View Applications' : 'Apply ↗'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -5308,6 +5316,9 @@ function PublicBrandProfilePage({
   onMessageBrand,
   onApply,
   gigs = GIGS,
+  userProfile,
+  creators = [],
+  brands = [],
 }: {
   brand: Brand
   onBack: () => void
@@ -5316,6 +5327,9 @@ function PublicBrandProfilePage({
   onMessageBrand: (brand: Brand) => void
   onApply: (gig: Gig) => void
   gigs?: Gig[]
+  userProfile?: any
+  creators?: Creator[]
+  brands?: Brand[]
 }) {
   const [activeTab, setActiveTab] = useState<'campaigns' | 'about'>('campaigns')
   const [copied, setCopied] = useState(false)
@@ -5442,34 +5456,37 @@ function PublicBrandProfilePage({
 
       {activeTab === 'campaigns' && (
         <div className="px-5 flex flex-col gap-3">
-          {brandGigs.map(gig => (
-            <div 
-              key={gig.id} 
-              onClick={() => onApply(gig)} 
-              className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900 leading-snug mb-1">{gig.title}</h4>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
-                    <span className="text-[10px] text-slate-400 font-medium">{formatBudget(gig.budget, gig.type)}</span>
+          {brandGigs.map(gig => {
+            const poster = resolveGigPosterDetails(gig, userProfile, creators, brands)
+            return (
+              <div 
+                key={gig.id} 
+                onClick={() => onApply(gig)} 
+                className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 leading-snug mb-1">{gig.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">{formatBudget(gig.budget, gig.type)}</span>
+                    </div>
                   </div>
+                  <span className="text-[9px] text-slate-400 font-bold bg-slate-50 px-2 py-0.5 rounded-full">{gig.location}</span>
                 </div>
-                <span className="text-[9px] text-slate-400 font-bold bg-slate-50 px-2 py-0.5 rounded-full">{gig.location}</span>
+                <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed mb-3">{gig.description}</p>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  <span className="text-[9px] text-slate-400 font-semibold">Deadline: {formatDeadline(gig.deadline)}</span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onApply(gig); }}
+                    className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm cursor-pointer"
+                  >
+                    {poster.isOwner ? 'View Applications' : 'Apply Now'}
+                  </button>
+                </div>
               </div>
-              <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed mb-3">{gig.description}</p>
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                <span className="text-[9px] text-slate-400 font-semibold">Deadline: {formatDeadline(gig.deadline)}</span>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onApply(gig); }}
-                  className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm cursor-pointer"
-                >
-                  Apply Now
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
           {brandGigs.length === 0 && (
             <div className="text-center py-10 text-slate-400 text-xs font-medium bg-white rounded-3xl border border-slate-100 shadow-sm">No active campaigns right now.</div>
           )}
@@ -7060,7 +7077,15 @@ export default function App() {
     setChats(prev => prev.map(c => c.id === id ? { ...c, unreadCount: 0 } : c))
   }
 
-  const handleApply = (gig: Gig) => setSelectedGigId(gig.id)
+  const handleApply = (gig: Gig) => {
+    const poster = resolveGigPosterDetails(gig, userProfile, creators, brands)
+    if (poster.isOwner) {
+      setSelectedMyGigId(gig.id)
+      setSelectedMyGigTab('applicants')
+    } else {
+      setSelectedGigId(gig.id)
+    }
+  }
 
   const handleBack = () => { 
     setSelectedMyGigId(null)
@@ -7258,6 +7283,9 @@ export default function App() {
           onMessageBrand={handleMessageBrand}
           onApply={handleApply}
           gigs={gigs}
+          userProfile={userProfile}
+          creators={creators}
+          brands={brands}
         />
       )
     }
