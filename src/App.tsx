@@ -1960,32 +1960,15 @@ function PostGigPage({
                     {gigType === 'Paid' ? 'Fixed Budget' : gigType === 'Barter' ? 'What you offer' : 'What they get'} <span className="text-[#e4405f]">*</span>
                   </label>
                   {gigType === 'Paid' ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        {['₹1,000', '₹2,000', '₹3,000', '₹5,000', '₹8,000', '₹10,000', '₹15,000', '₹20,000', '₹50,000'].map(amt => (
-                          <button
-                            key={amt}
-                            onClick={() => { setBudget(amt); setErrors(p => ({ ...p, budget: '' })) }}
-                            className={`py-2.5 rounded-xl text-xs font-bold border-2 transition ${
-                              budget === amt
-                                ? 'border-[#3b5bdb] bg-[#e8edff] text-[#3b5bdb]'
-                                : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
-                            }`}
-                          >
-                            {amt}
-                          </button>
-                        ))}
-                      </div>
-                      <div className={`flex items-center gap-2 bg-slate-50 border ${errors.budget ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
-                        <span className="text-slate-400 text-sm font-bold">₹</span>
-                        <input
-                          type="number"
-                          value={budget.startsWith('₹') ? '' : budget}
-                          onChange={e => { setBudget(e.target.value ? e.target.value : ''); setErrors(p => ({ ...p, budget: '' })) }}
-                          placeholder="Or type a custom amount"
-                          className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
-                        />
-                      </div>
+                    <div className={`flex items-center gap-2 bg-slate-50 border ${errors.budget ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
+                      <span className="text-slate-400 text-sm font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={budget.startsWith('₹') ? '' : budget}
+                        onChange={e => { setBudget(e.target.value ? e.target.value : ''); setErrors(p => ({ ...p, budget: '' })) }}
+                        placeholder="Enter amount e.g. 5000"
+                        className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
+                      />
                     </div>
                   ) : (
                     <div className={`flex items-center gap-2 bg-slate-50 border ${errors.budget ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
