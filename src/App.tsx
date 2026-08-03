@@ -23,6 +23,7 @@ import {
   orderBy,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   increment,
   arrayUnion,
   arrayRemove
@@ -5748,29 +5749,20 @@ function AdminDashboardPage({
   onLogout: () => void;
   onSwitchToPlatform?: () => void;
 }) {
-
-  // ... (inside JSX header around line 4423)
-        <div className="flex items-center gap-2">
-          {onSwitchToPlatform && (
-            <button 
-              onClick={onSwitchToPlatform}
-              className="text-xs font-bold bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <span>📱</span> User View
-            </button>
-          )}
-          <button 
-            onClick={onLogout}
-            className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl transition cursor-pointer"
-          >
-            Logout 🚪
-          </button>
-        </div>
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'gigs' | 'admins' | 'users'>('overview')
   const [showCreateEventModal, setShowCreateEventModal] = useState(false)
   const [adminsList, setAdminsList] = useState<any[]>([])
-
-  // Create Event State
+  const [selectedAdminGig, setSelectedAdminGig] = useState<Gig | null>(null)
+  const [selectedAdminEvent, setSelectedAdminEvent] = useState<Event | null>(null)
+  const [selectedAdminUser, setSelectedAdminUser] = useState<{ user: any; role: 'creator' | 'brand' } | null>(null)
+  const [editingGigTitle, setEditingGigTitle] = useState(false)
+  const [editGigTitleVal, setEditGigTitleVal] = useState('')
+  const [editingEventTitle, setEditingEventTitle] = useState(false)
+  const [editEventTitleVal, setEditEventTitleVal] = useState('')
+  const [gigSearch, setGigSearch] = useState('')
+  const [eventSearch, setEventSearch] = useState('')
+  const [userSearch, setUserSearch] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState<{ type: string; id: string; col: string } | null>(null)
   const [eventTitle, setEventTitle] = useState('')
   const [eventSubtitle, setEventSubtitle] = useState('')
   const [eventDate, setEventDate] = useState('')
@@ -5787,606 +5779,545 @@ function AdminDashboardPage({
   const [eventSpeakers, setEventSpeakers] = useState('')
   const [creatingEvent, setCreatingEvent] = useState(false)
 
-  // Listen to admins collection
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'admins'), (snap) => {
-      const list = snap.docs.map(d => ({ uid: d.id, ...d.data() }))
-      setAdminsList(list)
-    }, (err) => console.warn("Admin list error:", err))
+      setAdminsList(snap.docs.map(d => ({ uid: d.id, ...d.data() })))
+    }, (err) => console.warn('Admin list error:', err))
     return () => unsub()
   }, [])
 
-  // Toggle Gig Featured Status
   const toggleFeatureGig = async (gig: Gig) => {
-    try {
-      const current = (gig as any).isFeatured || false
-      await updateDoc(doc(db, 'gigs', String(gig.id)), {
-        isFeatured: !current
-      })
-    } catch (err: any) {
-      alert(err.message || 'Failed to update gig status')
-    }
+    try { await updateDoc(doc(db, 'gigs', String(gig.id)), { isFeatured: !((gig as any).isFeatured || false) }) }
+    catch (err: any) { alert(err.message) }
   }
-
-  // Toggle Event Featured Status
   const toggleFeatureEvent = async (ev: Event) => {
-    try {
-      const current = (ev as any).isFeatured || false
-      await updateDoc(doc(db, 'events', String(ev.id)), {
-        isFeatured: !current
-      })
-    } catch (err: any) {
-      alert(err.message || 'Failed to update event status')
-    }
+    try { await updateDoc(doc(db, 'events', String(ev.id)), { isFeatured: !((ev as any).isFeatured || false) }) }
+    catch (err: any) { alert(err.message) }
   }
-
-  // Approve Admin Access
   const handleApproveAdmin = async (uid: string) => {
-    try {
-      await updateDoc(doc(db, 'admins', uid), {
-        isAdmin: true
-      })
-      alert('Admin user approved successfully!')
-    } catch (err: any) {
-      alert(err.message || 'Failed to approve admin')
-    }
+    try { await updateDoc(doc(db, 'admins', uid), { isAdmin: true }); alert('Admin approved!') }
+    catch (err: any) { alert(err.message) }
   }
-
-  // Submit New Event to Firestore
+  const saveGigTitle = async () => {
+    if (!selectedAdminGig || !editGigTitleVal.trim()) return
+    try { await updateDoc(doc(db, 'gigs', String(selectedAdminGig.id)), { title: editGigTitleVal.trim() }); setEditingGigTitle(false) }
+    catch (err: any) { alert(err.message) }
+  }
+  const saveEventTitle = async () => {
+    if (!selectedAdminEvent || !editEventTitleVal.trim()) return
+    try { await updateDoc(doc(db, 'events', String(selectedAdminEvent.id)), { title: editEventTitleVal.trim() }); setEditingEventTitle(false) }
+    catch (err: any) { alert(err.message) }
+  }
+  const executeDelete = async () => {
+    if (!confirmDelete) return
+    try {
+      await deleteDoc(doc(db, confirmDelete.col, confirmDelete.id))
+      setConfirmDelete(null); setSelectedAdminGig(null); setSelectedAdminEvent(null); setSelectedAdminUser(null)
+    } catch (err: any) { alert(err.message || 'Delete failed') }
+  }
+  const resetEventForm = () => {
+    setEventTitle(''); setEventSubtitle(''); setEventDate(''); setEventTime('5:00 PM')
+    setEventVenue(''); setEventLocation('Kolkata, WB'); setEventTag('Featured Event')
+    setEventImage(''); setEventFile(null); setEventPreviewUrl(null)
+    setEventDescription(''); setEventOrganizer('Kreator Kolkata Community')
+    setEventEntryFee('Free RSVP'); setEventSpeakers('')
+  }
   const handleCreateEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!eventTitle.trim() || !eventVenue.trim()) return
-
     setCreatingEvent(true)
     try {
       let finalCover = eventImage.trim() || 'https://images.unsplash.com/photo-1648440108249-30567222448a?w=400&h=200&fit=crop&auto=format'
-      
       if (eventFile) {
         const storageRef = ref(storage, `event_covers/${Date.now()}`)
         const uploadResult = await uploadBytes(storageRef, eventFile)
         finalCover = await getDownloadURL(uploadResult.ref)
       }
-
       const newId = Date.now()
       const dObj = eventDate ? new Date(eventDate) : new Date()
       const dayStr = isNaN(dObj.getDate()) ? '15' : String(dObj.getDate())
       const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
       const monthStr = isNaN(dObj.getMonth()) ? 'AUG' : months[dObj.getMonth()]
-
       const parsedSpeakers = eventSpeakers.split(',').map(s => s.trim()).filter(Boolean)
-
       const newEv: Event = {
-        id: newId,
-        title: eventTitle.trim(),
+        id: newId, title: eventTitle.trim(),
         subtitle: eventSubtitle.trim() || 'Kreator Kolkata Official Event',
-        date: eventDate.trim() || 'Aug 25, 2026',
-        day: dayStr,
-        month: monthStr,
-        time: eventTime.trim() || '5:00 PM',
-        venue: eventVenue.trim(),
-        location: eventLocation.trim() || 'Kolkata, WB',
-        attendees: 1,
-        tag: eventTag.trim() || 'Networking',
-        color: '#3b5bdb',
-        image: finalCover,
-        description: eventDescription.trim() || 'Join Kolkata’s top content creators and industry professionals for an engaging event filled with learning, networking, and collaboration.',
+        date: eventDate.trim() || 'Aug 25, 2026', day: dayStr, month: monthStr,
+        time: eventTime.trim() || '5:00 PM', venue: eventVenue.trim(),
+        location: eventLocation.trim() || 'Kolkata, WB', attendees: 1,
+        tag: eventTag.trim() || 'Networking', color: '#3b5bdb', image: finalCover,
+        description: eventDescription.trim() || "Join Kolkata's top content creators.",
         organizer: eventOrganizer.trim() || 'Kreator Kolkata Community',
         entryFee: eventEntryFee.trim() || 'Free RSVP',
         speakers: parsedSpeakers.length > 0 ? parsedSpeakers : ['Kreator Kolkata Team'],
-        ...( { isFeatured: true } as any )
+        ...({ isFeatured: true } as any)
       }
-
       await setDoc(doc(db, 'events', String(newId)), newEv)
-      setShowCreateEventModal(false)
-      setEventTitle('')
-      setEventSubtitle('')
-      setEventDate('')
-      setEventTime('5:00 PM')
-      setEventVenue('')
-      setEventLocation('Kolkata, WB')
-      setEventTag('Featured Event')
-      setEventImage('')
-      setEventFile(null)
-      setEventPreviewUrl(null)
-      setEventDescription('')
-      setEventOrganizer('Kreator Kolkata Community')
-      setEventEntryFee('Free RSVP')
-      setEventSpeakers('')
-    } catch (err: any) {
-      alert(err.message || 'Failed to create event')
-    } finally {
-      setCreatingEvent(false)
-    }
+      setShowCreateEventModal(false); resetEventForm()
+    } catch (err: any) { alert(err.message || 'Failed to create event') }
+    finally { setCreatingEvent(false) }
   }
 
   const pendingAdmins = adminsList.filter(a => a.isAdmin === false)
+  const filteredGigs = gigs.filter(g => g.title.toLowerCase().includes(gigSearch.toLowerCase()) || (g.brand || g.creatorName || '').toLowerCase().includes(gigSearch.toLowerCase()))
+  const filteredEvents = events.filter(e => e.title.toLowerCase().includes(eventSearch.toLowerCase()))
+  const allUsers = [
+    ...creators.map(c => ({ user: c, role: 'creator' as const })),
+    ...brands.map(b => ({ user: b, role: 'brand' as const }))
+  ].filter(({ user }) => (user.name || '').toLowerCase().includes(userSearch.toLowerCase()))
+
+  const ConfirmModal = () => confirmDelete ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="bg-[#0f1d38] rounded-3xl p-6 w-full max-w-sm border border-red-500/30 shadow-2xl flex flex-col gap-4">
+        <div className="text-center">
+          <div className="text-3xl mb-3">🗑️</div>
+          <div className="text-base font-bold text-white mb-1">Confirm Delete</div>
+          <div className="text-xs text-slate-400">This action cannot be undone.</div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => setConfirmDelete(null)} className="flex-1 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-2xl cursor-pointer hover:bg-slate-700 transition">Cancel</button>
+          <button onClick={executeDelete} className="flex-1 py-3 bg-red-600 text-white text-xs font-bold rounded-2xl cursor-pointer hover:bg-red-500 transition">Yes, Delete</button>
+        </div>
+      </div>
+    </div>
+  ) : null
+
+  if (selectedAdminGig) {
+    const gig = selectedAdminGig
+    const isFeat = (gig as any).isFeatured || false
+    return (
+      <div className="flex-1 bg-[#0a1628] min-h-screen text-slate-100 flex flex-col">
+        <div className="bg-[#0f1d38] border-b border-slate-800 px-5 py-4 flex items-center gap-3 sticky top-0 z-30">
+          <button onClick={() => { setSelectedAdminGig(null); setEditingGigTitle(false) }} className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 cursor-pointer flex-shrink-0"><ArrowLeftIcon /></button>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] text-slate-500 font-bold uppercase">Gig Detail</div>
+            <div className="text-sm font-bold text-white truncate">{gig.title}</div>
+          </div>
+          <span className={`text-[9px] font-black px-2.5 py-1 rounded-full flex-shrink-0 ${gig.type === 'Paid' ? 'bg-emerald-500/20 text-emerald-300' : gig.type === 'Barter' ? 'bg-violet-500/20 text-violet-300' : 'bg-amber-500/20 text-amber-300'}`}>{gig.type}</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 pb-36 flex flex-col gap-5">
+          <div className="bg-gradient-to-br from-[#1a2744] to-[#0f1d38] rounded-3xl p-5 border border-slate-800 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <img src={gig.avatar} alt={gig.creatorName} className="w-14 h-14 rounded-2xl object-cover border-2 border-slate-700 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-white truncate">{gig.creatorName}</div>
+                <div className="text-[11px] text-slate-400">{gig.handle}</div>
+                <div className="text-[10px] text-[#e4405f] font-bold mt-0.5">📷 {gig.followers}</div>
+              </div>
+              {isFeat && <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/30 flex-shrink-0">⭐ FEATURED</span>}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[{l:'Budget',v:formatBudget(gig.budget,gig.type)},{l:'Applicants',v:String(gig.applicants||0)},{l:'Location',v:formatLocation(gig.location)}].map(({l,v})=>(
+                <div key={l} className="bg-slate-900/60 rounded-2xl p-3 text-center border border-slate-800">
+                  <div className="text-sm font-black text-white">{v}</div>
+                  <div className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800 flex flex-col gap-3">
+            <div className="text-[10px] text-slate-400 font-bold uppercase">Gig Title</div>
+            {editingGigTitle ? (
+              <div className="flex gap-2">
+                <input value={editGigTitleVal} onChange={e => setEditGigTitleVal(e.target.value)} className="flex-1 bg-slate-900 border border-[#3b5bdb] rounded-xl px-3 py-2 text-sm text-white outline-none" />
+                <button onClick={saveGigTitle} className="bg-[#3b5bdb] text-white text-xs font-bold px-3 py-2 rounded-xl cursor-pointer">Save</button>
+                <button onClick={() => setEditingGigTitle(false)} className="bg-slate-800 text-slate-400 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer">X</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="flex-1 text-sm font-bold text-white">{gig.title}</span>
+                <button onClick={() => { setEditGigTitleVal(gig.title); setEditingGigTitle(true) }} className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2.5 py-1.5 rounded-lg cursor-pointer">Edit</button>
+              </div>
+            )}
+          </div>
+          {gig.description && (
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800">
+              <div className="text-[10px] text-slate-400 font-bold uppercase mb-2">Description</div>
+              <p className="text-xs text-slate-300 leading-relaxed">{gig.description}</p>
+            </div>
+          )}
+          {gig.deliverables && gig.deliverables.length > 0 && (
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800">
+              <div className="text-[10px] text-slate-400 font-bold uppercase mb-3">Deliverables</div>
+              <div className="flex flex-col gap-2">
+                {gig.deliverables.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2.5 bg-slate-900/60 rounded-xl px-3 py-2 border border-slate-800">
+                    <div className="w-4 h-4 rounded-full bg-[#3b5bdb] flex items-center justify-center flex-shrink-0"><svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
+                    <span className="text-xs text-slate-300">{d}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800 flex flex-col gap-3">
+            <div className="text-[10px] text-slate-400 font-bold uppercase">Tags and Info</div>
+            {gig.tags && gig.tags.length > 0 && <div className="flex flex-wrap gap-2">{gig.tags.map(t => <span key={t} className="text-[10px] font-bold bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700">#{t}</span>)}</div>}
+            {gig.deadline && <div className="flex items-center gap-2 text-xs text-slate-400">Deadline: <span className="text-white font-bold">{formatDeadline(gig.deadline)}</span></div>}
+            <div className="flex items-center gap-2 bg-slate-900/50 rounded-xl p-2.5 border border-slate-800">
+              <span className="text-[10px] text-slate-500 font-mono flex-1 truncate">ID: {gig.id}</span>
+              <button onClick={() => navigator.clipboard.writeText(String(gig.id))} className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded cursor-pointer flex-shrink-0">Copy</button>
+            </div>
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-[#0a1628] border-t border-slate-800 px-5 py-4 z-20 flex gap-3">
+          <button onClick={() => toggleFeatureGig(gig)} className={`flex-1 py-3 rounded-2xl text-xs font-bold cursor-pointer transition ${isFeat ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>{isFeat ? 'Remove Feature' : 'Feature Gig'}</button>
+          <button onClick={() => setConfirmDelete({ type: 'gig', id: String(gig.id), col: 'gigs' })} className="flex-1 py-3 rounded-2xl text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 cursor-pointer transition">Delete Gig</button>
+        </div>
+        <ConfirmModal />
+      </div>
+    )
+  }
+
+  if (selectedAdminEvent) {
+    const ev = selectedAdminEvent
+    const isFeat = (ev as any).isFeatured || false
+    return (
+      <div className="flex-1 bg-[#0a1628] min-h-screen text-slate-100 flex flex-col">
+        <div className="bg-[#0f1d38] border-b border-slate-800 px-5 py-4 flex items-center gap-3 sticky top-0 z-30">
+          <button onClick={() => { setSelectedAdminEvent(null); setEditingEventTitle(false) }} className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 cursor-pointer flex-shrink-0"><ArrowLeftIcon /></button>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] text-slate-500 font-bold uppercase">Event Detail</div>
+            <div className="text-sm font-bold text-white truncate">{ev.title}</div>
+          </div>
+          {isFeat && <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/30 flex-shrink-0">FEATURED</span>}
+        </div>
+        <div className="flex-1 overflow-y-auto pb-36">
+          <div className="relative h-52 w-full overflow-hidden">
+            <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a1628] via-[#0a1628]/30 to-transparent" />
+            <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between">
+              <span className="text-[10px] font-bold bg-blue-500/30 text-blue-200 px-2.5 py-1 rounded-full backdrop-blur-sm border border-blue-400/30">{ev.tag}</span>
+              <div className="text-right"><div className="text-2xl font-black text-white">{ev.day}</div><div className="text-xs font-bold text-slate-300">{ev.month}</div></div>
+            </div>
+          </div>
+          <div className="p-5 flex flex-col gap-5">
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800 flex flex-col gap-3">
+              <div className="text-[10px] text-slate-400 font-bold uppercase">Event Title</div>
+              {editingEventTitle ? (
+                <div className="flex gap-2">
+                  <input value={editEventTitleVal} onChange={e => setEditEventTitleVal(e.target.value)} className="flex-1 bg-slate-900 border border-[#3b5bdb] rounded-xl px-3 py-2 text-sm text-white outline-none" />
+                  <button onClick={saveEventTitle} className="bg-[#3b5bdb] text-white text-xs font-bold px-3 py-2 rounded-xl cursor-pointer">Save</button>
+                  <button onClick={() => setEditingEventTitle(false)} className="bg-slate-800 text-slate-400 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer">X</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex-1"><div className="text-sm font-bold text-white">{ev.title}</div>{ev.subtitle && <div className="text-xs text-slate-400 mt-0.5">{ev.subtitle}</div>}</div>
+                  <button onClick={() => { setEditEventTitleVal(ev.title); setEditingEventTitle(true) }} className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2.5 py-1.5 rounded-lg cursor-pointer">Edit</button>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[{icon:'Date',l:'Date',v:ev.date},{icon:'Time',l:'Time',v:ev.time},{icon:'Venue',l:'Venue',v:ev.venue},{icon:'Attendees',l:'Attendees',v:String(ev.attendees||0)},{icon:'Entry',l:'Entry',v:ev.entryFee||'Free'},{icon:'Organizer',l:'Organizer',v:ev.organizer||'N/A'}].map(({icon,l,v})=>(
+                <div key={l} className="bg-[#0f1d38] rounded-2xl p-3 border border-slate-800">
+                  <div className="text-[9px] text-slate-500 font-bold uppercase mb-1">{icon}</div>
+                  <div className="text-xs font-bold text-white truncate">{v}</div>
+                </div>
+              ))}
+            </div>
+            {ev.description && <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800"><div className="text-[10px] text-slate-400 font-bold uppercase mb-2">About</div><p className="text-xs text-slate-300 leading-relaxed">{ev.description}</p></div>}
+            {ev.speakers && ev.speakers.length > 0 && (
+              <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800">
+                <div className="text-[10px] text-slate-400 font-bold uppercase mb-3">Speakers</div>
+                <div className="flex flex-wrap gap-2">{ev.speakers.map((s, i) => <span key={i} className="text-xs font-bold bg-slate-800 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">{s}</span>)}</div>
+              </div>
+            )}
+            <div className="flex items-center gap-2 bg-[#0f1d38] rounded-2xl p-3 border border-slate-800">
+              <span className="text-[10px] text-slate-500 font-mono flex-1 truncate">ID: {ev.id}</span>
+              <button onClick={() => navigator.clipboard.writeText(String(ev.id))} className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded cursor-pointer flex-shrink-0">Copy</button>
+            </div>
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-[#0a1628] border-t border-slate-800 px-5 py-4 z-20 flex gap-3">
+          <button onClick={() => toggleFeatureEvent(ev)} className={`flex-1 py-3 rounded-2xl text-xs font-bold cursor-pointer transition ${isFeat ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}>{isFeat ? 'Remove Feature' : 'Feature Event'}</button>
+          <button onClick={() => setConfirmDelete({ type: 'event', id: String(ev.id), col: 'events' })} className="flex-1 py-3 rounded-2xl text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 cursor-pointer transition">Delete Event</button>
+        </div>
+        <ConfirmModal />
+      </div>
+    )
+  }
+
+  if (selectedAdminUser) {
+    const { user, role } = selectedAdminUser
+    const isCreator = role === 'creator'
+    const avatar = isCreator ? user.avatar : user.logo
+    const userGigs = gigs.filter(g => (g.creatorName || '').toLowerCase() === (user.name || '').toLowerCase() || (g.brand || '').toLowerCase() === (user.name || '').toLowerCase())
+    return (
+      <div className="flex-1 bg-[#0a1628] min-h-screen text-slate-100 flex flex-col">
+        <div className="bg-[#0f1d38] border-b border-slate-800 px-5 py-4 flex items-center gap-3 sticky top-0 z-30">
+          <button onClick={() => setSelectedAdminUser(null)} className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 cursor-pointer flex-shrink-0"><ArrowLeftIcon /></button>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] text-slate-500 font-bold uppercase">User Detail</div>
+            <div className="text-sm font-bold text-white truncate">{user.name}</div>
+          </div>
+          <span className={`text-[9px] font-black px-2.5 py-1 rounded-full flex-shrink-0 ${isCreator ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}`}>{isCreator ? 'Creator' : 'Brand'}</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 pb-36 flex flex-col gap-5">
+          <div className="bg-gradient-to-br from-[#1a2744] to-[#0f1d38] rounded-3xl p-5 border border-slate-800">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="relative flex-shrink-0">
+                <img src={avatar} alt={user.name} className="w-20 h-20 rounded-3xl object-cover border-2 border-slate-700" />
+                {user.verified && <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white border-2 border-[#0f1d38]">V</div>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-base font-black text-white">{user.name}</div>
+                {isCreator && <div className="text-xs text-slate-400 mt-0.5">{user.handle}</div>}
+                <div className="text-xs text-slate-400 mt-0.5">{isCreator ? user.niche : user.industry}</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">{user.location || 'Kolkata'}</div>
+              </div>
+            </div>
+            {isCreator ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 text-center"><div className="text-sm font-black text-[#e4405f]">{(user as any).instagram?.followersFormatted || user.followers || 'N/A'}</div><div className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">Followers</div></div>
+                <div className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 text-center"><div className="text-sm font-black text-emerald-400">{userGigs.length}</div><div className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">Gigs Posted</div></div>
+              </div>
+            ) : user.website ? <div className="flex items-center gap-2 text-xs text-blue-400 bg-slate-900/40 rounded-xl px-3 py-2 border border-slate-800">{user.website}</div> : null}
+          </div>
+          {userGigs.length > 0 && (
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800 flex flex-col gap-3">
+              <div className="text-[10px] text-slate-400 font-bold uppercase">Gigs Posted ({userGigs.length})</div>
+              {userGigs.map(g => (
+                <div key={g.id} className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0"><div className="text-xs font-bold text-white truncate">{g.title}</div><div className="text-[10px] text-slate-400 mt-0.5">{formatBudget(g.budget, g.type)} - {g.type}</div></div>
+                  {(g as any).isFeatured && <span className="text-[9px] text-amber-400 flex-shrink-0">Featured</span>}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 bg-[#0f1d38] rounded-2xl p-3 border border-slate-800">
+            <span className="text-[10px] text-slate-500 font-mono flex-1 truncate">ID: {user.id}</span>
+            <button onClick={() => navigator.clipboard.writeText(String(user.id))} className="text-[10px] text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded cursor-pointer flex-shrink-0">Copy</button>
+          </div>
+        </div>
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-[#0a1628] border-t border-slate-800 px-5 py-4 z-20">
+          <button onClick={() => setConfirmDelete({ type: 'user', id: String(user.id), col: isCreator ? 'creators' : 'brands' })} className="w-full py-3 rounded-2xl text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 cursor-pointer flex items-center justify-center gap-2 transition">
+            Delete {isCreator ? 'Creator' : 'Brand'} Account
+          </button>
+        </div>
+        <ConfirmModal />
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 bg-[#0a1628] min-h-screen text-slate-100 flex flex-col pb-20">
-      
-      {/* Admin Top Header */}
-      <div className="bg-[#0f1d38] border-b border-slate-800 px-6 py-5 flex items-center justify-between sticky top-0 z-30 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <span className="w-8 h-8 rounded-xl bg-[#3b5bdb] flex items-center justify-center text-sm shadow-md">⚡</span>
+      <div className="bg-[#0f1d38] border-b border-slate-800 px-6 py-5 flex items-center justify-between sticky top-0 z-30 shadow-lg shadow-black/30">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#3b5bdb] to-[#2b4ef7] flex items-center justify-center text-base shadow-lg shadow-blue-900/40">⚡</div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-black text-white leading-none">Admin Panel</h2>
-              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-400/30">
-                CONTROL CENTER
-              </span>
+              <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-400/30">CONTROL CENTER</span>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium mt-0.5">Kreator Kolkata Management</p>
+            <p className="text-[10px] text-slate-500 font-medium mt-0.5">Kreator Kolkata Management</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {onSwitchToPlatform && (
-            <button 
-              onClick={onSwitchToPlatform}
-              className="text-xs font-bold bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <span>📱</span> User View
-            </button>
-          )}
-          <button 
-            onClick={onLogout}
-            className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl transition cursor-pointer"
-          >
-            Logout 🚪
-          </button>
+          {onSwitchToPlatform && <button onClick={onSwitchToPlatform} className="text-xs font-bold bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"><span>📱</span> User View</button>}
+          <button onClick={onLogout} className="text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl transition cursor-pointer">Logout</button>
         </div>
       </div>
-
-      {/* Main Content Area */}
-      <div className="p-5 flex flex-col gap-6">
-
-        {/* Stats Row */}
+      <div className="p-5 flex flex-col gap-5">
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-[#0f1d38] border border-slate-800/80 rounded-2xl p-4 shadow-sm">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Users</div>
-            <div className="text-2xl font-black text-white">{creators.length + brands.length}</div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">{creators.length} Creators · {brands.length} Brands</div>
-          </div>
-          <div className="bg-[#0f1d38] border border-slate-800/80 rounded-2xl p-4 shadow-sm">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Gigs & Events</div>
-            <div className="text-2xl font-black text-emerald-400">{gigs.length + events.length}</div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">{gigs.length} Gigs · {events.length} Events</div>
-          </div>
-        </div>
-
-        {/* Quick Action Button */}
-        <div className="flex gap-3">
-          <button 
-            onClick={() => setShowCreateEventModal(true)}
-            className="flex-1 bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white py-3 rounded-2xl font-bold text-xs shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-          >
-            <span>＋</span> Create New Event
-          </button>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex bg-[#0f1d38] p-1 rounded-2xl border border-slate-800 gap-1 overflow-x-auto scrollbar-hide">
-          {(['overview', 'events', 'gigs', 'admins', 'users'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold capitalize transition whitespace-nowrap cursor-pointer ${activeTab === tab ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              {tab === 'admins' ? `Admins (${pendingAdmins.length})` : tab}
-            </button>
+          {[
+            { label: 'Total Users', value: creators.length + brands.length, sub: `${creators.length} Creators, ${brands.length} Brands`, color: 'text-white', border: 'border-blue-500/20', bg: 'bg-blue-500/5' },
+            { label: 'Live Gigs', value: gigs.length, sub: `${gigs.filter(g => (g as any).isFeatured).length} featured`, color: 'text-emerald-400', border: 'border-emerald-500/20', bg: 'bg-emerald-500/5' },
+            { label: 'Events', value: events.length, sub: `${events.filter(e => (e as any).isFeatured).length} featured`, color: 'text-violet-400', border: 'border-violet-500/20', bg: 'bg-violet-500/5' },
+            { label: 'Pending Admins', value: pendingAdmins.length, sub: pendingAdmins.length > 0 ? 'Needs approval' : 'All clear', color: pendingAdmins.length > 0 ? 'text-amber-400' : 'text-slate-400', border: pendingAdmins.length > 0 ? 'border-amber-500/30' : 'border-slate-700', bg: pendingAdmins.length > 0 ? 'bg-amber-500/5' : 'bg-slate-800/30' },
+          ].map(({ label, value, sub, color, border, bg }) => (
+            <div key={label} className={`${bg} border ${border} rounded-2xl p-4 shadow-sm`}>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</div>
+              <div className={`text-2xl font-black ${color}`}>{value}</div>
+              <div className="text-[10px] text-slate-500 font-medium mt-1">{sub}</div>
+            </div>
           ))}
         </div>
-
-        {/* TAB 1: OVERVIEW */}
+        <button onClick={() => setShowCreateEventModal(true)} className="w-full bg-gradient-to-r from-[#3b5bdb] to-[#2b4ef7] text-white py-3.5 rounded-2xl font-bold text-xs shadow-lg shadow-blue-900/30 transition flex items-center justify-center gap-2 cursor-pointer">
+          Create New Event
+        </button>
+        <div className="flex bg-[#0f1d38] p-1 rounded-2xl border border-slate-800 gap-0.5 overflow-x-auto scrollbar-hide">
+          {([
+            { id: 'overview', label: 'Overview' },
+            { id: 'gigs', label: 'Gigs' },
+            { id: 'events', label: 'Events' },
+            { id: 'users', label: 'Users' },
+            { id: 'admins', label: pendingAdmins.length > 0 ? `Admins (${pendingAdmins.length})` : 'Admins' },
+          ] as const).map(({ id, label }) => (
+            <button key={id} onClick={() => setActiveTab(id)} className={`flex-1 py-2 px-2 rounded-xl text-[11px] font-bold transition whitespace-nowrap cursor-pointer ${activeTab === id ? 'bg-[#3b5bdb] text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}>{label}</button>
+          ))}
+        </div>
         {activeTab === 'overview' && (
           <div className="flex flex-col gap-4">
-            
-            {/* Pending Admins Alert */}
-            {pendingAdmins.length > 0 && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                    <span>⚠️</span> {pendingAdmins.length} Pending Admin Approval Request(s)
-                  </span>
-                  <button 
-                    onClick={() => setActiveTab('admins')}
-                    className="text-[10px] font-bold text-amber-400 underline"
-                  >
-                    View & Approve →
-                  </button>
+            {pendingAdmins.length > 0 && <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between gap-2"><span className="text-xs font-bold text-amber-400">{pendingAdmins.length} pending admin approval</span><button onClick={() => setActiveTab('admins')} className="text-[10px] font-bold text-amber-400 underline">View</button></div>}
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800 flex flex-col gap-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800"><h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Recent Gigs</h3><button onClick={() => setActiveTab('gigs')} className="text-[10px] font-bold text-blue-400">See all</button></div>
+              {gigs.slice(0, 4).map(gig => (
+                <div key={gig.id} className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 flex items-center gap-3 cursor-pointer hover:border-slate-600 transition" onClick={() => setSelectedAdminGig(gig)}>
+                  <img src={gig.avatar} alt="" className="w-9 h-9 rounded-xl object-cover border border-slate-700 flex-shrink-0" />
+                  <div className="flex-1 min-w-0"><div className="text-xs font-bold text-white truncate">{gig.title}</div><div className="text-[10px] text-slate-400">{formatBudget(gig.budget, gig.type)} - {gig.type}</div></div>
+                  {(gig as any).isFeatured && <span className="text-[9px] text-amber-400">Featured</span>}<span className="text-slate-600">{">"}</span>
                 </div>
-              </div>
-            )}
-
-            {/* Quick Gigs Preview */}
-            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800/80 flex flex-col gap-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Live Platform Gigs</h3>
-                <span className="text-xs text-slate-500 font-bold">{gigs.length} Total</span>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {gigs.slice(0, 4).map(gig => (
-                  <div key={gig.id} className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-bold text-white truncate">{gig.title}</div>
-                      <div className="text-[10px] text-slate-400 font-medium mt-0.5">{gig.brand || gig.creatorName} · {gig.budget}</div>
-                    </div>
-                    <button 
-                      onClick={() => toggleFeatureGig(gig)}
-                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition cursor-pointer ${(gig as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
-                    >
-                      {(gig as any).isFeatured ? '⭐ Featured' : 'Feature'}
-                    </button>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
-
-            {/* Quick Events Preview */}
-            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800/80 flex flex-col gap-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Platform Events</h3>
-                <span className="text-xs text-slate-500 font-bold">{events.length} Total</span>
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {events.slice(0, 4).map(ev => (
-                  <div key={ev.id} className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-bold text-white truncate">{ev.title}</div>
-                      <div className="text-[10px] text-slate-400 font-medium mt-0.5">{ev.date} · {ev.venue}</div>
-                    </div>
-                    <button 
-                      onClick={() => toggleFeatureEvent(ev)}
-                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition cursor-pointer ${(ev as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-400 hover:text-white'}`}
-                    >
-                      {(ev as any).isFeatured ? '⭐ Featured' : 'Feature'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        )}
-
-        {/* TAB 2: EVENTS */}
-        {activeTab === 'events' && (
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Manage & Feature Events</h3>
-              <button 
-                onClick={() => setShowCreateEventModal(true)}
-                className="bg-[#3b5bdb] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm cursor-pointer"
-              >
-                ＋ New Event
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {events.map(ev => (
-                <div key={ev.id} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 flex flex-col gap-3">
-                  <div className="flex gap-3 items-start">
-                    <img src={ev.image} alt={ev.title} className="w-16 h-16 rounded-2xl object-cover border border-slate-700 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-white truncate">{ev.title}</h4>
-                        {(ev as any).isFeatured && (
-                          <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
-                            FEATURED
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-slate-400 mt-0.5 font-medium">{ev.date} · {ev.time}</div>
-                      <div className="text-[10px] text-slate-500 truncate mt-0.5">{ev.venue}, {ev.location}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                    <span className="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2.5 py-1 rounded-lg">
-                      {ev.tag || 'Event'}
-                    </span>
-                    <button 
-                      onClick={() => toggleFeatureEvent(ev)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${(ev as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
-                    >
-                      {(ev as any).isFeatured ? '⭐ Remove Feature' : '⭐ Feature Event'}
-                    </button>
-                  </div>
+            <div className="bg-[#0f1d38] rounded-3xl p-5 border border-slate-800 flex flex-col gap-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800"><h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Recent Events</h3><button onClick={() => setActiveTab('events')} className="text-[10px] font-bold text-blue-400">See all</button></div>
+              {events.slice(0, 4).map(ev => (
+                <div key={ev.id} className="bg-slate-900/60 rounded-2xl p-3 border border-slate-800 flex items-center gap-3 cursor-pointer hover:border-slate-600 transition" onClick={() => setSelectedAdminEvent(ev)}>
+                  <img src={ev.image} alt="" className="w-9 h-9 rounded-xl object-cover border border-slate-700 flex-shrink-0" />
+                  <div className="flex-1 min-w-0"><div className="text-xs font-bold text-white truncate">{ev.title}</div><div className="text-[10px] text-slate-400">{ev.date} - {ev.venue}</div></div>
+                  {(ev as any).isFeatured && <span className="text-[9px] text-amber-400">Featured</span>}<span className="text-slate-600">{">"}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
-
-        {/* TAB 3: GIGS */}
         {activeTab === 'gigs' && (
           <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Manage & Feature Gigs</h3>
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 flex items-center gap-2 bg-[#0f1d38] border border-slate-700 rounded-2xl px-3 py-2.5 focus-within:border-[#3b5bdb] transition">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input value={gigSearch} onChange={e => setGigSearch(e.target.value)} placeholder="Search gigs..." className="flex-1 bg-transparent text-xs text-white outline-none placeholder:text-slate-500" />
+              </div>
+              <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap">{filteredGigs.length} total</span>
+            </div>
             <div className="flex flex-col gap-3">
-              {gigs.map(gig => (
-                <div key={gig.id} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 flex flex-col gap-3">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0 flex-1 pr-3">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-white truncate">{gig.title}</h4>
-                        {(gig as any).isFeatured && (
-                          <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
-                            FEATURED
-                          </span>
-                        )}
+              {filteredGigs.map(gig => (
+                <div key={gig.id} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 hover:border-slate-600 transition cursor-pointer" onClick={() => setSelectedAdminGig(gig)}>
+                  <div className="flex gap-3 items-start">
+                    <img src={gig.avatar} alt="" className="w-12 h-12 rounded-2xl object-cover border border-slate-700 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1"><h4 className="text-sm font-bold text-white truncate flex-1">{gig.title}</h4>{(gig as any).isFeatured && <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30 flex-shrink-0">Featured</span>}</div>
+                      <div className="text-xs text-slate-400 truncate">{gig.brand || gig.creatorName}</div>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${gig.type === 'Paid' ? 'bg-emerald-500/20 text-emerald-300' : gig.type === 'Barter' ? 'bg-violet-500/20 text-violet-300' : 'bg-amber-500/20 text-amber-300'}`}>{gig.type}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">{formatBudget(gig.budget, gig.type)}</span>
+                        <span className="text-[10px] text-slate-500">{gig.location}</span>
                       </div>
-                      <div className="text-xs text-slate-400 mt-1 font-medium">{gig.brand || gig.creatorName} · {gig.budget}</div>
                     </div>
-                    <span className="text-[9px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">{gig.type}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                    <span className="text-[10px] text-slate-400">{gig.location}</span>
-                    <button 
-                      onClick={() => toggleFeatureGig(gig)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${(gig as any).isFeatured ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
-                    >
-                      {(gig as any).isFeatured ? '⭐ Remove Feature' : '⭐ Feature Gig'}
-                    </button>
+                    <span className="text-slate-600 text-lg flex-shrink-0">{">"}</span>
                   </div>
                 </div>
               ))}
+              {filteredGigs.length === 0 && <div className="text-center py-14 text-slate-500 text-xs">No gigs found</div>}
             </div>
           </div>
         )}
-
-        {/* TAB 4: ADMIN APPROVALS */}
+        {activeTab === 'events' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 flex items-center gap-2 bg-[#0f1d38] border border-slate-700 rounded-2xl px-3 py-2.5 focus-within:border-[#3b5bdb] transition">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input value={eventSearch} onChange={e => setEventSearch(e.target.value)} placeholder="Search events..." className="flex-1 bg-transparent text-xs text-white outline-none placeholder:text-slate-500" />
+              </div>
+              <button onClick={() => setShowCreateEventModal(true)} className="bg-[#3b5bdb] text-white text-xs font-bold px-3 py-2 rounded-xl cursor-pointer whitespace-nowrap flex-shrink-0">New Event</button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {filteredEvents.map(ev => (
+                <div key={ev.id} className="bg-[#0f1d38] rounded-3xl border border-slate-800 hover:border-slate-600 transition cursor-pointer overflow-hidden" onClick={() => setSelectedAdminEvent(ev)}>
+                  <div className="relative h-32 overflow-hidden">
+                    <img src={ev.image} alt={ev.title} className="w-full h-full object-cover opacity-60" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628]/90 to-[#0a1628]/10 flex items-center">
+                      <div className="p-4 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1"><h4 className="text-sm font-bold text-white">{ev.title}</h4>{(ev as any).isFeatured && <span className="text-[9px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">Featured</span>}</div>
+                        <div className="text-xs text-slate-300">{ev.date} - {ev.time}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5 truncate">{ev.venue}</div>
+                      </div>
+                    </div>
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                      <span className="text-[9px] font-bold bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded-full backdrop-blur-sm border border-blue-400/30">{ev.tag}</span>
+                      <span className="text-slate-400">{">"}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filteredEvents.length === 0 && <div className="text-center py-14 text-slate-500 text-xs">No events found</div>}
+            </div>
+          </div>
+        )}
+        {activeTab === 'users' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 flex items-center gap-2 bg-[#0f1d38] border border-slate-700 rounded-2xl px-3 py-2.5 focus-within:border-[#3b5bdb] transition">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input value={userSearch} onChange={e => setUserSearch(e.target.value)} placeholder="Search users..." className="flex-1 bg-transparent text-xs text-white outline-none placeholder:text-slate-500" />
+              </div>
+              <span className="text-[10px] font-bold text-slate-500 whitespace-nowrap">{allUsers.length} total</span>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {allUsers.map(({ user, role }) => {
+                const isCreator = role === 'creator'; const avatar = isCreator ? user.avatar : user.logo
+                return (
+                  <div key={`${role}-${user.id}`} className="bg-[#0f1d38] rounded-2xl p-3 border border-slate-800 hover:border-slate-600 transition flex items-center gap-3 cursor-pointer" onClick={() => setSelectedAdminUser({ user, role })}>
+                    <img src={avatar} alt={user.name} className="w-12 h-12 rounded-2xl object-cover border border-slate-700 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5"><div className="text-xs font-bold text-white truncate">{user.name}</div>{user.verified && <span className="text-[9px] text-blue-400">V</span>}</div>
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">{isCreator ? `${user.handle} - ${user.niche}` : `${user.industry} - ${user.location || 'Kolkata'}`}</div>
+                      {isCreator && ((user as any).instagram?.followersFormatted || user.followers) && <div className="text-[10px] text-[#e4405f] font-bold mt-0.5">{(user as any).instagram?.followersFormatted || user.followers} followers</div>}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${isCreator ? 'bg-blue-500/20 text-blue-300' : 'bg-rose-500/20 text-rose-300'}`}>{isCreator ? 'Creator' : 'Brand'}</span>
+                      <span className="text-slate-600">{">"}</span>
+                    </div>
+                  </div>
+                )
+              })}
+              {allUsers.length === 0 && <div className="text-center py-14 text-slate-500 text-xs">No users found</div>}
+            </div>
+          </div>
+        )}
         {activeTab === 'admins' && (
           <div className="flex flex-col gap-4">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Admin User Management</h3>
             <div className="flex flex-col gap-3">
               {adminsList.map(a => (
-                <div key={a.uid} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-white truncate">{a.name || 'Admin User'}</h4>
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${a.isAdmin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>
-                        {a.isAdmin ? 'ACTIVE ADMIN' : 'PENDING APPROVAL'}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-400 mt-1 truncate">{a.email}</div>
+                <div key={a.uid} className="bg-[#0f1d38] rounded-3xl p-4 border border-slate-800 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#3b5bdb]/20 flex items-center justify-center text-[#3b5bdb] font-black flex-shrink-0">{(a.name || 'A')[0].toUpperCase()}</div>
+                  <div className="flex-1 min-w-0"><h4 className="text-sm font-bold text-white truncate">{a.name || 'Admin User'}</h4><div className="text-xs text-slate-400 truncate">{a.email}</div></div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${a.isAdmin ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>{a.isAdmin ? 'ACTIVE' : 'PENDING'}</span>
+                    {!a.isAdmin && <button onClick={() => handleApproveAdmin(a.uid)} className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition">Approve</button>}
                   </div>
-
-                  {!a.isAdmin && (
-                    <button 
-                      onClick={() => handleApproveAdmin(a.uid)}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow-md cursor-pointer"
-                    >
-                      ✓ Approve (isAdmin=true)
-                    </button>
-                  )}
                 </div>
               ))}
-
-              {adminsList.length === 0 && (
-                <div className="text-center py-10 text-slate-500 text-xs font-medium">No admin accounts registered yet.</div>
-              )}
+              {adminsList.length === 0 && <div className="text-center py-10 text-slate-500 text-xs">No admin accounts yet.</div>}
             </div>
           </div>
         )}
-
-        {/* TAB 5: USERS */}
-        {activeTab === 'users' && (
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Registered Creators & Brands</h3>
-            <div className="flex flex-col gap-3">
-              {creators.map(c => (
-                <div key={c.id} className="bg-[#0f1d38] rounded-2xl p-3 border border-slate-800 flex items-center gap-3">
-                  <img src={c.avatar} alt={c.name} className="w-10 h-10 rounded-full object-cover border border-slate-700" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-white truncate">{c.name}</div>
-                    <div className="text-[10px] text-slate-400 truncate">{c.handle} · {c.niche}</div>
-                  </div>
-                  <span className="text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">Creator</span>
-                </div>
-              ))}
-              {brands.map(b => (
-                <div key={b.id} className="bg-[#0f1d38] rounded-2xl p-3 border border-slate-800 flex items-center gap-3">
-                  <img src={b.logo} alt={b.name} className="w-10 h-10 rounded-full object-cover border border-slate-700" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-bold text-white truncate">{b.name}</div>
-                    <div className="text-[10px] text-slate-400 truncate">{b.industry} · {b.location}</div>
-                  </div>
-                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full">Brand</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
       </div>
-
-      {/* CREATE EVENT MODAL */}
       {showCreateEventModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-[#0f1d38] text-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-800 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#0f1d38] text-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-800 flex flex-col gap-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <h3 className="text-base font-bold text-white">Create Platform Event</h3>
-              <button 
-                onClick={() => setShowCreateEventModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
-              >
-                ✕
-              </button>
+              <button onClick={() => setShowCreateEventModal(false)} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer">X</button>
             </div>
-
             <form onSubmit={handleCreateEventSubmit} className="flex flex-col gap-3.5 overflow-y-auto max-h-[65vh] pr-1">
-              
-              {/* Event Cover Image Picker */}
-              <div className="flex flex-col items-center gap-2 mb-1">
-                <div 
-                  onClick={() => document.getElementById('event-file-input')?.click()}
-                  className="w-full h-28 rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/60 overflow-hidden relative group cursor-pointer flex items-center justify-center"
-                >
-                  {eventPreviewUrl || eventImage ? (
-                    <img src={eventPreviewUrl || eventImage} alt="Cover Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 text-slate-500">
-                      <span className="text-2xl">🖼️</span>
-                      <span className="text-xs font-bold">Upload Event Cover Image</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">Change Cover</span>
-                  </div>
-                </div>
-                <input 
-                  type="file" 
-                  id="event-file-input" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) {
-                      setEventFile(f)
-                      setEventPreviewUrl(URL.createObjectURL(f))
-                    }
-                  }}
-                />
+              <div onClick={() => document.getElementById('event-file-input')?.click()} className="w-full h-28 rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/60 overflow-hidden relative group cursor-pointer flex items-center justify-center">
+                {eventPreviewUrl || eventImage ? <img src={eventPreviewUrl || eventImage} alt="Cover" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center gap-1 text-slate-500"><span className="text-2xl">Image</span><span className="text-xs font-bold">Upload Event Cover Image</span></div>}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><span className="text-white text-xs font-bold">Change Cover</span></div>
               </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Event Title *</label>
-                <input 
-                  required
-                  type="text" 
-                  value={eventTitle}
-                  onChange={e => setEventTitle(e.target.value)}
-                  placeholder="e.g. Kolkata Creator Conclave 2026"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Subtitle / Tagline</label>
-                <input 
-                  type="text" 
-                  value={eventSubtitle}
-                  onChange={e => setEventSubtitle(e.target.value)}
-                  placeholder="e.g. Network with Kolkata's top creators"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                />
-              </div>
-
+              <input type="file" id="event-file-input" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setEventFile(f); setEventPreviewUrl(URL.createObjectURL(f)) } }} />
+              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Event Title</label><input required type="text" value={eventTitle} onChange={e => setEventTitle(e.target.value)} placeholder="e.g. Kolkata Creator Conclave 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Subtitle</label><input type="text" value={eventSubtitle} onChange={e => setEventSubtitle(e.target.value)} placeholder="e.g. Network with top creators" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Date *</label>
-                  <input 
-                    required
-                    type="text" 
-                    value={eventDate}
-                    onChange={e => setEventDate(e.target.value)}
-                    placeholder="e.g. Aug 28, 2026"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Time</label>
-                  <input 
-                    type="text" 
-                    value={eventTime}
-                    onChange={e => setEventTime(e.target.value)}
-                    placeholder="e.g. 5:00 PM"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                  />
-                </div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Date</label><input type="text" value={eventDate} onChange={e => setEventDate(e.target.value)} placeholder="e.g. Aug 28, 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Time</label><input type="text" value={eventTime} onChange={e => setEventTime(e.target.value)} placeholder="5:00 PM" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
               </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Venue & Location *</label>
-                <input 
-                  required
-                  type="text" 
-                  value={eventVenue}
-                  onChange={e => setEventVenue(e.target.value)}
-                  placeholder="e.g. Biswa Bangla Gate, New Town"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Category Tag</label>
-                <input 
-                  type="text" 
-                  value={eventTag}
-                  onChange={e => setEventTag(e.target.value)}
-                  placeholder="e.g. Networking, Summit, Party"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">About Event (Description)</label>
-                <textarea 
-                  rows={3}
-                  value={eventDescription}
-                  onChange={e => setEventDescription(e.target.value)}
-                  placeholder="Detailed overview of agenda, topics, and attendee guidelines..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb] resize-none font-sans"
-                />
-              </div>
-
+              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Venue</label><input required type="text" value={eventVenue} onChange={e => setEventVenue(e.target.value)} placeholder="e.g. Biswa Bangla Gate, New Town" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Category Tag</label><input type="text" value={eventTag} onChange={e => setEventTag(e.target.value)} placeholder="e.g. Networking, Summit, Party" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">About Event</label><textarea rows={3} value={eventDescription} onChange={e => setEventDescription(e.target.value)} placeholder="Detailed overview of agenda..." className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb] resize-none font-sans" /></div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Organized By / Host</label>
-                  <input 
-                    type="text" 
-                    value={eventOrganizer}
-                    onChange={e => setEventOrganizer(e.target.value)}
-                    placeholder="e.g. Kreator Kolkata Community"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Entry Fee / Ticket</label>
-                  <input 
-                    type="text" 
-                    value={eventEntryFee}
-                    onChange={e => setEventEntryFee(e.target.value)}
-                    placeholder="e.g. Free RSVP or ₹499"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                  />
-                </div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Organizer</label><input type="text" value={eventOrganizer} onChange={e => setEventOrganizer(e.target.value)} placeholder="Kreator Kolkata Community" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Entry Fee</label><input type="text" value={eventEntryFee} onChange={e => setEventEntryFee(e.target.value)} placeholder="Free RSVP or 499" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
               </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Featured Speakers & Hosts (Comma Separated)</label>
-                <input 
-                  type="text" 
-                  value={eventSpeakers}
-                  onChange={e => setEventSpeakers(e.target.value)}
-                  placeholder="e.g. Priya Sengupta, Souvik Chatterjee, Arjun Das"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]"
-                />
-              </div>
-
+              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Speakers (comma separated)</label><input type="text" value={eventSpeakers} onChange={e => setEventSpeakers(e.target.value)} placeholder="e.g. Priya Sengupta, Souvik Chatterjee" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
               <div className="flex gap-3 pt-3 border-t border-slate-800">
-                <button 
-                  type="button"
-                  onClick={() => setShowCreateEventModal(false)}
-                  disabled={creatingEvent}
-                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()}
-                  className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl shadow-md shadow-blue-900/40 hover:bg-[#2b4ef7] transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
-                >
-                  {creatingEvent ? 'Publishing…' : 'Publish Event ✨'}
-                </button>
+                <button type="button" onClick={() => setShowCreateEventModal(false)} disabled={creatingEvent} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer transition">Cancel</button>
+                <button type="submit" disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()} className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl hover:bg-[#2b4ef7] cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 transition">{creatingEvent ? 'Publishing...' : 'Publish Event'}</button>
               </div>
-
             </form>
           </div>
         </div>
       )}
-
     </div>
   )
 }
