@@ -3886,7 +3886,7 @@ function ExplorePage({
                     <div className="text-[9px] text-slate-400 font-medium mb-1">{creator.handle}</div>
                     {hasInstagram && (
                       <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 mb-1">
-                        <InstagramIcon />{creator.followers}
+                        <InstagramIcon />{(creator as any).instagram?.followersFormatted || creator.followers}
                       </span>
                     )}
                     <div className="text-[9px] text-slate-500 font-semibold truncate max-w-full mb-3">{creator.niche}</div>
@@ -4102,7 +4102,7 @@ function ExplorePage({
                     <div className="text-[9px] text-slate-400 font-medium mb-2">{creator.handle}</div>
                     {hasInstagram && (
                       <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2.5 py-0.5 rounded-full flex items-center gap-0.5">
-                        <InstagramIcon />{creator.followers}
+                        <InstagramIcon />{(creator as any).instagram?.followersFormatted || creator.followers}
                       </span>
                     )}
                     <span className="text-[9px] text-slate-500 font-semibold mt-1 truncate max-w-full">{creator.niche}</span>
@@ -4277,7 +4277,7 @@ function ExplorePage({
                 <div className="flex gap-1.5 items-center mb-3">
                   {hasInstagram && (
                     <span className="text-[9px] font-bold text-[#e4405f] bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                      <InstagramIcon />{creator.followers}
+                      <InstagramIcon />{(creator as any).instagram?.followersFormatted || creator.followers}
                     </span>
                   )}
                   {creator.engagement && (
@@ -5048,7 +5048,7 @@ function PublicProfilePage({
 
         <div className="grid grid-cols-4 gap-2 pt-2">
           {[
-            { label: 'Followers', value: creator.followers, color: 'text-rose-500' },
+            { label: 'Followers', value: (creator as any).instagram?.followersFormatted || creator.followers, color: 'text-rose-500' },
             { label: 'Avg. ER', value: creator.engagement, color: 'text-indigo-500' },
             { label: 'Collabs', value: '14+', color: 'text-emerald-500' },
             { label: 'Rating', value: '5.0 ★', color: 'text-amber-500' }

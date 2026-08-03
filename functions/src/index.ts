@@ -141,9 +141,9 @@ export const instagramCallback = functions.https.onRequest(async (req, res) => {
         creatorsRef.update({
           instagram: instagramData,
           isInstagramConnected: true,
-          followers: profile.media_count
-            ? `${Math.max(profile.media_count, 0)}`
-            : "0",
+          // Update the top-level followers field so public profile views show real data
+          followers: followersFormatted,
+          followers_count: rawFollowers,
         })
       );
     }
