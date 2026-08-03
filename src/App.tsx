@@ -311,6 +311,17 @@ const formatLocation = (loc?: string) => {
   return cleaned || loc
 }
 
+// Prepend ₹ to numeric budgets that don't already have a currency symbol
+const formatBudget = (budget: string | undefined, type?: string) => {
+  if (!budget) return ''
+  const b = budget.trim()
+  // Already has a currency symbol or is a non-numeric description
+  if (b.startsWith('₹') || b.startsWith('$') || b.startsWith('€')) return b
+  // If it's a Paid gig and the budget looks numeric (digits/commas/dashes), add ₹
+  if (type === 'Paid' || /^\d[\d,\s–\-\.]*$/.test(b)) return `₹${b}`
+  return b
+}
+
 type Gig = typeof GIGS[0]
 type Creator = typeof CREATORS[0]
 type Brand = typeof BRANDS[0]
@@ -838,7 +849,7 @@ function ApplyPage({
           {/* Stats row */}
           <div className="mx-5 mb-5 grid grid-cols-3 gap-3">
             <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
-              <div className="text-base font-black text-slate-900 mb-0.5">{gig.budget}</div>
+              <div className="text-base font-black text-slate-900 mb-0.5">{formatBudget(gig.budget, gig.type)}</div>
               <div className="text-[10px] text-slate-400 font-medium">Offer</div>
             </div>
             <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
@@ -1164,7 +1175,7 @@ function ViewMyGigPage({
             <h2 className="text-base font-extrabold text-slate-900 leading-snug mb-2">{gig.title}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
-              <span className="text-xs font-bold text-slate-800 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-100">{gig.budget}</span>
+              <span className="text-xs font-bold text-slate-800 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-100">{formatBudget(gig.budget, gig.type)}</span>
               <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
                 <MapPinIcon /> {formatLocation(gig.location)}
               </span>
@@ -2824,7 +2835,7 @@ function ProfilePage({
                 <div className="text-sm font-bold text-slate-900 truncate">{gig.title}</div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
-                  <span className="text-[10px] text-slate-400 font-medium truncate">{gig.budget}</span>
+                  <span className="text-[10px] text-slate-400 font-medium truncate">{formatBudget(gig.budget, gig.type)}</span>
                 </div>
                 <div className="flex items-center gap-1 mt-0.5 text-[10px] text-[#e4405f] font-bold">
                   <InstagramIcon />{gig.followers}
@@ -4124,7 +4135,7 @@ function ExplorePage({
                       >
                         {gig.creatorName}
                       </span>
-                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">{gig.budget}</span>
+                      <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">{formatBudget(gig.budget, gig.type)}</span>
                     </div>
                   </div>
                   <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3">
@@ -4371,7 +4382,7 @@ function ExplorePage({
                     </div>
                     <h3 className="text-xs font-bold text-slate-900 mb-2 truncate">{gig.title}</h3>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800">{gig.budget}</span>
+                      <span className="text-xs font-bold text-slate-800">{formatBudget(gig.budget, gig.type)}</span>
                       <button onClick={e => { e.stopPropagation(); onApply(gig) }} className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm">
                         Apply
                       </button>
@@ -4569,7 +4580,7 @@ function ExplorePage({
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[11px] text-slate-400 font-medium mb-0.5">Budget / Offer</div>
-                    <div className="text-sm font-bold text-slate-800">{gig.budget}</div>
+                    <div className="text-sm font-bold text-slate-800">{formatBudget(gig.budget, gig.type)}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
@@ -5441,7 +5452,7 @@ function PublicBrandProfilePage({
                   <h4 className="text-xs font-bold text-slate-900 leading-snug mb-1">{gig.title}</h4>
                   <div className="flex items-center gap-2">
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
-                    <span className="text-[10px] text-slate-400 font-medium">{gig.budget}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">{formatBudget(gig.budget, gig.type)}</span>
                   </div>
                 </div>
                 <span className="text-[9px] text-slate-400 font-bold bg-slate-50 px-2 py-0.5 rounded-full">{gig.location}</span>
