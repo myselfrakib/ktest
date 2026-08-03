@@ -866,9 +866,18 @@ function ApplyPage({
               }}
               className="mx-5 mb-5 bg-[#e8edff] hover:bg-[#dbe4ff] active:scale-[0.99] rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-all duration-200"
             >
-              <div className="w-8 h-8 rounded-xl bg-[#3b5bdb]/20 flex items-center justify-center text-[#3b5bdb] text-xs font-black">
-                {gig.brand[0]}
-              </div>
+              {/* Show uploaded logo if available, else letter avatar */}
+              {(gig as any).brandLogo && !(gig as any).brandLogo.includes('unsplash') ? (
+                <img
+                  src={(gig as any).brandLogo}
+                  alt={gig.brand}
+                  className="w-10 h-10 rounded-xl object-cover border border-[#c5d3ff] flex-shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-[#3b5bdb]/20 flex items-center justify-center text-[#3b5bdb] text-sm font-black flex-shrink-0">
+                  {gig.brand[0]}
+                </div>
+              )}
               <div>
                 <div className="text-[10px] text-[#3b5bdb] font-bold uppercase tracking-wider">Brand / Client</div>
                 <div className="text-sm font-bold text-slate-800 hover:underline">{gig.brand}</div>
@@ -1735,6 +1744,16 @@ function PostGigPage({
   const [brand, setBrand] = useState(userProfile?.name || '')
   const [contactMode, setContactMode] = useState('')
   const [minFollowers, setMinFollowers] = useState('')
+  const [brandLogoUrl, setBrandLogoUrl] = useState<string | null>(null)
+  const brandLogoInputRef = useRef<HTMLInputElement>(null)
+
+  const handleBrandLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => setBrandLogoUrl(ev.target?.result as string)
+    reader.readAsDataURL(file)
+  }
 
   useEffect(() => {
     if (userProfile?.name && !brand) {
@@ -1814,8 +1833,8 @@ function PostGigPage({
         description: description || 'New gig posted on Kreator Kolkata.',
         deliverables: deliverables.length ? deliverables : ['1 Reel', '2 Stories'],
         deadline: deadline || 'Aug 30, 2026',
-        brand: posterName,
-        brandLogo: posterAvatar
+        brand: brand.trim() || posterName,
+        brandLogo: brandLogoUrl || posterAvatar
       }
 
       await setDoc(doc(db, 'gigs', String(newGigId)), newGig)
@@ -1938,18 +1957,47 @@ function PostGigPage({
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="text-xs font-bold text-slate-700 mb-1.5 block">
-                    {gigType === 'Paid' ? 'Budget Range' : gigType === 'Barter' ? 'What you offer' : 'What they get'} <span className="text-[#e4405f]">*</span>
+                    {gigType === 'Paid' ? 'Fixed Budget' : gigType === 'Barter' ? 'What you offer' : 'What they get'} <span className="text-[#e4405f]">*</span>
                   </label>
-                  <div className={`flex items-center gap-2 bg-slate-50 border ${errors.budget ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
-                    {gigType === 'Paid' && <span className="text-slate-400 text-sm font-bold">₹</span>}
-                    <input
-                      type="text"
-                      value={budget}
-                      onChange={e => { setBudget(e.target.value); setErrors(p => ({ ...p, budget: '' })) }}
-                      placeholder={gigType === 'Paid' ? '8,000 – 15,000' : gigType === 'Barter' ? 'e.g. Products + Credits' : 'e.g. Complimentary meal for 2'}
-                      className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
-                    />
-                  </div>
+                  {gigType === 'Paid' ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        {['₹1,000', '₹2,000', '₹3,000', '₹5,000', '₹8,000', '₹10,000', '₹15,000', '₹20,000', '₹50,000'].map(amt => (
+                          <button
+                            key={amt}
+                            onClick={() => { setBudget(amt); setErrors(p => ({ ...p, budget: '' })) }}
+                            className={`py-2.5 rounded-xl text-xs font-bold border-2 transition ${
+                              budget === amt
+                                ? 'border-[#3b5bdb] bg-[#e8edff] text-[#3b5bdb]'
+                                : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
+                            }`}
+                          >
+                            {amt}
+                          </button>
+                        ))}
+                      </div>
+                      <div className={`flex items-center gap-2 bg-slate-50 border ${errors.budget ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
+                        <span className="text-slate-400 text-sm font-bold">₹</span>
+                        <input
+                          type="number"
+                          value={budget.startsWith('₹') ? '' : budget}
+                          onChange={e => { setBudget(e.target.value ? e.target.value : ''); setErrors(p => ({ ...p, budget: '' })) }}
+                          placeholder="Or type a custom amount"
+                          className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`flex items-center gap-2 bg-slate-50 border ${errors.budget ? 'border-red-400' : 'border-slate-200'} rounded-2xl px-4 py-3 focus-within:border-[#3b5bdb] transition`}>
+                      <input
+                        type="text"
+                        value={budget}
+                        onChange={e => { setBudget(e.target.value); setErrors(p => ({ ...p, budget: '' })) }}
+                        placeholder={gigType === 'Barter' ? 'e.g. Products + Credits' : 'e.g. Complimentary meal for 2'}
+                        className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
+                      />
+                    </div>
+                  )}
                   {errors.budget && <p className="text-xs text-red-500 mt-1 font-medium">{errors.budget}</p>}
                 </div>
 
@@ -2078,6 +2126,56 @@ function PostGigPage({
                     placeholder="e.g. Rang Bahar Textiles"
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#3b5bdb] transition"
                   />
+                </div>
+
+                {/* Brand Logo Upload */}
+                <div>
+                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">Brand Logo <span className="text-slate-400 font-normal">(optional)</span></label>
+                  <div className="flex items-center gap-3">
+                    {/* Preview circle */}
+                    <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {brandLogoUrl ? (
+                        <img src={brandLogoUrl} alt="Brand logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="3" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <path d="M21 15l-5-5L5 21" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1.5 flex-1">
+                      <button
+                        onClick={() => brandLogoInputRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 bg-[#e8edff] hover:bg-[#dbe4ff] text-[#3b5bdb] text-xs font-bold py-2.5 rounded-xl transition cursor-pointer border border-[#c5d3ff]"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        {brandLogoUrl ? 'Change Logo' : 'Upload Logo'}
+                      </button>
+                      {brandLogoUrl && (
+                        <button
+                          onClick={() => setBrandLogoUrl(null)}
+                          className="w-full text-xs font-bold text-slate-400 hover:text-red-500 transition py-1"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      ref={brandLogoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleBrandLogoUpload}
+                    />
+                  </div>
+                  {brandLogoUrl && (
+                    <p className="text-[10px] text-slate-400 font-medium mt-2">✓ Logo will be shown in gig details</p>
+                  )}
                 </div>
               </div>
             </div>
