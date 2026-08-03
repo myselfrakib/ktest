@@ -800,9 +800,9 @@ function ApplyPage({
                     <InstagramIcon /> {followersCount} followers
                   </span>
                   <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">{gig.niche}</span>
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
                 </div>
               </div>
-              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 self-start mt-1.5 ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
             </div>
             <div className="border-t border-slate-100 pt-3">
               <h2 className="font-bold text-slate-900 text-base leading-snug mb-1">{gig.title}</h2>
