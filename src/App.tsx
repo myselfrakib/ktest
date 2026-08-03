@@ -2218,6 +2218,25 @@ function ProfilePage({
     (rawFollowers >= 1000 ? `${(rawFollowers / 1000).toFixed(1).replace(/\.0$/, '')}K` : rawFollowers > 0 ? String(rawFollowers) : null)
   const [igConnecting, setIgConnecting] = useState(false)
   const [igError, setIgError] = useState<string | null>(null)
+  const [igDisconnecting, setIgDisconnecting] = useState(false)
+
+  const handleIgDisconnect = async () => {
+    if (!auth.currentUser || igDisconnecting) return
+    setIgDisconnecting(true)
+    try {
+      const uid = auth.currentUser.uid
+      const clearData = { isInstagramConnected: false, instagram: null }
+      const updates: Promise<any>[] = []
+      if (userRole === 'creator') updates.push(updateDoc(doc(db, 'creators', uid), clearData))
+      else if (userRole === 'brand') updates.push(updateDoc(doc(db, 'brands', uid), clearData))
+      updates.push(updateDoc(doc(db, 'users', uid), clearData))
+      await Promise.all(updates)
+    } catch (err) {
+      console.warn('Error disconnecting Instagram:', err)
+    } finally {
+      setIgDisconnecting(false)
+    }
+  }
 
   // Instagram Business Login OAuth URL
   // Dynamically use current origin as the redirect URI (e.g. https://kreatorkolkata.vercel.app/ or https://ktest-nine.vercel.app/)
@@ -2428,9 +2447,16 @@ function ProfilePage({
                 <InstagramIcon />
               </span>
               <span className="text-xs font-bold text-slate-700">{instaHandle}</span>
-              <span className="ml-auto text-xs font-black text-[#e4405f]">
+              <span className="text-xs font-black text-[#e4405f] ml-auto">
                 {instaFollowers ? `${instaFollowers} followers · ✓` : '✓ Connected'}
               </span>
+              <button
+                onClick={handleIgDisconnect}
+                disabled={igDisconnecting}
+                className="flex-shrink-0 text-[10px] font-bold text-slate-400 hover:text-red-500 border border-slate-200 hover:border-red-200 hover:bg-red-50 rounded-lg px-2 py-1 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {igDisconnecting ? '...' : 'Disconnect'}
+              </button>
             </div>
           ) : igConnecting ? (
             <div className="w-full flex items-center gap-3 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-3 mb-4">
