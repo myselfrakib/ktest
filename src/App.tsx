@@ -605,7 +605,25 @@ function formatDeadline(dateStr: string): string {
 
 // ── Apply Page ─────────────────────────────────────────────────────────────
 
-function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack: () => void; userProfile?: any; currentUser?: any }) {
+function ApplyPage({
+  gig,
+  onBack,
+  userProfile,
+  currentUser,
+  creators,
+  brands,
+  onCreatorClick,
+  onBrandClick
+}: {
+  gig: Gig
+  onBack: () => void
+  userProfile?: any
+  currentUser?: any
+  creators: Creator[]
+  brands: Brand[]
+  onCreatorClick: (name: string) => void
+  onBrandClick: (brand: Brand) => void
+}) {
   const [step, setStep] = useState<'detail' | 'form' | 'success'>('detail')
   const [pitch, setPitch] = useState('')
   const [rate, setRate] = useState('')
@@ -614,6 +632,11 @@ function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack
   const [availability, setAvailability] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+
+  // Find creator matching the gig poster to display real Instagram followers
+  const matchedCreator = creators.find(c => c.name.toLowerCase() === gig.creatorName.toLowerCase()) || 
+                         CREATORS.find(c => c.name.toLowerCase() === gig.creatorName.toLowerCase());
+  const followersCount = (matchedCreator as any)?.instagram?.followersFormatted || matchedCreator?.followers || gig.followers;
 
   useEffect(() => {
     if (userProfile) {
@@ -745,8 +768,11 @@ function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack
         <>
           {/* Creator card */}
           <div className="mx-5 mb-4 bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="relative">
+            <div className="flex items-start gap-3 mb-3">
+              <div 
+                onClick={() => onCreatorClick(gig.creatorName)}
+                className="relative cursor-pointer hover:opacity-90 active:scale-95 transition-opacity duration-150 flex-shrink-0"
+              >
                 <img src={gig.avatar} alt={gig.creatorName} className="w-14 h-14 rounded-full object-cover border-2 border-[#e8edff]" />
                 {gig.verified && (
                   <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center">
@@ -756,17 +782,27 @@ function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack
                   </span>
                 )}
               </div>
-              <div className="flex-1">
-                <div className="font-bold text-slate-900 text-sm">{gig.creatorName}</div>
-                <div className="text-xs text-slate-400 font-medium">{gig.handle}</div>
-                <div className="flex items-center gap-1.5 mt-1">
+              <div className="flex-1 min-w-0">
+                <div 
+                  onClick={() => onCreatorClick(gig.creatorName)}
+                  className="font-bold text-slate-900 text-sm hover:text-[#3b5bdb] hover:underline transition cursor-pointer truncate"
+                >
+                  {gig.creatorName}
+                </div>
+                <div 
+                  onClick={() => onCreatorClick(gig.creatorName)}
+                  className="text-xs text-slate-400 font-medium hover:text-[#3b5bdb] hover:underline transition cursor-pointer truncate"
+                >
+                  {gig.handle}
+                </div>
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                   <span className="flex items-center gap-1 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-2 py-0.5 rounded-full">
-                    <InstagramIcon /> {gig.followers} followers
+                    <InstagramIcon /> {followersCount} followers
                   </span>
                   <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">{gig.niche}</span>
                 </div>
               </div>
-              <span className={`text-[11px] font-bold px-3 py-1 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 self-start mt-1.5 ${TYPE_COLORS[gig.type] || 'bg-slate-100'}`}>{gig.type}</span>
             </div>
             <div className="border-t border-slate-100 pt-3">
               <h2 className="font-bold text-slate-900 text-base leading-snug mb-1">{gig.title}</h2>
@@ -820,13 +856,22 @@ function ApplyPage({ gig, onBack, userProfile, currentUser }: { gig: Gig; onBack
 
           {/* Brand */}
           {gig.brand && (
-            <div className="mx-5 mb-5 bg-[#e8edff] rounded-2xl px-4 py-3 flex items-center gap-3">
+            <div 
+              onClick={() => {
+                const matchedBrand = brands.find(b => b.name.toLowerCase() === gig.brand?.toLowerCase()) || 
+                                     BRANDS.find(b => b.name.toLowerCase() === gig.brand?.toLowerCase());
+                if (matchedBrand) {
+                  onBrandClick(matchedBrand);
+                }
+              }}
+              className="mx-5 mb-5 bg-[#e8edff] hover:bg-[#dbe4ff] active:scale-[0.99] rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-all duration-200"
+            >
               <div className="w-8 h-8 rounded-xl bg-[#3b5bdb]/20 flex items-center justify-center text-[#3b5bdb] text-xs font-black">
                 {gig.brand[0]}
               </div>
               <div>
                 <div className="text-[10px] text-[#3b5bdb] font-bold uppercase tracking-wider">Brand / Client</div>
-                <div className="text-sm font-bold text-slate-800">{gig.brand}</div>
+                <div className="text-sm font-bold text-slate-800 hover:underline">{gig.brand}</div>
               </div>
             </div>
           )}
@@ -7136,7 +7181,30 @@ export default function App() {
     }
     if (gigPosted) return <GigPostedSuccess onBack={handleBack} />
     if (posting) return <PostGigPage userProfile={userProfile} userRole={userRole} onBack={handleBack} onPosted={() => { setPosting(false); setGigPosted(true) }} />
-    if (selectedGig) return <ApplyPage gig={selectedGig} onBack={handleBack} userProfile={userProfile} currentUser={auth.currentUser} />
+    if (selectedGig) {
+      return (
+        <ApplyPage 
+          gig={selectedGig} 
+          onBack={handleBack} 
+          userProfile={userProfile} 
+          currentUser={auth.currentUser}
+          creators={creators}
+          brands={brands}
+          onCreatorClick={(name) => {
+            const matched = creators.find(c => c.name.toLowerCase() === name.toLowerCase()) || 
+                            CREATORS.find(c => c.name.toLowerCase() === name.toLowerCase());
+            if (matched) {
+              setSelectedGigId(null);
+              setSelectedCreatorName(matched.name);
+            }
+          }}
+          onBrandClick={(b) => {
+            setSelectedGigId(null);
+            setSelectedBrandName(b.name);
+          }}
+        />
+      )
+    }
     if (viewingNotifications) {
       return (
         <NotificationsPage 
