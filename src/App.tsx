@@ -1528,7 +1528,11 @@ function ApplyPage({
 
           type: "application",
 
-          title: `New Application for ${gig.title}!`,
+          category: "activity",
+
+          actionText: "Review Pitch",
+
+          title: `📩 New Application for "${gig.title}"`,
 
           message: `${userProfile?.name || "A creator"} applied with pitch: "${pitch.trim().slice(0, 60)}..."`,
 
@@ -1538,6 +1542,28 @@ function ApplyPage({
 
           read: false,
         })
+
+        // Also send confirmation notification to the applicant
+        if (currentUser?.uid) {
+          await addDoc(collection(db, "notifications"), {
+            recipientUid: currentUser.uid,
+            recipientName: userProfile?.name || "Applicant",
+            senderName: gig.creatorName,
+            senderAvatar:
+              gig.avatar ||
+              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&h=160&fit=crop&auto=format",
+            type: "application",
+            category: "activity",
+            actionText: "View Status",
+            title: `✅ Application Submitted!`,
+            message: `You successfully applied to "${gig.title}". We'll notify you when ${gig.creatorName} reviews your pitch!`,
+            read: false,
+            createdAt: new Date().toISOString(),
+            avatar:
+              gig.avatar ||
+              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&h=160&fit=crop&auto=format",
+          })
+        }
       } catch (err) {
         console.warn("[APPLY] Could not send notification:", err)
       }
@@ -2177,6 +2203,28 @@ function ViewMyGigPage({
             status: d.id === app.id ? "accepted" : "rejected",
           })
         })
+
+        // Send Push Notification for Application Accepted
+        if (app.applicantUid) {
+          await addDoc(collection(db, "notifications"), {
+            recipientUid: app.applicantUid,
+            recipientName: app.applicantName || "Creator",
+            senderName: gig.creatorName || "Gig Owner",
+            senderAvatar:
+              gig.avatar ||
+              "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
+            title: "🎉 Application Accepted!",
+            message: `Congratulations! Your application for "${gig.title}" was accepted by ${gig.creatorName}!`,
+            type: "application",
+            category: "activity",
+            actionText: "Open Chat",
+            read: false,
+            createdAt: new Date().toISOString(),
+            avatar:
+              gig.avatar ||
+              "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
+          })
+        }
       } catch (_) {}
       setAcceptToast(app.applicantName || "Creator")
       setTimeout(() => setAcceptToast(null), 4000)
@@ -3465,6 +3513,26 @@ function PostGigPage({
       }
 
       await setDoc(doc(db, "gigs", String(newGigId)), newGig)
+
+      // 4. Send Push Notification for New Gig Created
+      try {
+        await addDoc(collection(db, "notifications"), {
+          recipientUid: "all",
+          recipientName: "Community",
+          senderName: newGig.creatorName,
+          senderAvatar: newGig.avatar,
+          title: `⚡ New Gig Posted: ${newGig.title}`,
+          message: `${newGig.creatorName} posted a new gig "${newGig.title}" in ${newGig.niche}! Budget: ${newGig.budget}`,
+          type: "gig",
+          category: "activity",
+          actionText: "View Gig",
+          read: false,
+          createdAt: new Date().toISOString(),
+          avatar: newGig.avatar,
+        })
+      } catch (e) {
+        console.warn("Gig notification failed:", e)
+      }
 
       onPosted()
     } catch (err: any) {
@@ -7977,12 +8045,20 @@ function NotificationsPage({
   unreadNotifications,
 
   setUnreadNotifications,
+
+  dbNotifications = [],
+
+  onNotificationAction,
 }: {
   onBack: () => void
 
   unreadNotifications: Set<number>
 
   setUnreadNotifications: React.Dispatch<React.SetStateAction<Set<number>>>
+
+  dbNotifications?: any[]
+
+  onNotificationAction?: (notification: any) => void
 }) {
   const [activeTab, setActiveTab] = useState<"all" | "activity" | "system">(
     "all",
@@ -7990,27 +8066,81 @@ function NotificationsPage({
 
   const handleMarkAllRead = () => {
     setUnreadNotifications(new Set())
-  }
 
-  const handleToggleRead = (id: number) => {
-    setUnreadNotifications((prev) => {
-      const next = new Set(prev)
-
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
+    dbNotifications.forEach(async (n) => {
+      if (!n.read && n.id) {
+        try {
+          await updateDoc(doc(db, "notifications", n.id), { read: true })
+        } catch (e) {}
       }
-
-      return next
     })
   }
 
-  const filteredNotifications = NOTIFICATIONS.filter((n) => {
+  const handleToggleRead = async (item: any) => {
+    if (item.isDbDoc && item.dbId) {
+      try {
+        await updateDoc(doc(db, "notifications", item.dbId), {
+          read: !item.read,
+        })
+      } catch (e) {}
+    } else {
+      setUnreadNotifications((prev) => {
+        const next = new Set(prev)
+
+        if (next.has(item.id)) {
+          next.delete(item.id)
+        } else {
+          next.add(item.id)
+        }
+
+        return next
+      })
+    }
+  }
+
+  const combinedList = [
+    ...(dbNotifications || []).map((n) => ({
+      id: n.id,
+      dbId: n.id,
+      title: n.title,
+      message: n.message,
+      time: n.createdAt
+        ? new Date(n.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "Just now",
+      type: n.type || "system",
+      category: n.category || "activity",
+      actionText: n.actionText || "View",
+      read: n.read ?? false,
+      avatar: n.avatar || null,
+      isDbDoc: true,
+      raw: n,
+    })),
+    ...NOTIFICATIONS.map((n) => ({
+      id: n.id,
+      dbId: null,
+      title: n.title,
+      message: n.message,
+      time: n.time,
+      type: n.type,
+      category: n.category,
+      actionText: n.actionText,
+      read: !unreadNotifications.has(n.id),
+      avatar: n.avatar || null,
+      isDbDoc: false,
+      raw: n,
+    })),
+  ]
+
+  const filteredNotifications = combinedList.filter((n) => {
     if (activeTab === "all") return true
 
     return n.category === activeTab
   })
+
+  const unreadCount = combinedList.filter((n) => !n.read).length
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-10 bg-slate-50 flex flex-col min-h-screen">
@@ -8027,7 +8157,7 @@ function NotificationsPage({
             Notifications
           </h1>
         </div>
-        {unreadNotifications.size > 0 && (
+        {unreadCount > 0 && (
           <button
             onClick={handleMarkAllRead}
             className="text-xs font-bold text-[#3b5bdb] hover:underline"
@@ -8063,7 +8193,7 @@ function NotificationsPage({
       {/* Notifications List */}
       <div className="flex-1 px-4 py-4 flex flex-col gap-3">
         {filteredNotifications.map((notification) => {
-          const isUnread = unreadNotifications.has(notification.id)
+          const isUnread = !notification.read
 
           const renderNotificationIcon = () => {
             if (notification.avatar) {
@@ -8078,7 +8208,7 @@ function NotificationsPage({
 
             return (
               <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center text-lg">
-                {notification.type === "system" ? "🔒" : "🔔"}
+                {notification.type === "system" ? "🔒" : "⚡"}
               </div>
             )
           }
@@ -8086,7 +8216,7 @@ function NotificationsPage({
           return (
             <div
               key={notification.id}
-              onClick={() => handleToggleRead(notification.id)}
+              onClick={() => handleToggleRead(notification)}
               className={`p-4 rounded-3xl bg-white border transition-all duration-200 cursor-pointer flex gap-3 relative ${
                 isUnread
                   ? "border-l-4 border-l-[#3b5bdb] border-slate-100 shadow-sm"
@@ -8117,7 +8247,7 @@ function NotificationsPage({
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleToggleRead(notification.id)
+                      handleToggleRead(notification)
                     }}
                     className="text-[10px] font-bold text-[#3b5bdb] bg-[#3b5bdb]/10 px-3 py-1.5 rounded-xl hover:bg-[#3b5bdb]/20 transition"
                   >
@@ -8127,7 +8257,7 @@ function NotificationsPage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleToggleRead(notification.id)
+                        handleToggleRead(notification)
                       }}
                       className="text-[10px] font-medium text-slate-400 hover:text-slate-600 px-2 py-1.5 transition"
                     >
@@ -8499,6 +8629,30 @@ function ChatPage({
           `✅ Accepted ${app.applicantName || chatName} for "${app.gigTitle || "Gig"}"!`,
         )
         setTimeout(() => setGigPanelToast(null), 4000)
+
+        // Send Push Notification for Application Accepted
+        if (app.applicantUid) {
+          await addDoc(collection(db, "notifications"), {
+            recipientUid: app.applicantUid,
+            recipientName: app.applicantName || chatName || "Creator",
+            senderName: userProfile?.name || "Gig Host",
+            senderAvatar:
+              userProfile?.avatar ||
+              userProfile?.logo ||
+              "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
+            title: "🎉 Application Accepted!",
+            message: `Congratulations! Your application for "${app.gigTitle || "Gig"}" was accepted by ${userProfile?.name || "Gig Host"}!`,
+            type: "application",
+            category: "activity",
+            actionText: "Open Chat",
+            read: false,
+            createdAt: new Date().toISOString(),
+            avatar:
+              userProfile?.avatar ||
+              userProfile?.logo ||
+              "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
+          })
+        }
       }
     } catch (err: any) {
       alert(err.message || "Action failed")
@@ -12927,6 +13081,10 @@ export default function App() {
 
   const [generatingShareCard, setGeneratingShareCard] = useState(false)
 
+  // Real-time Push Notifications state
+  const [dbNotifications, setDbNotifications] = useState<any[]>([])
+  const [liveToast, setLiveToast] = useState<any>(null)
+
   // WebRTC Live Calling State & Refs
   const [activeCall, setActiveCall] = useState<any>(null)
   const [incomingCall, setIncomingCall] = useState<any>(null)
@@ -13675,6 +13833,57 @@ export default function App() {
     const s = sec % 60
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
   }
+
+  // Real-time Firestore Notifications Listener & Desktop Push
+  useEffect(() => {
+    if (!currentUser) return
+
+    const q1 = query(
+      collection(db, "notifications"),
+      where("recipientUid", "in", [currentUser.uid, "all"]),
+      orderBy("createdAt", "desc"),
+    )
+
+    const unsubscribe = onSnapshot(
+      q1,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        setDbNotifications(list)
+
+        snap.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            const data = change.doc.data()
+            const createdTime = new Date(data.createdAt || Date.now()).getTime()
+            const isRecent = Date.now() - createdTime < 15000
+
+            if (!data.read && isRecent) {
+              setLiveToast(data)
+              setTimeout(() => setLiveToast(null), 6000)
+
+              if (
+                "Notification" in window &&
+                Notification.permission === "granted"
+              ) {
+                try {
+                  new Notification(data.title || "Kreator Kolkata", {
+                    body: data.message,
+                    icon: data.avatar || "/favicon.ico",
+                  })
+                } catch (e) {}
+              }
+            }
+          }
+        })
+      },
+      (err) => console.warn("Notifications listener error:", err),
+    )
+
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {})
+    }
+
+    return () => unsubscribe()
+  }, [currentUser])
 
   // Derived object states from IDs/names
 
@@ -14458,6 +14667,7 @@ export default function App() {
           onBack={() => setViewingNotifications(false)}
           unreadNotifications={unreadNotifications}
           setUnreadNotifications={setUnreadNotifications}
+          dbNotifications={dbNotifications}
         />
       )
     }
@@ -14968,6 +15178,34 @@ export default function App() {
                 <PhoneOffIcon />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Live Notification Banner Toast */}
+        {liveToast && (
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-[400px] bg-slate-900/95 text-white backdrop-blur-xl p-4 rounded-3xl shadow-2xl border border-slate-700/60 flex items-center gap-3 animate-in slide-in-from-top duration-300">
+            <img
+              src={
+                liveToast.avatar ||
+                "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
+              }
+              alt=""
+              className="w-11 h-11 rounded-full object-cover border border-slate-700 flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-black text-white truncate">
+                {liveToast.title}
+              </div>
+              <p className="text-[11px] text-slate-300 leading-tight truncate">
+                {liveToast.message}
+              </p>
+            </div>
+            <button
+              onClick={() => setLiveToast(null)}
+              className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs font-bold flex items-center justify-center flex-shrink-0"
+            >
+              ✕
+            </button>
           </div>
         )}
 
