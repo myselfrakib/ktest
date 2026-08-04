@@ -7586,66 +7586,77 @@ function ExplorePage({
               <div
                 key={event.id}
                 onClick={() => onSelectEvent && onSelectEvent(event)}
-                className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 flex flex-col relative transition-transform active:scale-[0.99] cursor-pointer hover:border-slate-200"
+                className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md border border-slate-100 flex flex-col relative transition-transform active:scale-[0.99] cursor-pointer hover:border-slate-200"
               >
-                <div className="relative h-[120px]">
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  <span className="absolute top-3 left-3 bg-[#3b5bdb] text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    {event.tag}
-                  </span>
-                  <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
-                    <div>
-                      <h3 className="text-white font-bold text-base leading-tight">
+                <img
+                  src={event.image}
+                  alt={event.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
+
+                <div className="absolute inset-0 p-4 flex flex-col justify-between z-10">
+                  {/* Top Row: Tag/Featured & RSVP Button */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="bg-white/20 backdrop-blur-md text-white text-[9px] font-bold px-2.5 py-1 rounded-full border border-white/30 uppercase tracking-wider">
+                        {event.tag}
+                      </span>
+                      {(event as any).isFeatured && (
+                        <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                          ⭐ FEATURED
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!isRsvp) toggleRsvpEvent(event.id)
+                      }}
+                      disabled={isRsvp}
+                      className={`text-[10px] font-bold px-3.5 py-1.5 rounded-full shadow-md active:scale-95 transition ${
+                        isRsvp
+                          ? "bg-emerald-500/20 backdrop-blur-md text-emerald-300 border border-emerald-500/30 cursor-default"
+                          : "bg-white text-slate-800 hover:bg-slate-50 cursor-pointer"
+                      }`}
+                    >
+                      {isRsvp ? "✓ Registered" : "Register Now"}
+                    </button>
+                  </div>
+
+                  {/* Bottom Row: Title & Info */}
+                  <div className="flex justify-between items-end gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-display font-black text-base leading-tight mb-1 truncate">
                         {event.title}
                       </h3>
-                      <p className="text-white/80 text-xs">{event.subtitle}</p>
+                      {event.subtitle && (
+                        <p className="text-white/70 text-[10px] font-medium truncate mb-1.5">
+                          {event.subtitle}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-white/80 text-[10px]">
+                        <span className="flex items-center gap-1">
+                          <CalendarIcon />
+                          {event.date} · {event.time}
+                        </span>
+                        <span className="flex items-center gap-1 truncate">
+                          <MapPinIcon />
+                          {event.venue}
+                        </span>
+                      </div>
                     </div>
-                    <div className="bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl px-3 py-1 text-center min-w-[50px] flex flex-col justify-center">
-                      <span className="text-white font-display font-black text-lg leading-none">
-                        {event.day}
-                      </span>
-                      <span className="text-white/80 text-[9px] font-bold uppercase tracking-wider">
-                        {event.month}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 flex items-center justify-between bg-white">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                      <CalendarIcon />
-                      <span>{event.time}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                      <MapPinIcon />
-                      <span>{event.venue}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium mt-1">
+
+                    {/* Attendees count */}
+                    <div className="flex items-center gap-1 text-[10px] text-white/85 bg-white/10 backdrop-blur-sm border border-white/10 px-2.5 py-1 rounded-full flex-shrink-0">
                       <UsersIcon />
-                      <span>
+                      <span className="font-bold">
                         {event.attendees + (isRsvp ? 1 : 0)} attending
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (!isRsvp) toggleRsvpEvent(event.id)
-                    }}
-                    disabled={isRsvp}
-                    className={`text-xs font-bold px-4 py-2.5 rounded-xl transition ${
-                      isRsvp
-                        ? "bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default"
-                        : "bg-[#3b5bdb] text-white shadow-sm shadow-blue-100 cursor-pointer"
-                    }`}
-                  >
-                    {isRsvp ? "✓ Registered" : "Register Now"}
-                  </button>
                 </div>
               </div>
             )
