@@ -1450,7 +1450,8 @@ function HomePage({
   creators = CREATORS,
   brands = BRANDS,
   userProfile,
-  onProfileClick
+  onProfileClick,
+  onShareGig
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -1468,6 +1469,7 @@ function HomePage({
   brands?: Brand[]
   userProfile?: any
   onProfileClick?: () => void
+  onShareGig: (gig: Gig) => void
 }) {
   const [activeFilter, setActiveFilter] = useState('All Gigs')
   const [activeNiche, setActiveNiche] = useState('All')
@@ -1678,10 +1680,11 @@ function HomePage({
                   </div>
                 </div>
                 <button
-                  onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
-                  className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center"
+                  onClick={e => { e.stopPropagation(); onShareGig(gig) }}
+                  className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:text-[#3b5bdb] hover:bg-blue-50 active:scale-90 transition cursor-pointer"
+                  title="Share Gig"
                 >
-                  <BookmarkIcon filled={savedGigs.has(gig.id)} />
+                  <ShareIcon />
                 </button>
               </div>
               <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">{gig.title}</h3>
@@ -4032,7 +4035,8 @@ function ExplorePage({
   events = EVENTS,
   userProfile,
   onProfileClick,
-  onSelectEvent
+  onSelectEvent,
+  onShareGig
 }: {
   savedGigs: Set<number>
   toggleSave: (id: number) => void
@@ -4056,6 +4060,7 @@ function ExplorePage({
   userProfile?: any
   onProfileClick?: () => void
   onSelectEvent?: (event: Event) => void
+  onShareGig: (gig: Gig) => void
 }) {
 
   const userAvatar = userProfile?.avatar || userProfile?.logo || "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
@@ -4444,10 +4449,11 @@ function ExplorePage({
                       <div className="flex items-center gap-2">
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}>{gig.type}</span>
                         <button
-                          onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
-                          className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
+                          onClick={e => { e.stopPropagation(); onShareGig(gig) }}
+                          className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:text-[#3b5bdb] hover:bg-blue-50 transition active:scale-95 cursor-pointer"
+                          title="Share Gig"
                         >
-                          <BookmarkIcon filled={savedGigs.has(gig.id)} />
+                          <ShareIcon />
                         </button>
                       </div>
                     </div>
@@ -4639,10 +4645,11 @@ function ExplorePage({
                       </div>
                     </div>
                     <button
-                      onClick={e => { e.stopPropagation(); toggleSave(gig.id) }}
-                      className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center"
+                      onClick={e => { e.stopPropagation(); onShareGig(gig) }}
+                      className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:text-[#3b5bdb] hover:bg-blue-50 active:scale-90 transition cursor-pointer"
+                      title="Share Gig"
                     >
-                      <BookmarkIcon filled={savedGigs.has(gig.id)} />
+                      <ShareIcon />
                     </button>
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">{gig.title}</h3>
@@ -6717,6 +6724,471 @@ function AuthScreen({
   )
 }
 
+// ── Canvas Story Card Generator ──────────────────────────────────────────
+const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not get canvas context');
+
+  // 1. Draw Background Gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+  grad.addColorStop(0, '#3b5bdb');
+  grad.addColorStop(0.5, '#7048e8');
+  grad.addColorStop(1, '#f76707');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Add subtle grid radial dot pattern
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  for (let x = 60; x < 1080; x += 60) {
+    for (let y = 60; y < 1920; y += 60) {
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 2. Draw Title Header
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 48px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('KREATOR KOLKATA', 540, 200);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillText('NEW COLLABORATION GIG', 540, 260);
+
+  // 3. Draw Main Card Container
+  const cardX = 90;
+  const cardY = 360;
+  const cardW = 900;
+  const cardH = 1140;
+  const r = 50;
+
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+  ctx.shadowBlur = 35;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 15;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(cardX + r, cardY);
+  ctx.lineTo(cardX + cardW - r, cardY);
+  ctx.quadraticCurveTo(cardX + cardW, cardY, cardX + cardW, cardY + r);
+  ctx.lineTo(cardX + cardW, cardY + cardH - r);
+  ctx.quadraticCurveTo(cardX + cardW, cardY + cardH, cardX + cardW - r, cardY + cardH);
+  ctx.lineTo(cardX + r, cardY + cardH);
+  ctx.quadraticCurveTo(cardX, cardY + cardH, cardX, cardY + cardH - r);
+  ctx.lineTo(cardX, cardY + r);
+  ctx.quadraticCurveTo(cardX, cardY, cardX + r, cardY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Reset shadow
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // 4. Load & Draw Avatar safely
+  let avatarImg: HTMLImageElement | null = null;
+  let useFallbackAvatar = false;
+  
+  if (poster.avatar) {
+    try {
+      const response = await fetch(poster.avatar, { mode: 'cors' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        avatarImg = new Image();
+        avatarImg.src = blobUrl;
+        await new Promise((resolve) => {
+          avatarImg!.onload = resolve;
+          avatarImg!.onerror = () => {
+            useFallbackAvatar = true;
+            resolve(null);
+          };
+        });
+      } else {
+        useFallbackAvatar = true;
+      }
+    } catch (e) {
+      useFallbackAvatar = true;
+    }
+  } else {
+    useFallbackAvatar = true;
+  }
+
+  const avX = cardX + 80;
+  const avY = cardY + 100;
+  const avSize = 140;
+
+  if (!useFallbackAvatar && avatarImg) {
+    ctx.strokeStyle = '#f1f5f9';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(avX + avSize / 2, avY + avSize / 2, avSize / 2 + 3, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(avX + avSize / 2, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+    ctx.clip();
+    try {
+      ctx.drawImage(avatarImg, avX, avY, avSize, avSize);
+    } catch (e) {
+      useFallbackAvatar = true;
+    }
+    ctx.restore();
+  }
+
+  if (useFallbackAvatar) {
+    ctx.fillStyle = '#3b5bdb';
+    ctx.beginPath();
+    ctx.arc(avX + avSize / 2, avY + avSize / 2, avSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 64px sans-serif';
+    ctx.textAlign = 'center';
+    const initial = (poster.name || 'K').trim()[0].toUpperCase();
+    ctx.fillText(initial, avX + avSize / 2, avY + avSize / 2 + 22);
+  }
+
+  // 5. Draw Poster Name
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 44px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(poster.name, avX + avSize + 40, avY + avSize / 2 - 10);
+
+  // Draw Poster Handle
+  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillText(poster.handle || '@kolkata.creator', avX + avSize + 40, avY + avSize / 2 + 40);
+
+  // Draw Verified checkmark
+  if (poster.verified) {
+    const checkX = avX + avSize + 45 + ctx.measureText(poster.name).width;
+    if (checkX < cardX + cardW - 80) {
+      ctx.fillStyle = '#3b5bdb';
+      ctx.beginPath();
+      ctx.arc(checkX + 18, avY + avSize / 2 - 25, 18, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(checkX + 11, avY + avSize / 2 - 25);
+      ctx.lineTo(checkX + 16, avY + avSize / 2 - 20);
+      ctx.lineTo(checkX + 24, avY + avSize / 2 - 30);
+      ctx.stroke();
+    }
+  }
+
+  // 6. Draw Divider Line
+  ctx.strokeStyle = '#f1f5f9';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(cardX + 80, cardY + 280);
+  ctx.lineTo(cardX + cardW - 80, cardY + 280);
+  ctx.stroke();
+
+  // 7. Draw Campaign Title (Wrapped Text)
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '900 52px sans-serif';
+  const titleY = cardY + 370;
+  const titleText = gig.title;
+  
+  const words = titleText.split(' ');
+  let line = '';
+  const lines = [];
+  const maxWidth = cardW - 160;
+  ctx.font = '900 52px sans-serif';
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && n > 0) {
+      lines.push(line);
+      line = words[n] + ' ';
+    } else {
+      line = testLine;
+    }
+  }
+  lines.push(line);
+
+  ctx.textAlign = 'left';
+  for (let i = 0; i < Math.min(lines.length, 3); i++) {
+    ctx.fillText(lines[i], cardX + 80, titleY + i * 70);
+  }
+
+  // 8. Draw Badges
+  const badgeY = titleY + Math.min(lines.length, 3) * 70 + 20;
+  const drawRoundRect = (x: number, y: number, w: number, h: number, r: number) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  // Draw Type Badge
+  ctx.fillStyle = '#e8edff';
+  drawRoundRect(cardX + 80, badgeY, 180, 60, 30);
+  ctx.fillStyle = '#3b5bdb';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(gig.type, cardX + 80 + 90, badgeY + 40);
+
+  // Draw Niche Badge
+  ctx.fillStyle = '#fef3c7';
+  ctx.font = 'bold 28px sans-serif';
+  const nicheW = ctx.measureText(gig.niche).width + 60;
+  drawRoundRect(cardX + 280, badgeY, nicheW, 60, 30);
+  ctx.fillStyle = '#d97706';
+  ctx.textAlign = 'center';
+  ctx.fillText(gig.niche, cardX + 280 + nicheW / 2, badgeY + 40);
+
+  // 9. Draw Details Box
+  const detailY = badgeY + 110;
+  ctx.fillStyle = '#f8fafc';
+  drawRoundRect(cardX + 80, detailY, cardW - 160, 240, 30);
+
+  // Draw Budget Heading
+  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 26px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('BUDGET / OFFER', cardX + 120, detailY + 70);
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '900 44px sans-serif';
+  ctx.fillText(gig.budget, cardX + 120, detailY + 130);
+
+  // Draw Location Heading
+  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('LOCATION', cardX + 120, detailY + 200);
+
+  ctx.fillStyle = '#334155';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.fillText(gig.location || 'Kolkata, WB', cardX + 280, detailY + 200);
+
+  // 10. Draw Footer CTA Reminder
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Join Kolkata’s biggest creator community', 540, cardY + cardH + 110);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 38px sans-serif';
+  ctx.fillText('kreatorkolkata.com', 540, cardY + cardH + 170);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(new File([blob], `gig-${gig.id}.png`, { type: 'image/png' }));
+      } else {
+        reject(new Error('Canvas blob is null'));
+      }
+    }, 'image/png');
+  });
+};
+
+// ── Share Gig Popup Modal ──────────────────────────────────────────────────
+interface ShareGigModalProps {
+  gig: Gig
+  userProfile: any
+  creators: Creator[]
+  brands: Brand[]
+  onClose: () => void
+}
+
+function ShareGigModal({ gig, userProfile, creators, brands, onClose }: ShareGigModalProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
+  const [shareError, setShareError] = useState<string | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  const poster = resolveGigPosterDetails(gig, userProfile, creators, brands)
+
+  useEffect(() => {
+    let active = true
+    const renderImage = async () => {
+      try {
+        const file = await generateGigStoryImage(gig, poster)
+        if (active) {
+          const url = URL.createObjectURL(file)
+          setPreviewUrl(url)
+          setLoading(false)
+        }
+      } catch (err: any) {
+        console.error('Failed to generate gig share image', err)
+        if (active) {
+          setShareError('Failed to generate image preview')
+          setLoading(false)
+        }
+      }
+    }
+    renderImage()
+
+    return () => {
+      active = false
+    }
+  }, [gig])
+
+  const handleNativeShare = async () => {
+    try {
+      if (!previewUrl) return
+      const file = await generateGigStoryImage(gig, poster)
+      
+      const shareData = {
+        files: [file],
+        title: gig.title,
+        text: `Check out this creator gig on Kreator Kolkata: ${gig.title}`,
+      }
+
+      if (navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData)
+      } else {
+        handleDownload()
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.warn('Native share failed', err)
+        handleCopyLink()
+      }
+    }
+  }
+
+  const handleDownload = async () => {
+    try {
+      if (!previewUrl) return
+      const file = await generateGigStoryImage(gig, poster)
+      const a = document.createElement('a')
+      a.href = previewUrl
+      a.download = `kreator-kolkata-gig-${gig.id}.png`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (err) {
+      console.error('Download failed', err)
+    }
+  }
+
+  const handleCopyLink = () => {
+    const shareUrl = `${window.location.origin}/?gig=${gig.id}`
+    navigator.clipboard.writeText(shareUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div 
+        ref={modalRef}
+        className="bg-white rounded-3xl w-full max-w-[360px] p-5 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200"
+      >
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">Share Story Card</h3>
+            <p className="text-[10px] text-slate-400 font-medium">Ready to share on Instagram & other apps</p>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-95 transition cursor-pointer border-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Preview Container */}
+        <div className="aspect-[9/16] w-full max-w-[220px] mx-auto bg-slate-100 rounded-2xl overflow-hidden relative border shadow-inner flex items-center justify-center">
+          {loading ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 rounded-full border-3 border-slate-200 border-t-[#3b5bdb] animate-spin" />
+              <span className="text-[10px] font-bold text-slate-400">Generating Card...</span>
+            </div>
+          ) : previewUrl ? (
+            <img 
+              src={previewUrl} 
+              alt="Gig Share Card Preview" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="text-center p-4">
+              <span className="text-xs font-semibold text-rose-500">{shareError || 'Failed to render'}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Sharing Options */}
+        <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+          <button
+            onClick={handleNativeShare}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-xs font-bold rounded-xl shadow-md shadow-blue-100 active:scale-[0.98] transition cursor-pointer disabled:opacity-50 border-none"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>Share Image to Apps / Story</span>
+          </button>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleDownload}
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl active:scale-[0.98] transition cursor-pointer disabled:opacity-50 border border-slate-200"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download PNG</span>
+            </button>
+
+            <button
+              onClick={handleCopyLink}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl active:scale-[0.98] transition cursor-pointer relative border border-slate-200"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Root App ───────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -6738,6 +7210,7 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [userRole, setUserRole] = useState<'creator' | 'brand' | 'admin' | 'admin_pending' | null>(null)
   const [adminViewMode, setAdminViewMode] = useState<'dashboard' | 'platform'>('dashboard')
+  const [sharingGig, setSharingGig] = useState<Gig | null>(null)
 
   // Auth State changed hook
   useEffect(() => {
@@ -7415,6 +7888,7 @@ export default function App() {
           userProfile={userProfile}
           onProfileClick={() => setActiveTab('profile')}
           onSelectEvent={(ev) => setSelectedEventId(ev.id)}
+          onShareGig={setSharingGig}
         />
       )
     }
@@ -7436,6 +7910,7 @@ export default function App() {
         brands={brands}
         userProfile={userProfile}
         onProfileClick={() => setActiveTab('profile')}
+        onShareGig={setSharingGig}
       />
     )
   }
@@ -7587,6 +8062,15 @@ export default function App() {
               />
             )}
           </div>
+        )}
+        {sharingGig && (
+          <ShareGigModal 
+            gig={sharingGig} 
+            userProfile={userProfile}
+            creators={creators}
+            brands={brands}
+            onClose={() => setSharingGig(null)} 
+          />
         )}
       </div>
     </div>
