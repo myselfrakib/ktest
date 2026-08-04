@@ -6436,15 +6436,32 @@ function AdminDashboardPage({
         )}
       </div>
       {showCreateEventModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#0f1d38] text-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-800 flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h3 className="text-base font-bold text-white">Create Platform Event</h3>
-              <button onClick={() => setShowCreateEventModal(false)} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer">X</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-200">
+          <div className="bg-[#0b1329]/95 text-white rounded-[32px] w-full max-w-md p-6 shadow-[0_25px_60px_rgba(0,0,0,0.8)] border border-slate-800/80 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-800/85">
+              <div>
+                <h3 className="text-base font-black tracking-tight text-white bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Create Platform Event</h3>
+                <p className="text-[9px] text-slate-500 font-black mt-0.5 uppercase tracking-wider">Publish a new event to the community</p>
+              </div>
+              <button 
+                onClick={() => setShowCreateEventModal(false)} 
+                className="w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-850 border border-slate-800/80 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer transition duration-150 active:scale-95 hover:rotate-90"
+              >
+                ✕
+              </button>
             </div>
+            
             {originalImage ? (
               <div className="flex flex-col gap-4 select-none">
-                <div className="event-crop-container relative aspect-[2/1] w-full overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 cursor-grab active:cursor-grabbing"
+                <div className="flex items-center justify-between pb-2 border-b border-slate-850">
+                  <div>
+                    <h4 className="text-xs font-black text-white">Adjust Event Banner</h4>
+                    <p className="text-[9px] text-slate-500 font-bold mt-0.5">Drag to pan banner, use slider to zoom</p>
+                  </div>
+                  <span className="text-[9px] font-black bg-[#3b5bdb]/15 text-[#5c7cfa] border border-[#3b5bdb]/30 px-2 py-0.5 rounded-full uppercase tracking-wider">2:1 Ratio</span>
+                </div>
+
+                <div className="event-crop-container relative aspect-[2/1] w-full overflow-hidden rounded-[24px] border border-slate-800 bg-slate-950 cursor-grab active:cursor-grabbing shadow-inner"
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
@@ -6472,7 +6489,7 @@ function AdminDashboardPage({
                     }}
                     className="w-full h-full object-cover pointer-events-none select-none"
                   />
-                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40">
                     <div className="border-r border-b border-white/20"></div>
                     <div className="border-r border-b border-white/20"></div>
                     <div className="border-b border-white/20"></div>
@@ -6483,12 +6500,12 @@ function AdminDashboardPage({
                     <div className="border-r border-white/20"></div>
                     <div></div>
                   </div>
-                  <div className="absolute inset-0 border-2 border-[#3b5bdb] pointer-events-none rounded-2xl" />
+                  <div className="absolute inset-0 border-2 border-[#3b5bdb] pointer-events-none rounded-[24px]" />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+                  <div className="flex justify-between text-[9px] text-slate-500 font-black uppercase tracking-widest">
                     <span>Zoom Scale</span>
-                    <span>{zoom.toFixed(1)}x</span>
+                    <span className="text-slate-300">{zoom.toFixed(2)}x</span>
                   </div>
                   <input 
                     type="range" 
@@ -6497,11 +6514,11 @@ function AdminDashboardPage({
                     step="0.05"
                     value={zoom}
                     onChange={e => setZoom(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#3b5bdb]"
+                    className="w-full h-1.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-[#3b5bdb]"
                   />
                 </div>
-                <div className="flex gap-3 pt-3 border-t border-slate-800">
-                  <button type="button" onClick={() => { setOriginalImage(null); setEventFile(null); setEventPreviewUrl(null) }} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer transition">Cancel</button>
+                <div className="flex gap-3 pt-3 border-t border-slate-800/80">
+                  <button type="button" onClick={() => { setOriginalImage(null); setEventFile(null); setEventPreviewUrl(null) }} className="flex-1 py-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold rounded-2xl cursor-pointer transition duration-150 active:scale-98">Cancel</button>
                   <button type="button" 
                     onClick={async () => {
                       try {
@@ -6514,30 +6531,30 @@ function AdminDashboardPage({
                         alert('Error cropping image')
                       }
                     }}
-                    className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl hover:bg-[#2b4ef7] cursor-pointer transition"
+                    className="flex-1 py-3 bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] text-white text-xs font-black rounded-2xl hover:brightness-110 active:scale-98 transition duration-150 flex items-center justify-center shadow-lg shadow-blue-950/40"
                   >
                     Apply Crop
                   </button>
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleCreateEventSubmit} className="flex flex-col gap-3.5 overflow-y-auto max-h-[65vh] pr-1">
+              <form onSubmit={handleCreateEventSubmit} className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] pr-1.5 scrollbar-thin">
                 <div 
                   onClick={() => document.getElementById('event-file-input')?.click()} 
-                  className="w-full aspect-[2/1] rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/40 overflow-hidden relative group cursor-pointer flex items-center justify-center transition-colors hover:border-[#3b5bdb]"
+                  className="w-full aspect-[2/1] rounded-[24px] border-2 border-dashed border-slate-800 bg-slate-950/40 overflow-hidden relative group cursor-pointer flex items-center justify-center transition-all duration-200 hover:border-[#3b5bdb] hover:bg-slate-950/60"
                 >
                   {eventPreviewUrl || eventImage ? (
                     <>
                       <img src={eventPreviewUrl || eventImage} alt="Cover" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                        <span className="text-white text-xs font-bold bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-700">Change Cover</span>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-150 flex items-center justify-center">
+                        <span className="text-white text-[10px] font-bold bg-slate-950/80 px-3 py-1.5 rounded-full border border-slate-800 shadow-lg">Change Cover</span>
                       </div>
                     </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center gap-2 text-slate-500 group-hover:text-slate-300 transition-colors">
-                      <span className="text-5xl font-light leading-none">+</span>
-                      <span className="text-xs font-bold">Upload Event Cover</span>
-                      <span className="text-[10px] text-slate-600 font-medium">Aspect Ratio 2:1</span>
+                    <div className="flex flex-col items-center justify-center gap-2 text-slate-550 group-hover:text-slate-350 transition-colors">
+                      <span className="text-4xl font-light leading-none">+</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider">Upload Event Cover</span>
+                      <span className="text-[9px] text-slate-600 font-bold">Recommended 2:1 Landscape</span>
                     </div>
                   )}
                 </div>
@@ -6560,23 +6577,62 @@ function AdminDashboardPage({
                     } 
                   }} 
                 />
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Event Title</label><input required type="text" value={eventTitle} onChange={e => setEventTitle(e.target.value)} placeholder="e.g. Kolkata Creator Conclave 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Subtitle</label><input type="text" value={eventSubtitle} onChange={e => setEventSubtitle(e.target.value)} placeholder="e.g. Network with top creators" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Date</label><input type="text" value={eventDate} onChange={e => setEventDate(e.target.value)} placeholder="e.g. Aug 28, 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Time</label><input type="text" value={eventTime} onChange={e => setEventTime(e.target.value)} placeholder="5:00 PM" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Event Title</label>
+                  <input required type="text" value={eventTitle} onChange={e => setEventTitle(e.target.value)} placeholder="e.g. Kolkata Creator Conclave 2026" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
                 </div>
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Venue</label><input required type="text" value={eventVenue} onChange={e => setEventVenue(e.target.value)} placeholder="e.g. Biswa Bangla Gate, New Town" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Category Tag</label><input type="text" value={eventTag} onChange={e => setEventTag(e.target.value)} placeholder="e.g. Networking, Summit, Party" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">About Event</label><textarea rows={3} value={eventDescription} onChange={e => setEventDescription(e.target.value)} placeholder="Detailed overview of agenda..." className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb] resize-none font-sans" /></div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Organizer</label><input type="text" value={eventOrganizer} onChange={e => setEventOrganizer(e.target.value)} placeholder="Kreator Kolkata Community" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Entry Fee</label><input type="text" value={eventEntryFee} onChange={e => setEventEntryFee(e.target.value)} placeholder="Free RSVP or 499" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Subtitle / Pitch</label>
+                  <input type="text" value={eventSubtitle} onChange={e => setEventSubtitle(e.target.value)} placeholder="e.g. Network with top creators" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
                 </div>
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Speakers (comma separated)</label><input type="text" value={eventSpeakers} onChange={e => setEventSpeakers(e.target.value)} placeholder="e.g. Priya Sengupta, Souvik Chatterjee" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                <div className="flex gap-3 pt-3 border-t border-slate-800">
-                  <button type="button" onClick={() => setShowCreateEventModal(false)} disabled={creatingEvent} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer transition">Cancel</button>
-                  <button type="submit" disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()} className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl hover:bg-[#2b4ef7] cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 transition">{creatingEvent ? 'Publishing...' : 'Publish Event'}</button>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Date</label>
+                    <input type="text" value={eventDate} onChange={e => setEventDate(e.target.value)} placeholder="e.g. Aug 28, 2026" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Time</label>
+                    <input type="text" value={eventTime} onChange={e => setEventTime(e.target.value)} placeholder="5:00 PM" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Venue</label>
+                  <input required type="text" value={eventVenue} onChange={e => setEventVenue(e.target.value)} placeholder="e.g. Biswa Bangla Gate, New Town" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
+                </div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Category Tag</label>
+                  <input type="text" value={eventTag} onChange={e => setEventTag(e.target.value)} placeholder="e.g. Networking, Summit, Party" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
+                </div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">About Event</label>
+                  <textarea rows={3} value={eventDescription} onChange={e => setEventDescription(e.target.value)} placeholder="Detailed overview of event agenda..." className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium resize-none font-sans leading-relaxed" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Organizer</label>
+                    <input type="text" value={eventOrganizer} onChange={e => setEventOrganizer(e.target.value)} placeholder="Kreator Kolkata Community" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Entry Fee</label>
+                    <input type="text" value={eventEntryFee} onChange={e => setEventEntryFee(e.target.value)} placeholder="Free RSVP or 499" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Speakers (comma separated)</label>
+                  <input type="text" value={eventSpeakers} onChange={e => setEventSpeakers(e.target.value)} placeholder="e.g. Priya Sengupta, Souvik Chatterjee" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
+                </div>
+                
+                <div className="flex gap-3 pt-3 border-t border-slate-800/80">
+                  <button type="button" onClick={() => setShowCreateEventModal(false)} disabled={creatingEvent} className="flex-1 py-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold rounded-2xl cursor-pointer transition duration-150 active:scale-98">Cancel</button>
+                  <button type="submit" disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()} className="flex-1 py-3.5 bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] text-white text-xs font-black rounded-2xl hover:brightness-110 active:scale-98 transition duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-blue-950/40">{creatingEvent ? 'Publishing...' : 'Publish Event'}</button>
                 </div>
               </form>
             )}
