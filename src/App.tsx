@@ -2561,6 +2561,203 @@ function ProfilePage({
         { id: 'reviews', label: 'Reviews' },
       ];
 
+  if (isEditing) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#f8fafc] flex flex-col min-h-screen">
+        {/* Header */}
+        <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 flex items-center gap-3 sticky top-0 z-10">
+          <button 
+            onClick={() => setIsEditing(false)} 
+            className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-700 active:scale-95 transition cursor-pointer"
+          >
+            <ArrowLeftIcon />
+          </button>
+          <div>
+            <h3 className="text-base font-black text-slate-900">Edit Profile</h3>
+            <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Update your profile info</p>
+          </div>
+        </div>
+
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-6 pb-28">
+          
+          {/* Framed Profile Image Picker */}
+          <div className="flex flex-col items-center gap-2.5 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+              Profile Photo
+            </div>
+            <div 
+              className="relative group cursor-pointer" 
+              onClick={() => document.getElementById('avatar-file-input')?.click()}
+            >
+              <div className="p-1 rounded-full bg-gradient-to-tr from-[#3b5bdb] via-[#7048e8] to-[#f76707] shadow-md">
+                <div className="w-24 h-24 rounded-full border-2 border-white overflow-hidden bg-slate-100 relative">
+                  <img 
+                    src={previewUrl || avatar} 
+                    alt="Upload Preview Frame" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                    <span className="text-white text-base">📷</span>
+                    <span className="text-white text-[9px] font-bold">Change</span>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#3b5bdb] text-white border-2 border-white flex items-center justify-center shadow-md">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+            </div>
+            <input 
+              type="file" 
+              id="avatar-file-input" 
+              accept="image/*" 
+              style={{ display: 'none' }} 
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  setSelectedFile(file)
+                  setPreviewUrl(URL.createObjectURL(file))
+                }
+              }}
+            />
+            <button 
+              type="button"
+              onClick={() => document.getElementById('avatar-file-input')?.click()}
+              className="text-xs font-bold text-[#3b5bdb] hover:underline bg-transparent border-none cursor-pointer"
+            >
+              {previewUrl ? 'Choose Different Photo' : (userRole === 'brand' ? 'Change Brand Logo' : 'Change Profile Picture')}
+            </button>
+          </div>
+
+          {/* Form Fields Card */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-xs flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {userRole === 'brand' ? 'Brand / Company Name' : 'Display Name'}
+              </label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                placeholder="Enter name"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {userRole === 'brand' ? 'Industry' : 'Niche / Specialty'}
+              </label>
+              <input
+                type="text"
+                value={editNiche}
+                onChange={(e) => setEditNiche(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                placeholder={userRole === 'brand' ? 'e.g. Retail, Food, Tech' : 'e.g. Lifestyle & Fashion'}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Location</label>
+              <input
+                type="text"
+                value={editLocation}
+                onChange={(e) => setEditLocation(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
+                placeholder="e.g. Kolkata, WB"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">About / Bio</label>
+              <textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition resize-none"
+                placeholder="Tell us about yourself or your brand..."
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* Footer Fixed Action Bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 flex gap-3 z-10">
+          <button 
+            onClick={() => setIsEditing(false)} 
+            disabled={saving}
+            className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-2xl active:scale-95 transition cursor-pointer disabled:opacity-50 border-none"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={async () => {
+              if (!auth.currentUser) return
+              setSaving(true)
+              try {
+                let finalAvatarUrl = userProfile?.avatar || userProfile?.logo || null
+                
+                if (selectedFile) {
+                  const storageRef = ref(storage, `profile_pics/${auth.currentUser.uid}`)
+                  const uploadResult = await uploadBytes(storageRef, selectedFile)
+                  finalAvatarUrl = await getDownloadURL(uploadResult.ref)
+                }
+
+                if (userRole === 'brand') {
+                  await updateDoc(doc(db, 'brands', auth.currentUser.uid), {
+                    name: editName,
+                    bio: editBio,
+                    location: editLocation,
+                    industry: editNiche,
+                    logo: finalAvatarUrl
+                  })
+                } else {
+                  await updateDoc(doc(db, 'creators', auth.currentUser.uid), {
+                    name: editName,
+                    bio: editBio,
+                    location: editLocation,
+                    niche: editNiche,
+                    avatar: finalAvatarUrl
+                  })
+                }
+
+                // Update common user doc
+                await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+                  name: editName,
+                  bio: editBio,
+                  location: editLocation,
+                  niche: editNiche,
+                  avatar: finalAvatarUrl
+                })
+
+                setIsEditing(false)
+              } catch (err: any) {
+                alert(err.message || 'Failed to update profile details')
+              } finally {
+                setSaving(false)
+              }
+            }}
+            disabled={saving || !editName.trim()}
+            className="flex-1 py-3.5 bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-sm font-bold rounded-2xl active:scale-95 transition cursor-pointer shadow-md shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-50 border-none"
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <span>Save Changes</span>
+            )}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
 
@@ -3040,183 +3237,7 @@ function ProfilePage({
 
 
 
-      {/* Edit Profile Modal */}
-      {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900">Edit Profile</h3>
-              <button 
-                onClick={() => setIsEditing(false)} 
-                className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-95 transition cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="flex flex-col gap-4 overflow-y-auto max-h-[60vh] py-1 px-0.5">
-              
-              {/* Framed Profile Image Picker */}
-              <div className="flex flex-col items-center gap-2.5 mb-2">
-                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  Photo Frame Preview
-                </div>
-                <div 
-                  className="relative group cursor-pointer" 
-                  onClick={() => document.getElementById('avatar-file-input')?.click()}
-                >
-                  <div className="p-1 rounded-full bg-gradient-to-tr from-[#3b5bdb] via-[#7048e8] to-[#f76707] shadow-md shadow-blue-200">
-                    <div className="w-20 h-20 rounded-full border-2 border-white overflow-hidden bg-slate-100 relative">
-                      <img 
-                        src={previewUrl || avatar} 
-                        alt="Upload Preview Frame" 
-                        className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
-                        <span className="text-white text-base">📷</span>
-                        <span className="text-white text-[9px] font-bold">Change</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#3b5bdb] text-white border-2 border-white flex items-center justify-center shadow-md group-hover:scale-110 transition">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                      <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                  </div>
-                </div>
-                <input 
-                  type="file" 
-                  id="avatar-file-input" 
-                  accept="image/*" 
-                  style={{ display: 'none' }} 
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      setSelectedFile(file)
-                      setPreviewUrl(URL.createObjectURL(file))
-                    }
-                  }}
-                />
-                <button 
-                  type="button"
-                  onClick={() => document.getElementById('avatar-file-input')?.click()}
-                  className="text-xs font-bold text-[#3b5bdb] hover:underline"
-                >
-                  {previewUrl ? 'Choose Different Photo' : (userRole === 'brand' ? 'Change Brand Logo' : 'Change Profile Picture')}
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  {userRole === 'brand' ? 'Brand / Company Name' : 'Display Name'}
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
-                  placeholder="Enter name"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  {userRole === 'brand' ? 'Industry' : 'Niche / Specialty'}
-                </label>
-                <input
-                  type="text"
-                  value={editNiche}
-                  onChange={(e) => setEditNiche(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
-                  placeholder={userRole === 'brand' ? 'e.g. Retail, Food, Tech' : 'e.g. Lifestyle & Fashion'}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Location</label>
-                <input
-                  type="text"
-                  value={editLocation}
-                  onChange={(e) => setEditLocation(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
-                  placeholder="e.g. Kolkata, WB"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">About / Bio</label>
-                <textarea
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition resize-none"
-                  placeholder="Tell us about yourself or your brand..."
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-3 border-t border-slate-100">
-              <button 
-                onClick={() => setIsEditing(false)} 
-                disabled={saving}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-2xl active:scale-98 transition cursor-pointer disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={async () => {
-                  if (!auth.currentUser) return
-                  setSaving(true)
-                  try {
-                    let finalAvatarUrl = userProfile?.avatar || userProfile?.logo || null
-                    
-                    if (selectedFile) {
-                      const storageRef = ref(storage, `profile_pics/${auth.currentUser.uid}`)
-                      const uploadResult = await uploadBytes(storageRef, selectedFile)
-                      finalAvatarUrl = await getDownloadURL(uploadResult.ref)
-                    }
-
-                    if (userRole === 'brand') {
-                      await updateDoc(doc(db, 'brands', auth.currentUser.uid), {
-                        name: editName,
-                        bio: editBio,
-                        location: editLocation,
-                        industry: editNiche,
-                        logo: finalAvatarUrl
-                      })
-                    } else {
-                      await updateDoc(doc(db, 'creators', auth.currentUser.uid), {
-                        name: editName,
-                        bio: editBio,
-                        location: editLocation,
-                        niche: editNiche,
-                        avatar: finalAvatarUrl
-                      })
-                    }
-                    setIsEditing(false)
-                  } catch (err: any) {
-                    alert(err.message || 'Failed to update profile')
-                  } finally {
-                    setSaving(false)
-                  }
-                }}
-                disabled={saving || !editName.trim()}
-                className="flex-1 py-3 bg-[#3b5bdb] text-white text-sm font-bold rounded-2xl shadow-md shadow-blue-200 active:scale-98 transition cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-70"
-              >
-                {saving ? (
-                  <>
-                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" />
-                    </svg>
-                    Saving…
-                  </>
-                ) : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add Portfolio Image Modal */}
       {showAddPortfolioModal && (
