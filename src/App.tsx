@@ -4192,7 +4192,19 @@ function PostGigPage({
 
 // ── Gig Posted Success ─────────────────────────────────────────────────────
 
-function GigPostedSuccess({ onBack }: { onBack: () => void }) {
+function GigPostedSuccess({
+  onBack,
+
+  onViewMyGigs,
+
+  onShareInstagram,
+}: {
+  onBack: () => void
+
+  onViewMyGigs: () => void
+
+  onShareInstagram: () => void
+}) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 px-6 py-16 text-center min-h-screen">
       <div className="relative mb-6">
@@ -4226,7 +4238,10 @@ function GigPostedSuccess({ onBack }: { onBack: () => void }) {
         You'll be notified for every new applicant.
       </p>
 
-      <div className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm border border-slate-100 flex items-center gap-3">
+      <button
+        onClick={onViewMyGigs}
+        className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm border border-slate-100 hover:border-[#3b5bdb]/40 hover:bg-slate-50/80 flex items-center gap-3 active:scale-[0.99] transition cursor-pointer text-left"
+      >
         <div className="w-10 h-10 rounded-xl bg-[#e8edff] flex items-center justify-center text-[#3b5bdb] text-lg">
           💼
         </div>
@@ -4236,9 +4251,13 @@ function GigPostedSuccess({ onBack }: { onBack: () => void }) {
             View &amp; manage your posted gigs
           </div>
         </div>
-        <span className="text-slate-400">→</span>
-      </div>
-      <div className="w-full bg-white rounded-2xl p-4 mb-8 shadow-sm border border-slate-100 flex items-center gap-3">
+        <span className="text-slate-400 font-bold text-lg">→</span>
+      </button>
+
+      <button
+        onClick={onShareInstagram}
+        className="w-full bg-white rounded-2xl p-4 mb-8 shadow-sm border border-slate-100 hover:border-rose-300 hover:bg-rose-50/40 flex items-center gap-3 active:scale-[0.99] transition cursor-pointer text-left"
+      >
         <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-lg">
           📣
         </div>
@@ -4248,12 +4267,12 @@ function GigPostedSuccess({ onBack }: { onBack: () => void }) {
             Share your gig on Instagram
           </div>
         </div>
-        <span className="text-slate-400">→</span>
-      </div>
+        <span className="text-slate-400 font-bold text-lg">→</span>
+      </button>
 
       <button
         onClick={onBack}
-        className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200"
+        className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 active:scale-[0.99] transition cursor-pointer"
       >
         Back to Home
       </button>
@@ -14615,7 +14634,29 @@ export default function App() {
       )
     }
 
-    if (gigPosted) return <GigPostedSuccess onBack={handleBack} />
+    if (gigPosted)
+      return (
+        <GigPostedSuccess
+          onBack={handleBack}
+          onViewMyGigs={() => {
+            setGigPosted(false)
+            setPosting(false)
+            setActiveTab("profile")
+          }}
+          onShareInstagram={() => {
+            const latestGig = gigs[0] || GIGS[0]
+            if (latestGig) {
+              handleShareGigCard(latestGig)
+            } else {
+              const shareUrl = `${window.location.origin}`
+              navigator.clipboard.writeText(shareUrl)
+              alert(
+                "Gig link copied! You can now paste and share on Instagram!",
+              )
+            }
+          }}
+        />
+      )
 
     if (posting)
       return (
