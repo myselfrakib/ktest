@@ -1804,14 +1804,14 @@ function ApplyPage({
                 Offer
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
+            <div className="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-100 text-center flex flex-col justify-center">
               <div className="flex items-center justify-center gap-1 mb-0.5">
                 <CalendarIcon />
-                <span className="text-[11px] font-black text-slate-900">
+                <span className="text-[9px] font-bold text-slate-700 tracking-tight">
                   {formatDeadline(gig.deadline)}
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400 font-medium">
+              <div className="text-[9px] text-slate-400 font-medium">
                 Deadline
               </div>
             </div>
@@ -2445,7 +2445,7 @@ function ViewMyGigPage({
               </div>
             </div>
             <div className="bg-slate-50 rounded-2xl py-2 px-1">
-              <div className="text-xs font-black text-emerald-600">
+              <div className="text-[9.5px] font-bold text-emerald-600">
                 {formatDeadline(gig.deadline) || "30-08-26"}
               </div>
               <div className="text-[9px] text-slate-400 font-semibold">
