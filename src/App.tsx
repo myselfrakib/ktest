@@ -1147,6 +1147,119 @@ function CompassIcon() {
   )
 }
 
+function PhoneIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  )
+}
+
+function VideoIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="23 7 16 12 23 17 23 7" />
+      <rect x="1" y="5" width="15" height="14" rx="3" ry="3" />
+    </svg>
+  )
+}
+
+function PhoneOffIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M10.68 13.31a16 16 0 0 0 3.41 3.41l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.33a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  )
+}
+
+function MicIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <line x1="12" y1="19" x2="12" y2="23" />
+      <line x1="8" y1="23" x2="16" y2="23" />
+    </svg>
+  )
+}
+
+function MicOffIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="1" y1="1" x2="23" y2="23" />
+      <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+      <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
+      <line x1="12" y1="19" x2="12" y2="23" />
+      <line x1="8" y1="23" x2="16" y2="23" />
+    </svg>
+  )
+}
+
+function CameraOffIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="1" y1="1" x2="23" y2="23" />
+      <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  )
+}
+
 // Helper function to format deadline date string to dd-mm-yy format
 
 function formatDeadline(dateStr: string): string {
@@ -8061,6 +8174,7 @@ function ChatPage({
   currentUser,
   creators = [],
   brands = [],
+  onStartCall,
 }: {
   chats: ChatThread[]
   setChats: React.Dispatch<React.SetStateAction<ChatThread[]>>
@@ -8077,6 +8191,7 @@ function ChatPage({
   currentUser?: any
   creators: Creator[]
   brands: Brand[]
+  onStartCall?: (type: "audio" | "video") => void
 }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [inputText, setInputText] = useState("")
@@ -8448,12 +8563,20 @@ function ChatPage({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition cursor-pointer">
-              📞
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onStartCall?.("audio")}
+              className="w-9.5 h-9.5 rounded-full bg-slate-50 hover:bg-[#e8edff] text-slate-600 hover:text-[#3b5bdb] flex items-center justify-center active:scale-95 transition cursor-pointer border border-slate-100 shadow-2xs"
+              title="Voice Call"
+            >
+              <PhoneIcon />
             </button>
-            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition cursor-pointer">
-              📹
+            <button
+              onClick={() => onStartCall?.("video")}
+              className="w-9.5 h-9.5 rounded-full bg-slate-50 hover:bg-[#e8edff] text-slate-600 hover:text-[#3b5bdb] flex items-center justify-center active:scale-95 transition cursor-pointer border border-slate-100 shadow-2xs"
+              title="Video Call"
+            >
+              <VideoIcon />
             </button>
           </div>
         </div>
@@ -12804,6 +12927,19 @@ export default function App() {
 
   const [generatingShareCard, setGeneratingShareCard] = useState(false)
 
+  // WebRTC Live Calling State & Refs
+  const [activeCall, setActiveCall] = useState<any>(null)
+  const [incomingCall, setIncomingCall] = useState<any>(null)
+  const [callTimer, setCallTimer] = useState<number>(0)
+  const [isMuted, setIsMuted] = useState<boolean>(false)
+  const [isVideoOff, setIsVideoOff] = useState<boolean>(false)
+
+  const pcRef = useRef<RTCPeerConnection | null>(null)
+  const localStreamRef = useRef<MediaStream | null>(null)
+  const remoteStreamRef = useRef<MediaStream | null>(null)
+  const localVideoRef = useRef<HTMLVideoElement | null>(null)
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null)
+
   // Route restoration & Session storage persistence
   const touchStartX = useRef<number | null>(null)
 
@@ -13272,6 +13408,273 @@ export default function App() {
     const interval = setInterval(updatePresence, 60000)
     return () => clearInterval(interval)
   }, [currentUser, userRole])
+
+  // ── WebRTC Signaling & Live Calling Hooks ─────────────────────────────────
+
+  // 1. Listen for Incoming Calls
+  useEffect(() => {
+    if (!currentUser) return
+    const qCalls = query(
+      collection(db, "calls"),
+      where("calleeUid", "==", currentUser.uid),
+      where("status", "==", "calling"),
+    )
+    const unsubscribe = onSnapshot(qCalls, (snap) => {
+      if (!snap.empty) {
+        const d = snap.docs[0]
+        setIncomingCall({ id: d.id, ...d.data() })
+      } else {
+        setIncomingCall(null)
+      }
+    })
+    return () => unsubscribe()
+  }, [currentUser])
+
+  // 2. Listen for Active Call Updates
+  useEffect(() => {
+    if (!activeCall) return
+    const callRef = doc(db, "calls", activeCall.id)
+    const unsubscribe = onSnapshot(callRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data()
+        if (data?.status === "ended" || data?.status === "rejected") {
+          handleCleanupCall()
+        }
+      } else {
+        handleCleanupCall()
+      }
+    })
+    return () => unsubscribe()
+  }, [activeCall?.id])
+
+  // 3. Call Duration Timer
+  useEffect(() => {
+    let interval: any
+    if (activeCall && activeCall.status === "accepted") {
+      interval = setInterval(() => setCallTimer((t) => t + 1), 1000)
+    } else {
+      setCallTimer(0)
+    }
+    return () => clearInterval(interval)
+  }, [activeCall?.status])
+
+  const handleCleanupCall = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop())
+      localStreamRef.current = null
+    }
+    if (pcRef.current) {
+      pcRef.current.close()
+      pcRef.current = null
+    }
+    setActiveCall(null)
+    setIncomingCall(null)
+    setCallTimer(0)
+    setIsMuted(false)
+    setIsVideoOff(false)
+  }
+
+  const startCall = async (type: "audio" | "video") => {
+    if (!currentUser) {
+      alert("Please log in to start a call.")
+      return
+    }
+
+    let calleeUid = ""
+    let calleeName = "Kreator Member"
+    let calleeAvatar =
+      "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format"
+
+    if (activeConvoId) {
+      const convo = conversations.find((c) => c.id === activeConvoId)
+      if (convo) {
+        calleeUid =
+          convo.participants.find((uid) => uid !== currentUser.uid) || ""
+        calleeName = convo.participantNames[calleeUid] || "Kreator Member"
+        calleeAvatar = convo.participantAvatars[calleeUid] || calleeAvatar
+      }
+    }
+
+    if (!calleeUid) {
+      alert("Real-time calls are available between registered members.")
+      return
+    }
+
+    try {
+      const callId = getConvoId(currentUser.uid, calleeUid)
+      const callRef = doc(db, "calls", callId)
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: type === "video",
+      })
+      localStreamRef.current = stream
+
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      })
+      pcRef.current = pc
+
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream))
+
+      const callerCandidatesCol = collection(callRef, "callerCandidates")
+      pc.onicecandidate = (e) => {
+        if (e.candidate) addDoc(callerCandidatesCol, e.candidate.toJSON())
+      }
+
+      pc.ontrack = (e) => {
+        if (e.streams && e.streams[0]) {
+          remoteStreamRef.current = e.streams[0]
+          if (remoteVideoRef.current)
+            remoteVideoRef.current.srcObject = e.streams[0]
+        }
+      }
+
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+
+      const newCallData = {
+        id: callId,
+        callerUid: currentUser.uid,
+        callerName: userProfile?.name || "Kreator Member",
+        callerAvatar: userProfile?.avatar || userProfile?.logo || calleeAvatar,
+        calleeUid,
+        calleeName,
+        calleeAvatar,
+        type,
+        status: "calling",
+        offer: { type: offer.type, sdp: offer.sdp },
+        createdAt: new Date().toISOString(),
+      }
+
+      await setDoc(callRef, newCallData)
+      setActiveCall(newCallData)
+
+      onSnapshot(callRef, async (snap) => {
+        const d = snap.data()
+        if (d && d.answer && !pc.currentRemoteDescription) {
+          await pc.setRemoteDescription(new RTCSessionDescription(d.answer))
+          setActiveCall((prev: any) => ({ ...prev, status: "accepted" }))
+        }
+      })
+
+      const calleeCandidatesCol = collection(callRef, "calleeCandidates")
+      onSnapshot(calleeCandidatesCol, (snap) => {
+        snap.docChanges().forEach(async (change) => {
+          if (change.type === "added") {
+            await pc.addIceCandidate(new RTCIceCandidate(change.doc.data()))
+          }
+        })
+      })
+    } catch (err: any) {
+      console.error("Failed to start call:", err)
+      alert(
+        "Microphone / Camera access required for calling: " +
+          (err.message || err),
+      )
+    }
+  }
+
+  const answerCall = async () => {
+    if (!incomingCall || !currentUser) return
+    try {
+      const callRef = doc(db, "calls", incomingCall.id)
+      const callSnap = await getDoc(callRef)
+      if (!callSnap.exists()) return
+
+      const callData = callSnap.data()
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: callData.type === "video",
+      })
+      localStreamRef.current = stream
+
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      })
+      pcRef.current = pc
+
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream))
+
+      const calleeCandidatesCol = collection(callRef, "calleeCandidates")
+      pc.onicecandidate = (e) => {
+        if (e.candidate) addDoc(calleeCandidatesCol, e.candidate.toJSON())
+      }
+
+      pc.ontrack = (e) => {
+        if (e.streams && e.streams[0]) {
+          remoteStreamRef.current = e.streams[0]
+          if (remoteVideoRef.current)
+            remoteVideoRef.current.srcObject = e.streams[0]
+        }
+      }
+
+      await pc.setRemoteDescription(new RTCSessionDescription(callData.offer))
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+
+      await updateDoc(callRef, {
+        answer: { type: answer.type, sdp: answer.sdp },
+        status: "accepted",
+      })
+
+      setActiveCall({ ...incomingCall, status: "accepted" })
+      setIncomingCall(null)
+
+      const callerCandidatesCol = collection(callRef, "callerCandidates")
+      onSnapshot(callerCandidatesCol, (snap) => {
+        snap.docChanges().forEach(async (change) => {
+          if (change.type === "added") {
+            await pc.addIceCandidate(new RTCIceCandidate(change.doc.data()))
+          }
+        })
+      })
+    } catch (err: any) {
+      console.error("Answer call error:", err)
+      alert("Call connection failed: " + err.message)
+    }
+  }
+
+  const declineCall = async () => {
+    if (!incomingCall) return
+    try {
+      await updateDoc(doc(db, "calls", incomingCall.id), { status: "rejected" })
+    } catch (e) {}
+    setIncomingCall(null)
+  }
+
+  const endCall = async () => {
+    if (activeCall) {
+      try {
+        await updateDoc(doc(db, "calls", activeCall.id), { status: "ended" })
+      } catch (e) {}
+    }
+    handleCleanupCall()
+  }
+
+  const toggleMute = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled
+      })
+      setIsMuted((prev) => !prev)
+    }
+  }
+
+  const toggleVideo = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled
+      })
+      setIsVideoOff((prev) => !prev)
+    }
+  }
+
+  const formatTimer = (sec: number) => {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
+  }
 
   // Derived object states from IDs/names
 
@@ -14138,6 +14541,7 @@ export default function App() {
           currentUser={currentUser}
           creators={creators}
           brands={brands}
+          onStartCall={startCall}
         />
       )
     }
@@ -14416,6 +14820,157 @@ export default function App() {
             )}
           </div>
         )}
+        {/* Incoming Call Overlay */}
+        {incomingCall && (
+          <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex flex-col items-center justify-between p-8 text-white animate-in fade-in duration-300">
+            <div className="flex flex-col items-center gap-2 pt-12">
+              <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase bg-slate-800/80 px-3 py-1 rounded-full border border-slate-700">
+                Incoming {incomingCall.type === "video" ? "Video" : "Voice"}{" "}
+                Call
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center gap-6">
+              <div className="relative">
+                <div className="absolute -inset-4 rounded-full bg-[#3b5bdb]/30 animate-ping" />
+                <img
+                  src={incomingCall.callerAvatar}
+                  alt={incomingCall.callerName}
+                  className="w-28 h-28 rounded-full object-cover border-4 border-[#3b5bdb] shadow-2xl relative z-10"
+                />
+              </div>
+
+              <div className="text-center">
+                <h2 className="text-2xl font-black tracking-tight">
+                  {incomingCall.callerName}
+                </h2>
+                <p className="text-xs text-slate-400 font-medium mt-1">
+                  Kreator Member
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-12 pb-12">
+              <button
+                onClick={declineCall}
+                className="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-600/40 active:scale-95 transition cursor-pointer"
+                title="Decline Call"
+              >
+                <PhoneOffIcon />
+              </button>
+              <button
+                onClick={answerCall}
+                className="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/40 active:scale-95 transition cursor-pointer animate-bounce"
+                title="Accept Call"
+              >
+                <PhoneIcon />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Active Ongoing Call Overlay */}
+        {activeCall && (
+          <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col justify-between text-white overflow-hidden">
+            {/* Video Feed */}
+            {activeCall.type === "video" ? (
+              <div className="relative flex-1 bg-slate-900 overflow-hidden">
+                <video
+                  ref={remoteVideoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                {/* Local Video PiP */}
+                <div className="absolute top-6 right-6 w-28 h-40 rounded-2xl bg-slate-800 border-2 border-slate-700/60 shadow-2xl overflow-hidden z-10">
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Call Header */}
+                <div className="absolute top-6 left-6 z-10 flex items-center gap-3 bg-slate-900/60 backdrop-blur-md px-4 py-2 rounded-full border border-slate-700/50">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-bold text-slate-200">
+                    {activeCall.status === "calling"
+                      ? "Calling..."
+                      : formatTimer(callTimer)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              /* Audio Mode Screen */
+              <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 p-6 relative">
+                <div className="relative mb-6">
+                  {activeCall.status === "accepted" && (
+                    <div className="absolute -inset-6 rounded-full bg-[#3b5bdb]/20 animate-ping" />
+                  )}
+                  <img
+                    src={
+                      activeCall.callerUid === currentUser?.uid
+                        ? activeCall.calleeAvatar
+                        : activeCall.callerAvatar
+                    }
+                    alt="Call participant"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-2xl relative z-10"
+                  />
+                </div>
+                <h3 className="text-2xl font-black tracking-tight mb-1">
+                  {activeCall.callerUid === currentUser?.uid
+                    ? activeCall.calleeName
+                    : activeCall.callerName}
+                </h3>
+                <span className="text-xs text-[#3b5bdb] font-bold bg-[#3b5bdb]/10 px-3 py-1 rounded-full border border-[#3b5bdb]/20 mt-2">
+                  {activeCall.status === "calling"
+                    ? "Ringing..."
+                    : formatTimer(callTimer)}
+                </span>
+              </div>
+            )}
+
+            {/* In-Call Toolbar */}
+            <div className="bg-slate-900/90 backdrop-blur-md px-8 py-6 flex items-center justify-around border-t border-slate-800 z-20">
+              <button
+                onClick={toggleMute}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-95 cursor-pointer border ${
+                  isMuted
+                    ? "bg-rose-600 text-white border-rose-500"
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700"
+                }`}
+                title={isMuted ? "Unmute" : "Mute"}
+              >
+                {isMuted ? <MicOffIcon /> : <MicIcon />}
+              </button>
+
+              {activeCall.type === "video" && (
+                <button
+                  onClick={toggleVideo}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-95 cursor-pointer border ${
+                    isVideoOff
+                      ? "bg-rose-600 text-white border-rose-500"
+                      : "bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700"
+                  }`}
+                  title={isVideoOff ? "Turn Camera On" : "Turn Camera Off"}
+                >
+                  {isVideoOff ? <CameraOffIcon /> : <VideoIcon />}
+                </button>
+              )}
+
+              <button
+                onClick={endCall}
+                className="w-14 h-14 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-600/40 active:scale-95 transition cursor-pointer border border-rose-500"
+                title="End Call"
+              >
+                <PhoneOffIcon />
+              </button>
+            </div>
+          </div>
+        )}
+
         {generatingShareCard && (
           <div className="fixed inset-0 bg-black/45 backdrop-blur-xs z-50 flex flex-col items-center justify-center text-white">
             <div className="bg-slate-900 rounded-3xl p-6 flex flex-col items-center gap-3 border border-slate-800 shadow-2xl max-w-[280px]">
