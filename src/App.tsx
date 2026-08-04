@@ -5768,15 +5768,9 @@ function ProfilePage({
               Work Showcase ({portfolioItems.length})
             </span>
             <button
-              onClick={() => {
-                setPortfolioFile(null)
-
-                setPortfolioPreviewUrl(null)
-
-                setPortfolioLikes("1.5K")
-
-                setShowAddPortfolioModal(true)
-              }}
+              onClick={() =>
+                document.getElementById("portfolio-direct-input")?.click()
+              }
               className="bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm shadow-blue-200 active:scale-95 transition cursor-pointer flex items-center gap-1"
             >
               <span>＋</span> Add Work Image
@@ -5784,70 +5778,99 @@ function ProfilePage({
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            {/* Upload Work Tile */}
-            <div
-              onClick={() => {
-                setPortfolioFile(null)
-
-                setPortfolioPreviewUrl(null)
-
-                setPortfolioLikes("1.5K")
-
-                setShowAddPortfolioModal(true)
-              }}
-              className="relative rounded-2xl overflow-hidden aspect-square border-2 border-dashed border-[#3b5bdb]/40 bg-[#e8edff]/40 hover:bg-[#e8edff] transition cursor-pointer flex flex-col items-center justify-center text-center p-2 group"
-            >
-              <div className="w-8 h-8 rounded-full bg-[#3b5bdb] text-white flex items-center justify-center text-lg font-bold shadow-md group-hover:scale-110 transition">
-                ＋
-              </div>
-              <span className="text-[10px] font-bold text-[#3b5bdb] mt-1">
-                Upload Work
-              </span>
-            </div>
-
             {portfolioItems.map((item: any, idx: number) => {
               const itemImg =
                 typeof item === "string" ? item : item.img || item.url
-
-              const itemLikes =
-                typeof item === "string" ? "1.5K" : item.likes || "1.2K"
 
               const itemId = item.id || idx
 
               return (
                 <div
                   key={itemId}
-                  className="relative rounded-2xl overflow-hidden aspect-square bg-slate-100 group cursor-pointer shadow-sm border border-slate-100"
+                  className="relative rounded-2xl overflow-hidden aspect-[3/4] bg-slate-100 group cursor-pointer shadow-sm border border-slate-100"
                 >
                   <img
                     src={itemImg}
                     alt="Portfolio work"
                     className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex flex-col justify-between p-1.5 z-10">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex flex-col justify-end items-end p-1.5 z-10">
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-
                         handleDeletePortfolioItem(itemId)
                       }}
                       title="Remove image"
-                      className="self-end bg-red-600/90 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold hover:bg-red-600 transition cursor-pointer shadow-md"
+                      className="bg-red-600/90 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold hover:bg-red-600 transition cursor-pointer shadow-md"
                     >
                       ✕
                     </button>
-                    <div className="text-center text-white text-[9px] font-bold">
-                      ❤️ {itemLikes}
-                    </div>
-                  </div>
-                  <div className="absolute bottom-1.5 right-1.5 bg-black/50 backdrop-blur-xs rounded-full px-1.5 py-0.5 group-hover:opacity-0 transition">
-                    <span className="text-white text-[9px] font-bold">
-                      ❤️ {itemLikes}
-                    </span>
                   </div>
                 </div>
               )
             })}
+
+            {/* Upload Work Tile — always last */}
+            <div
+              onClick={() =>
+                document.getElementById("portfolio-direct-input")?.click()
+              }
+              className="relative rounded-2xl overflow-hidden aspect-[3/4] border-2 border-dashed border-[#3b5bdb]/40 bg-[#e8edff]/40 hover:bg-[#e8edff] transition cursor-pointer flex flex-col items-center justify-center text-center p-2 group"
+            >
+              {uploadingPortfolio ? (
+                <div className="w-8 h-8 rounded-full border-2 border-[#3b5bdb]/30 border-t-[#3b5bdb] animate-spin" />
+              ) : (
+                <>
+                  <div className="w-8 h-8 rounded-full bg-[#3b5bdb] text-white flex items-center justify-center text-lg font-bold shadow-md group-hover:scale-110 transition">
+                    ＋
+                  </div>
+                  <span className="text-[10px] font-bold text-[#3b5bdb] mt-1">
+                    Upload Work
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Hidden direct file input */}
+            <input
+              type="file"
+              id="portfolio-direct-input"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file || !auth.currentUser) return
+                setUploadingPortfolio(true)
+                try {
+                  const storageRef = ref(
+                    storage,
+                    `portfolio/${auth.currentUser.uid}/${Date.now()}`,
+                  )
+                  const uploadResult = await uploadBytes(storageRef, file)
+                  const finalUrl = await getDownloadURL(uploadResult.ref)
+                  const newItem = {
+                    id: Date.now(),
+                    img: finalUrl,
+                    likes: "",
+                    createdAt: new Date().toISOString(),
+                  }
+                  const currentList =
+                    userProfile?.portfolioItems || PORTFOLIO_ITEMS
+                  const updatedList = [newItem, ...currentList]
+                  const docCollection =
+                    userRole === "brand" ? "brands" : "creators"
+                  await updateDoc(
+                    doc(db, docCollection, auth.currentUser.uid),
+                    { portfolioItems: updatedList },
+                  )
+                } catch (err: any) {
+                  alert(err.message || "Failed to upload portfolio image")
+                } finally {
+                  setUploadingPortfolio(false)
+                  e.target.value = ""
+                }
+              }}
+            />
           </div>
         </div>
       )}
@@ -6226,9 +6249,9 @@ function ProfilePage({
               {/* Live Preview Card */}
               <div className="flex flex-col items-center gap-2">
                 <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                  Glassmorphism Card Preview
+                  Image Preview
                 </div>
-                <div className="w-40 h-40 rounded-2xl overflow-hidden aspect-square bg-slate-100 relative shadow-md border-2 border-slate-100 group">
+                <div className="w-32 rounded-2xl overflow-hidden aspect-[3/4] bg-slate-100 relative shadow-md border-2 border-slate-100">
                   {portfolioPreviewUrl ? (
                     <img
                       src={portfolioPreviewUrl}
@@ -6237,16 +6260,22 @@ function ProfilePage({
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
-                      <span className="text-3xl mb-1">🖼️</span>
-                      <span className="text-[10px] font-semibold">
+                      <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                      <span className="text-[10px] font-semibold mt-1">
                         Select image below
-                      </span>
-                    </div>
-                  )}
-                  {portfolioPreviewUrl && (
-                    <div className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-xs rounded-full px-2 py-0.5">
-                      <span className="text-white text-[9px] font-bold">
-                        ❤️ {portfolioLikes || "1.5K"}
                       </span>
                     </div>
                   )}
@@ -6308,19 +6337,6 @@ function ProfilePage({
                       setPortfolioPreviewUrl(e.target.value)
                     }}
                     placeholder="https://images.unsplash.com/your-image.jpg"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">
-                    Likes / Tag Badge (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={portfolioLikes}
-                    onChange={(e) => setPortfolioLikes(e.target.value)}
-                    placeholder="e.g. 2.4K or Featured"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-900 outline-none focus:border-[#3b5bdb] focus:bg-white transition"
                   />
                 </div>
