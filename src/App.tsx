@@ -6436,20 +6436,23 @@ function AdminDashboardPage({
         )}
       </div>
       {showCreateEventModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-200">
-          <div className="bg-[#0b1329]/95 text-white rounded-[32px] w-full max-w-md p-6 shadow-[0_25px_60px_rgba(0,0,0,0.8)] border border-slate-800/80 flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-800/85">
-              <div>
-                <h3 className="text-base font-black tracking-tight text-white bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Create Platform Event</h3>
-                <p className="text-[9px] text-slate-500 font-black mt-0.5 uppercase tracking-wider">Publish a new event to the community</p>
-              </div>
-              <button 
-                onClick={() => setShowCreateEventModal(false)} 
-                className="w-8 h-8 rounded-full bg-slate-900/60 hover:bg-slate-850 border border-slate-800/80 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer transition duration-150 active:scale-95 hover:rotate-90"
-              >
-                ✕
-              </button>
+        <div className="fixed inset-0 z-50 bg-[#070b19] flex flex-col min-h-screen">
+          <div className="sticky top-0 z-10 bg-[#0b1329]/85 backdrop-blur-md border-b border-slate-800/80 px-4 py-4 flex items-center gap-3">
+            <button 
+              onClick={() => setShowCreateEventModal(false)}
+              className="w-9 h-9 rounded-full bg-slate-900/60 hover:bg-slate-850 border border-slate-800/80 text-slate-350 hover:text-white flex items-center justify-center cursor-pointer transition active:scale-95 duration-150"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div>
+              <h3 className="text-sm font-black tracking-tight text-white bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Create Platform Event</h3>
+              <p className="text-[9px] text-slate-500 font-black uppercase tracking-wider mt-0.5">Publish a new event to the community</p>
             </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto w-full max-w-lg mx-auto px-4 py-6 scrollbar-none">
             
             {originalImage ? (
               <div className="flex flex-col gap-4 select-none">
@@ -6630,7 +6633,7 @@ function AdminDashboardPage({
                   <input type="text" value={eventSpeakers} onChange={e => setEventSpeakers(e.target.value)} placeholder="e.g. Priya Sengupta, Souvik Chatterjee" className="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950/40 text-xs text-slate-100 placeholder:text-slate-650 outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]/20 transition-all duration-200 font-medium" />
                 </div>
                 
-                <div className="flex gap-3 pt-3 border-t border-slate-800/80">
+                <div className="flex gap-3.5 pt-4 border-t border-slate-800/80">
                   <button type="button" onClick={() => setShowCreateEventModal(false)} disabled={creatingEvent} className="flex-1 py-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold rounded-2xl cursor-pointer transition duration-150 active:scale-98">Cancel</button>
                   <button type="submit" disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()} className="flex-1 py-3.5 bg-gradient-to-r from-[#3b5bdb] to-[#5c7cfa] text-white text-xs font-black rounded-2xl hover:brightness-110 active:scale-98 transition duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg shadow-blue-950/40">{creatingEvent ? 'Publishing...' : 'Publish Event'}</button>
                 </div>
