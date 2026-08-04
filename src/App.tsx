@@ -15316,20 +15316,8 @@ export default function App() {
           } catch (e) {}
         }
       } else if (action === "View Gig") {
-        // If it's a gig the current user posted, open it in profile > My Gigs
         if (raw?.gigId) {
-          const gigIdNum = Number(raw.gigId)
-          const ownedGig = gigs.find(
-            (g) =>
-              g.id === gigIdNum && (g as any).posterUid === currentUser?.uid,
-          )
-          if (ownedGig) {
-            setSelectedMyGigId(gigIdNum)
-            setSelectedMyGigTab("applicants")
-            setActiveTab("profile")
-          } else {
-            setSelectedGigId(gigIdNum)
-          }
+          setSelectedGigId(Number(raw.gigId))
         } else {
           setActiveTab("explore")
         }
