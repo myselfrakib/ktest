@@ -1891,6 +1891,17 @@ function ApplyPage({
                   The gig poster has already selected a creator for this gig.
                 </div>
               </div>
+            ) : hasAlreadyApplied ? (
+              <div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-2xl py-4 px-5 flex flex-col items-center gap-2 text-center">
+                <span className="text-2xl">✅</span>
+                <div className="text-sm font-black text-emerald-800">
+                  Already Applied
+                </div>
+                <div className="text-xs text-emerald-700 font-medium">
+                  You have already submitted an application for this gig. You
+                  can track your status in your Profile.
+                </div>
+              </div>
             ) : (
               <button
                 onClick={() => setStep("form")}
@@ -2883,6 +2894,8 @@ function HomePage({
   onProfileClick,
 
   onShareGig,
+
+  userAppliedGigIds,
 }: {
   savedGigs: Set<number>
 
@@ -2917,6 +2930,8 @@ function HomePage({
   onProfileClick?: () => void
 
   onShareGig: (gig: Gig) => void
+
+  userAppliedGigIds?: Set<number>
 }) {
   const [activeFilter, setActiveFilter] = useState("All Gigs")
 
@@ -3304,6 +3319,10 @@ function HomePage({
                     {(gig as any).applicantSelected && !poster.isOwner ? (
                       <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
                         ✅ Selected
+                      </span>
+                    ) : userAppliedGigIds?.has(gig.id) && !poster.isOwner ? (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
+                        ✓ Applied
                       </span>
                     ) : (
                       <button
@@ -6928,6 +6947,8 @@ function ExplorePage({
   onSelectEvent,
 
   onShareGig,
+
+  userAppliedGigIds,
 }: {
   savedGigs: Set<number>
 
@@ -6976,6 +6997,8 @@ function ExplorePage({
   onSelectEvent?: (event: Event) => void
 
   onShareGig: (gig: Gig) => void
+
+  userAppliedGigIds?: Set<number>
 }) {
   const userAvatar =
     userProfile?.avatar ||
@@ -7224,15 +7247,21 @@ function ExplorePage({
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onApply(gig)
-                      }}
-                      className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3"
-                    >
-                      {poster.isOwner ? "View Applications" : "Apply"}
-                    </button>
+                    {userAppliedGigIds?.has(gig.id) && !poster.isOwner ? (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1 flex-shrink-0 ml-3">
+                        ✓ Applied
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onApply(gig)
+                        }}
+                        className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3"
+                      >
+                        {poster.isOwner ? "View Applications" : "Apply"}
+                      </button>
+                    )}
                   </div>
                 )
               })}
@@ -7642,15 +7671,21 @@ function ExplorePage({
                       <span className="text-xs font-bold text-slate-800">
                         {formatBudget(gig.budget, gig.type)}
                       </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onApply(gig)
-                        }}
-                        className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm"
-                      >
-                        {poster.isOwner ? "View Applications" : "Apply"}
-                      </button>
+                      {userAppliedGigIds?.has(gig.id) && !poster.isOwner ? (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                          ✓ Applied
+                        </span>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onApply(gig)
+                          }}
+                          className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm"
+                        >
+                          {poster.isOwner ? "View Applications" : "Apply"}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )
@@ -9574,6 +9609,8 @@ function PublicBrandProfilePage({
   creators = [],
 
   brands = [],
+
+  userAppliedGigIds,
 }: {
   brand: Brand
 
@@ -9594,6 +9631,8 @@ function PublicBrandProfilePage({
   creators?: Creator[]
 
   brands?: Brand[]
+
+  userAppliedGigIds?: Set<number>
 }) {
   const [activeTab, setActiveTab] = useState<"campaigns" | "about">("campaigns")
 
@@ -9811,15 +9850,21 @@ function PublicBrandProfilePage({
                   <span className="text-[9px] text-slate-400 font-semibold">
                     Deadline: {formatDeadline(gig.deadline)}
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onApply(gig)
-                    }}
-                    className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm cursor-pointer"
-                  >
-                    {poster.isOwner ? "View Applications" : "Apply Now"}
-                  </button>
+                  {userAppliedGigIds?.has(gig.id) && !poster.isOwner ? (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      ✓ Applied
+                    </span>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onApply(gig)
+                      }}
+                      className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm cursor-pointer"
+                    >
+                      {poster.isOwner ? "View Applications" : "Apply Now"}
+                    </button>
+                  )}
                 </div>
               </div>
             )
@@ -13329,6 +13374,37 @@ export default function App() {
     new Set([1]),
   )
 
+  const [userAppliedGigIds, setUserAppliedGigIds] = useState<Set<number>>(
+    new Set(),
+  )
+
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setUserAppliedGigIds(new Set())
+      return
+    }
+
+    const q = query(
+      collection(db, "applications"),
+      where("applicantUid", "==", currentUser.uid),
+    )
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snap) => {
+        const ids = new Set<number>()
+        snap.docs.forEach((doc) => {
+          const data = doc.data()
+          if (data.gigId) ids.add(Number(data.gigId))
+        })
+        setUserAppliedGigIds(ids)
+      },
+      (err) => console.warn("User applications snapshot error:", err),
+    )
+
+    return () => unsubscribe()
+  }, [currentUser?.uid])
+
   const [rsvpEvents, setRsvpEvents] = useState<Set<number>>(new Set([1]))
 
   const [viewingNotifications, setViewingNotifications] = useState(
@@ -14933,6 +15009,7 @@ export default function App() {
           userProfile={userProfile}
           creators={creators}
           brands={brands}
+          userAppliedGigIds={userAppliedGigIds}
         />
       )
     }
@@ -15018,6 +15095,7 @@ export default function App() {
           onProfileClick={() => setActiveTab("profile")}
           onSelectEvent={(ev) => setSelectedEventId(ev.id)}
           onShareGig={handleShareGig}
+          userAppliedGigIds={userAppliedGigIds}
         />
       )
     }
@@ -15041,6 +15119,7 @@ export default function App() {
         userProfile={userProfile}
         onProfileClick={() => setActiveTab("profile")}
         onShareGig={handleShareGig}
+        userAppliedGigIds={userAppliedGigIds}
       />
     )
   }
