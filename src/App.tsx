@@ -14102,52 +14102,92 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) return
 
+    // Run two separate queries (avoids composite index requirement for in+orderBy)
     const q1 = query(
       collection(db, "notifications"),
-      where("recipientUid", "in", [currentUser.uid, "all"]),
-      orderBy("createdAt", "desc"),
+      where("recipientUid", "==", currentUser.uid),
+    )
+    const q2 = query(
+      collection(db, "notifications"),
+      where("recipientUid", "==", "all"),
     )
 
-    const unsubscribe = onSnapshot(
-      q1,
-      (snap) => {
-        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-        setDbNotifications(list)
+    let snap1Docs: any[] = []
+    let snap2Docs: any[] = []
 
-        snap.docChanges().forEach((change) => {
-          if (change.type === "added") {
-            const data = change.doc.data()
-            const createdTime = new Date(data.createdAt || Date.now()).getTime()
-            const isRecent = Date.now() - createdTime < 15000
+    const merge = () => {
+      const seen = new Set<string>()
+      const merged: any[] = []
+      ;[...snap1Docs, ...snap2Docs].forEach((d) => {
+        if (!seen.has(d.id)) {
+          seen.add(d.id)
+          merged.push(d)
+        }
+      })
+      merged.sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+        return tb - ta
+      })
+      setDbNotifications(merged)
+    }
 
-            if (!data.read && isRecent) {
-              setLiveToast(data)
-              playNotificationSound()
-              setTimeout(() => setLiveToast(null), 6000)
+    const handleChanges = (changes: any[]) => {
+      changes.forEach((change) => {
+        if (change.type === "added") {
+          const data = change.doc.data()
+          const createdTime = new Date(data.createdAt || Date.now()).getTime()
+          const isRecent = Date.now() - createdTime < 15000
 
-              if (
-                "Notification" in window &&
-                Notification.permission === "granted"
-              ) {
-                try {
-                  new Notification(data.title || "Kreator Kolkata", {
-                    body: data.message,
-                    icon: data.avatar || "/favicon.ico",
-                  })
-                } catch (e) {}
-              }
+          if (!data.read && isRecent) {
+            setLiveToast(data)
+            playNotificationSound()
+            setTimeout(() => setLiveToast(null), 6000)
+
+            if (
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              try {
+                new Notification(data.title || "Kreator Kolkata", {
+                  body: data.message,
+                  icon: data.avatar || "/favicon.ico",
+                })
+              } catch (e) {}
             }
           }
-        })
+        }
+      })
+    }
+
+    const unsub1 = onSnapshot(
+      q1,
+      (snap) => {
+        snap1Docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        merge()
+        handleChanges(snap.docChanges())
       },
-      (err) => console.warn("Notifications listener error:", err),
+      (err) => console.warn("Notifications listener (user) error:", err),
+    )
+
+    const unsub2 = onSnapshot(
+      q2,
+      (snap) => {
+        snap2Docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        merge()
+        handleChanges(snap.docChanges())
+      },
+      (err) => console.warn("Notifications listener (all) error:", err),
     )
 
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {})
     }
 
-    return () => unsubscribe()
+    return () => {
+      unsub1()
+      unsub2()
+    }
   }, [currentUser])
 
   // Derived object states from IDs/names
