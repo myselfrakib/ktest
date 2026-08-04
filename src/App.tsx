@@ -963,7 +963,7 @@ function ApplyPage({
                     className="flex-1 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1">Budget range: {gig.budget}</p>
+                <p className="text-[10px] text-slate-400 mt-1">Budget range: {formatBudget(gig.budget, gig.type)}</p>
               </div>
             )}
 
@@ -1697,7 +1697,7 @@ function HomePage({
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[11px] text-slate-400 font-medium mb-0.5">Budget / Offer</div>
-                  <div className="text-sm font-bold text-slate-800">{gig.budget}</div>
+                  <div className="text-sm font-bold text-slate-800">{formatBudget(gig.budget, gig.type)}</div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
@@ -6971,7 +6971,7 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 
   ctx.fillStyle = '#0f172a';
   ctx.font = '900 44px sans-serif';
-  ctx.fillText(gig.budget, cardX + 120, detailY + 130);
+  ctx.fillText(formatBudget(gig.budget, gig.type), cardX + 120, detailY + 130);
 
   // Draw Location Heading
   ctx.fillStyle = '#64748b';
