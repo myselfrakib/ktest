@@ -1452,7 +1452,34 @@ function ApplyPage({
     return e
   }
 
+  const [hasAlreadyApplied, setHasAlreadyApplied] = useState(false)
+
+  useEffect(() => {
+    if (!currentUser?.uid || !gig?.id) return
+
+    const q = query(
+      collection(db, "applications"),
+      where("gigId", "==", gig.id),
+      where("applicantUid", "==", currentUser.uid),
+    )
+
+    getDocs(q)
+      .then((snap) => {
+        if (!snap.empty) {
+          setHasAlreadyApplied(true)
+        }
+      })
+      .catch((err) => console.warn("Check application error:", err))
+  }, [currentUser?.uid, gig?.id])
+
   const handleSubmit = async () => {
+    if (hasAlreadyApplied) {
+      alert(
+        "You have already submitted an application for this gig! Track your pitch in your Profile.",
+      )
+      return
+    }
+
     const e = validate()
 
     if (Object.keys(e).length) {
@@ -1997,6 +2024,21 @@ function ApplyPage({
               </div>
             </div>
 
+            {hasAlreadyApplied && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+                <span className="text-xl">✅</span>
+                <div>
+                  <div className="text-xs font-bold text-emerald-900">
+                    Application Already Submitted
+                  </div>
+                  <div className="text-[11px] text-emerald-700">
+                    You have already submitted a pitch for this gig. You can
+                    track status in your Profile.
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Terms notice */}
             <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex gap-2.5">
               <span className="text-amber-500 mt-0.5 flex-shrink-0">⚠️</span>
@@ -2010,10 +2052,16 @@ function ApplyPage({
             {/* Submit */}
             <button
               onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base flex items-center justify-center gap-2 disabled:opacity-70 transition"
+              disabled={submitting || hasAlreadyApplied}
+              className={`w-full font-bold py-4 rounded-2xl text-base flex items-center justify-center gap-2 transition ${
+                hasAlreadyApplied
+                  ? "bg-emerald-500/20 text-emerald-700 border border-emerald-500/30 cursor-not-allowed"
+                  : "bg-[#3b5bdb] text-white shadow-md shadow-blue-200 cursor-pointer disabled:opacity-70"
+              }`}
             >
-              {submitting ? (
+              {hasAlreadyApplied ? (
+                "✓ Application Already Submitted"
+              ) : submitting ? (
                 <>
                   <svg
                     className="animate-spin w-4 h-4"
