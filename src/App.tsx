@@ -5866,6 +5866,63 @@ function AdminDashboardPage({
   const [eventSpeakers, setEventSpeakers] = useState('')
   const [creatingEvent, setCreatingEvent] = useState(false)
 
+  // Canvas Image Cropper States
+  const [zoom, setZoom] = useState(1.0)
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [originalImage, setOriginalImage] = useState<string | null>(null)
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - panX, y: e.clientY - panY })
+  }
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
+    setPanX(e.clientX - dragStart.x)
+    setPanY(e.clientY - dragStart.y)
+  }
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const getCroppedImageBlob = (): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.src = originalImage!
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = 800
+        canvas.height = 400
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject(new Error('No canvas context'))
+
+        ctx.fillStyle = '#0f1d38'
+        ctx.fillRect(0, 0, 800, 400)
+
+        ctx.save()
+        ctx.translate(400 + panX * 2, 200 + panY * 2)
+        ctx.scale(zoom, zoom)
+        
+        const iw = img.width
+        const ih = img.height
+        const scale = Math.max(800 / iw, 400 / ih)
+        const dw = iw * scale
+        const dh = ih * scale
+        
+        ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh)
+        ctx.restore()
+
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error('Canvas blob failed'))
+        }, 'image/jpeg', 0.9)
+      }
+      img.onerror = () => reject(new Error('Failed to load image for cropping'))
+    })
+  }
+
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'admins'), (snap) => {
       setAdminsList(snap.docs.map(d => ({ uid: d.id, ...d.data() })))
@@ -6377,31 +6434,128 @@ function AdminDashboardPage({
               <h3 className="text-base font-bold text-white">Create Platform Event</h3>
               <button onClick={() => setShowCreateEventModal(false)} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer">X</button>
             </div>
-            <form onSubmit={handleCreateEventSubmit} className="flex flex-col gap-3.5 overflow-y-auto max-h-[65vh] pr-1">
-              <div onClick={() => document.getElementById('event-file-input')?.click()} className="w-full h-28 rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/60 overflow-hidden relative group cursor-pointer flex items-center justify-center">
-                {eventPreviewUrl || eventImage ? <img src={eventPreviewUrl || eventImage} alt="Cover" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center gap-1 text-slate-500"><span className="text-2xl">Image</span><span className="text-xs font-bold">Upload Event Cover Image</span></div>}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><span className="text-white text-xs font-bold">Change Cover</span></div>
+            {originalImage ? (
+              <div className="flex flex-col gap-4 select-none">
+                <div className="relative aspect-[2/1] w-full overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 cursor-grab active:cursor-grabbing"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onTouchStart={(e) => {
+                    const touch = e.touches[0]
+                    setIsDragging(true)
+                    setDragStart({ x: touch.clientX - panX, y: touch.clientY - panY })
+                  }}
+                  onTouchMove={(e) => {
+                    if (!isDragging) return
+                    const touch = e.touches[0]
+                    setPanX(touch.clientX - dragStart.x)
+                    setPanY(touch.clientY - dragStart.y)
+                  }}
+                  onTouchEnd={() => setIsDragging(false)}
+                >
+                  <img
+                    src={originalImage}
+                    alt="Original"
+                    style={{
+                      transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
+                      transformOrigin: 'center center',
+                    }}
+                    className="w-full h-full object-contain pointer-events-none select-none"
+                  />
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
+                    <div className="border-r border-b border-white/20"></div>
+                    <div className="border-r border-b border-white/20"></div>
+                    <div className="border-b border-white/20"></div>
+                    <div className="border-r border-b border-white/20"></div>
+                    <div className="border-r border-b border-white/20"></div>
+                    <div className="border-b border-white/20"></div>
+                    <div className="border-r border-white/20"></div>
+                    <div className="border-r border-white/20"></div>
+                    <div></div>
+                  </div>
+                  <div className="absolute inset-0 border-2 border-[#3b5bdb] pointer-events-none rounded-2xl" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
+                    <span>Zoom Scale</span>
+                    <span>{zoom.toFixed(1)}x</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="1.0" 
+                    max="3.0" 
+                    step="0.05"
+                    value={zoom}
+                    onChange={e => setZoom(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#3b5bdb]"
+                  />
+                </div>
+                <div className="flex gap-3 pt-3 border-t border-slate-800">
+                  <button type="button" onClick={() => { setOriginalImage(null); setEventFile(null); setEventPreviewUrl(null) }} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer transition">Cancel</button>
+                  <button type="button" 
+                    onClick={async () => {
+                      try {
+                        const blob = await getCroppedImageBlob()
+                        const croppedFile = new File([blob], 'event-cover.jpg', { type: 'image/jpeg' })
+                        setEventFile(croppedFile)
+                        setEventPreviewUrl(URL.createObjectURL(blob))
+                        setOriginalImage(null)
+                      } catch (err) {
+                        alert('Error cropping image')
+                      }
+                    }}
+                    className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl hover:bg-[#2b4ef7] cursor-pointer transition"
+                  >
+                    Apply Crop
+                  </button>
+                </div>
               </div>
-              <input type="file" id="event-file-input" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setEventFile(f); setEventPreviewUrl(URL.createObjectURL(f)) } }} />
-              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Event Title</label><input required type="text" value={eventTitle} onChange={e => setEventTitle(e.target.value)} placeholder="e.g. Kolkata Creator Conclave 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Subtitle</label><input type="text" value={eventSubtitle} onChange={e => setEventSubtitle(e.target.value)} placeholder="e.g. Network with top creators" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Date</label><input type="text" value={eventDate} onChange={e => setEventDate(e.target.value)} placeholder="e.g. Aug 28, 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Time</label><input type="text" value={eventTime} onChange={e => setEventTime(e.target.value)} placeholder="5:00 PM" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-              </div>
-              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Venue</label><input required type="text" value={eventVenue} onChange={e => setEventVenue(e.target.value)} placeholder="e.g. Biswa Bangla Gate, New Town" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Category Tag</label><input type="text" value={eventTag} onChange={e => setEventTag(e.target.value)} placeholder="e.g. Networking, Summit, Party" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">About Event</label><textarea rows={3} value={eventDescription} onChange={e => setEventDescription(e.target.value)} placeholder="Detailed overview of agenda..." className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb] resize-none font-sans" /></div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Organizer</label><input type="text" value={eventOrganizer} onChange={e => setEventOrganizer(e.target.value)} placeholder="Kreator Kolkata Community" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Entry Fee</label><input type="text" value={eventEntryFee} onChange={e => setEventEntryFee(e.target.value)} placeholder="Free RSVP or 499" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-              </div>
-              <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Speakers (comma separated)</label><input type="text" value={eventSpeakers} onChange={e => setEventSpeakers(e.target.value)} placeholder="e.g. Priya Sengupta, Souvik Chatterjee" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
-              <div className="flex gap-3 pt-3 border-t border-slate-800">
-                <button type="button" onClick={() => setShowCreateEventModal(false)} disabled={creatingEvent} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer transition">Cancel</button>
-                <button type="submit" disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()} className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl hover:bg-[#2b4ef7] cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 transition">{creatingEvent ? 'Publishing...' : 'Publish Event'}</button>
-              </div>
-            </form>
+            ) : (
+              <form onSubmit={handleCreateEventSubmit} className="flex flex-col gap-3.5 overflow-y-auto max-h-[65vh] pr-1">
+                <div onClick={() => document.getElementById('event-file-input')?.click()} className="w-full h-28 rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/60 overflow-hidden relative group cursor-pointer flex items-center justify-center">
+                  {eventPreviewUrl || eventImage ? <img src={eventPreviewUrl || eventImage} alt="Cover" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center gap-1 text-slate-500"><span className="text-2xl">Image</span><span className="text-xs font-bold">Upload Event Cover Image</span></div>}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><span className="text-white text-xs font-bold">Change Cover</span></div>
+                </div>
+                <input 
+                  type="file" 
+                  id="event-file-input" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={e => { 
+                    const f = e.target.files?.[0]; 
+                    if (f) { 
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setOriginalImage(ev.target?.result as string);
+                        setZoom(1.0);
+                        setPanX(0);
+                        setPanY(0);
+                      };
+                      reader.readAsDataURL(f);
+                    } 
+                  }} 
+                />
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Event Title</label><input required type="text" value={eventTitle} onChange={e => setEventTitle(e.target.value)} placeholder="e.g. Kolkata Creator Conclave 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Subtitle</label><input type="text" value={eventSubtitle} onChange={e => setEventSubtitle(e.target.value)} placeholder="e.g. Network with top creators" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Date</label><input type="text" value={eventDate} onChange={e => setEventDate(e.target.value)} placeholder="e.g. Aug 28, 2026" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Time</label><input type="text" value={eventTime} onChange={e => setEventTime(e.target.value)} placeholder="5:00 PM" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                </div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Venue</label><input required type="text" value={eventVenue} onChange={e => setEventVenue(e.target.value)} placeholder="e.g. Biswa Bangla Gate, New Town" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Category Tag</label><input type="text" value={eventTag} onChange={e => setEventTag(e.target.value)} placeholder="e.g. Networking, Summit, Party" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">About Event</label><textarea rows={3} value={eventDescription} onChange={e => setEventDescription(e.target.value)} placeholder="Detailed overview of agenda..." className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb] resize-none font-sans" /></div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Organizer</label><input type="text" value={eventOrganizer} onChange={e => setEventOrganizer(e.target.value)} placeholder="Kreator Kolkata Community" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                  <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Entry Fee</label><input type="text" value={eventEntryFee} onChange={e => setEventEntryFee(e.target.value)} placeholder="Free RSVP or 499" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                </div>
+                <div className="flex flex-col gap-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Speakers (comma separated)</label><input type="text" value={eventSpeakers} onChange={e => setEventSpeakers(e.target.value)} placeholder="e.g. Priya Sengupta, Souvik Chatterjee" className="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white outline-none focus:border-[#3b5bdb]" /></div>
+                <div className="flex gap-3 pt-3 border-t border-slate-800">
+                  <button type="button" onClick={() => setShowCreateEventModal(false)} disabled={creatingEvent} className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer transition">Cancel</button>
+                  <button type="submit" disabled={creatingEvent || !eventTitle.trim() || !eventVenue.trim()} className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-xl hover:bg-[#2b4ef7] cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 transition">{creatingEvent ? 'Publishing...' : 'Publish Event'}</button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
