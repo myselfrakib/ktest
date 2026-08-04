@@ -5256,7 +5256,7 @@ function PublicProfilePage({
           </button>
         </div>
 
-        <div className="absolute -bottom-10 left-5">
+        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
           <div className="relative">
             <img 
               src={creator.avatar} 
@@ -5272,27 +5272,25 @@ function PublicProfilePage({
         </div>
       </div>
 
-      <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 shadow-sm">
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <h2 className="font-display text-xl font-black text-slate-900 leading-tight">{creator.name}</h2>
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
-              <span>{creator.handle}</span>
-              <span className="w-1 h-1 rounded-full bg-slate-300" />
-              <span className="text-[#f76707] font-bold">{creator.niche}</span>
-            </div>
+      <div className="px-5 pt-16 pb-4 bg-white border-b border-slate-100 shadow-sm flex flex-col items-center text-center">
+        <div className="flex flex-col items-center mb-2">
+          <h2 className="font-display text-xl font-black text-slate-900 leading-tight mb-1">{creator.name}</h2>
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 font-semibold">
+            <span>{creator.handle}</span>
+            <span className="w-1 h-1 rounded-full bg-slate-300" />
+            <span className="text-[#f76707] font-bold">{creator.niche}</span>
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 leading-relaxed mb-4">
+        <p className="text-xs text-slate-500 leading-relaxed mb-4 max-w-sm">
           {creator.bio}
         </p>
 
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-4">
+        <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-4">
           <MapPinIcon /><span>Kolkata, West Bengal · Creator</span>
         </div>
 
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-3 mb-4 w-full">
           <button 
             onClick={() => toggleFollowCreator(creator.id)}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${isFollowing ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-[#3b5bdb] text-white shadow-blue-100'}`}
@@ -5307,7 +5305,7 @@ function PublicProfilePage({
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 pt-2">
+        <div className="grid grid-cols-4 gap-2 pt-2 w-full">
           {[
             { label: 'Followers', value: (creator as any).instagram?.followersFormatted || creator.followers, color: 'text-rose-500' },
             { label: 'Avg. ER', value: creator.engagement, color: 'text-indigo-500' },
@@ -5438,7 +5436,7 @@ function PublicBrandProfilePage({
           </button>
         </div>
 
-        <div className="absolute -bottom-10 left-5">
+        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
           <div className="relative">
             <img 
               src={brand.logo} 
@@ -5454,27 +5452,25 @@ function PublicBrandProfilePage({
         </div>
       </div>
 
-      <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 shadow-sm">
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <h2 className="font-display text-xl font-black text-slate-900 leading-tight">{brand.name}</h2>
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
-              <span>Brand Account</span>
-              <span className="w-1 h-1 rounded-full bg-slate-300" />
-              <span className="text-[#3b5bdb] font-bold">{brand.industry}</span>
-            </div>
+      <div className="px-5 pt-16 pb-4 bg-white border-b border-slate-100 shadow-sm flex flex-col items-center text-center">
+        <div className="flex flex-col items-center mb-2">
+          <h2 className="font-display text-xl font-black text-slate-900 leading-tight mb-1">{brand.name}</h2>
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 font-semibold">
+            <span>Brand Account</span>
+            <span className="w-1 h-1 rounded-full bg-slate-300" />
+            <span className="text-[#3b5bdb] font-bold">{brand.industry}</span>
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 leading-relaxed mb-4">
+        <p className="text-xs text-slate-500 leading-relaxed mb-4 max-w-sm">
           {brand.bio}
         </p>
 
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-4">
+        <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-4">
           <MapPinIcon /><span>{brand.location || 'Kolkata, WB'} · Brand Partner</span>
         </div>
 
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-3 mb-4 w-full">
           <button 
             onClick={() => toggleFollowBrand(brand.id)}
             className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${isFollowing ? 'bg-slate-100 text-slate-500 border border-slate-200' : 'bg-[#3b5bdb] text-white shadow-blue-100'}`}
@@ -5489,7 +5485,7 @@ function PublicBrandProfilePage({
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 pt-2">
+        <div className="grid grid-cols-4 gap-2 pt-2 w-full">
           {[
             { label: 'Followers', value: '45K+', color: 'text-indigo-500' },
             { label: 'Active Gigs', value: brandGigs.length, color: 'text-emerald-500' },
