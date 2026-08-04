@@ -1666,12 +1666,24 @@ function ApplyPage({
 
           {/* CTA */}
           <div className="mx-5 mb-8">
-            <button
-              onClick={() => setStep("form")}
-              className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base"
-            >
-              Apply for this Gig ↗
-            </button>
+            {(gig as any).applicantSelected ? (
+              <div className="w-full bg-emerald-50 border-2 border-emerald-300 rounded-2xl py-4 px-5 flex flex-col items-center gap-2 text-center">
+                <span className="text-2xl">✅</span>
+                <div className="text-sm font-black text-emerald-700">
+                  Creator Selected
+                </div>
+                <div className="text-xs text-emerald-600 font-medium">
+                  The gig poster has already selected a creator for this gig.
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setStep("form")}
+                className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base"
+              >
+                Apply for this Gig ↗
+              </button>
+            )}
           </div>
         </>
       )}
@@ -1868,6 +1880,10 @@ function ViewMyGigPage({
 
   const [loadingApps, setLoadingApps] = useState(true)
 
+  const [acceptToast, setAcceptToast] = useState<string | null>(null)
+
+  const [acceptingId, setAcceptingId] = useState<string | null>(null)
+
   // Edit states
 
   const [editTitle, setEditTitle] = useState(gig.title)
@@ -1983,6 +1999,49 @@ function ViewMyGigPage({
     }
   }
 
+  const acceptApplicant = async (app: any) => {
+    if (
+      !window.confirm(
+        `Accept ${app.applicantName || "this creator"} for this gig?`,
+      )
+    )
+      return
+    setAcceptingId(app.id)
+    try {
+      const qGigs = query(collection(db, "gigs"), where("id", "==", gig.id))
+      const snap = await getDocs(qGigs)
+      if (!snap.empty) {
+        await updateDoc(snap.docs[0].ref, {
+          applicantSelected: true,
+          selectedApplicantUid: app.applicantUid || null,
+          selectedApplicantName: app.applicantName || "Creator",
+          selectedApplicantAvatar: app.applicantAvatar || null,
+          selectedApplicantHandle: app.instaHandle || app.applicantHandle || "",
+          status: "Closed",
+        })
+      }
+      // Update the application doc status too
+      try {
+        const qApp = query(
+          collection(db, "applications"),
+          where("gigId", "==", gig.id),
+        )
+        const appSnap = await getDocs(qApp)
+        appSnap.docs.forEach(async (d) => {
+          await updateDoc(d.ref, {
+            status: d.id === app.id ? "accepted" : "rejected",
+          })
+        })
+      } catch (_) {}
+      setAcceptToast(app.applicantName || "Creator")
+      setTimeout(() => setAcceptToast(null), 4000)
+    } catch (err: any) {
+      alert(err.message || "Failed to accept applicant")
+    } finally {
+      setAcceptingId(null)
+    }
+  }
+
   const toggleGigStatus = async () => {
     const nextStatus = gigStatus === "Active" ? "Closed" : "Active"
 
@@ -2003,6 +2062,13 @@ function ViewMyGigPage({
 
   return (
     <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide bg-[#f8fafc] min-h-screen pb-24">
+      {/* Accept Toast */}
+      {acceptToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+          <span>✅</span> {acceptToast} accepted! Gig is now closed.
+        </div>
+      )}
+
       {/* Top Header */}
       <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-20 shadow-xs">
         <div className="flex items-center gap-3">
@@ -2154,65 +2220,145 @@ function ViewMyGigPage({
               </span>
             </div>
           ) : applications.length > 0 ? (
-            applications.map((app) => (
-              <div
-                key={app.id}
-                className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={
-                        app.applicantAvatar ||
-                        "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
-                      }
-                      alt=""
-                      className="w-10 h-10 rounded-full object-cover border border-slate-100"
-                    />
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900">
-                        {app.applicantName || "Creator"}
-                      </h4>
-                      <span className="text-[10px] text-slate-400 font-medium">
-                        {app.instaHandle || app.applicantHandle || "@creator"}
+            applications.map((app) => {
+              const isAccepted = app.status === "accepted"
+              const isRejected = app.status === "rejected"
+              return (
+                <div
+                  key={app.id}
+                  className={`bg-white rounded-3xl p-4 shadow-sm border flex flex-col gap-3 transition ${
+                    isAccepted
+                      ? "border-emerald-300 bg-emerald-50/40"
+                      : isRejected
+                        ? "border-slate-100 opacity-50"
+                        : "border-slate-100"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <img
+                          src={
+                            app.applicantAvatar ||
+                            "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
+                          }
+                          alt=""
+                          className="w-11 h-11 rounded-full object-cover border-2 border-slate-100"
+                        />
+                        {isAccepted && (
+                          <span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white text-[10px] font-black">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-slate-900">
+                            {app.applicantName || "Creator"}
+                          </h4>
+                          {isAccepted && (
+                            <span className="text-[8px] font-black text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                              Selected
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {app.instaHandle || app.applicantHandle || "@creator"}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      {app.expectedRate || "Standard Rate"}
+                    </span>
+                  </div>
+
+                  {app.pitch && (
+                    <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 leading-relaxed italic">
+                      "{app.pitch}"
+                    </div>
+                  )}
+
+                  {/* Applicant extra info */}
+                  <div className="flex gap-2 flex-wrap">
+                    {app.availability && (
+                      <span className="text-[9px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                        🗓 {app.availability}
                       </span>
+                    )}
+                    {app.portfolio && (
+                      <a
+                        href={app.portfolio}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[9px] font-bold bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full"
+                      >
+                        🔗 Portfolio
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 gap-2">
+                    <span className="text-[9px] text-slate-400 font-semibold">
+                      Applied:{" "}
+                      {app.appliedAt
+                        ? new Date(app.appliedAt).toLocaleDateString()
+                        : "Recently"}
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          onOpenChat &&
+                          onOpenChat(
+                            app.applicantName || "Creator",
+                            app.applicantAvatar ||
+                              "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+                          )
+                        }
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm cursor-pointer active:scale-95 transition flex items-center gap-1"
+                      >
+                        💬 Chat
+                      </button>
+
+                      {!isAccepted && !isRejected && (
+                        <button
+                          disabled={acceptingId === app.id}
+                          onClick={() => acceptApplicant(app)}
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm cursor-pointer active:scale-95 transition flex items-center gap-1 disabled:opacity-60"
+                        >
+                          {acceptingId === app.id ? (
+                            <svg
+                              className="animate-spin w-3 h-3"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                            >
+                              <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="white"
+                                strokeWidth="3"
+                                strokeDasharray="60"
+                                strokeDashoffset="20"
+                              />
+                            </svg>
+                          ) : (
+                            "✅ Accept"
+                          )}
+                        </button>
+                      )}
+
+                      {isAccepted && (
+                        <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1">
+                          ✅ Accepted
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    {app.expectedRate || "Standard Rate"}
-                  </span>
                 </div>
-
-                {app.pitch && (
-                  <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 leading-relaxed italic">
-                    "{app.pitch}"
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[9px] text-slate-400 font-semibold">
-                    Applied:{" "}
-                    {app.appliedAt
-                      ? new Date(app.appliedAt).toLocaleDateString()
-                      : "Recently"}
-                  </span>
-
-                  <button
-                    onClick={() =>
-                      onOpenChat &&
-                      onOpenChat(
-                        app.applicantName || "Creator",
-                        app.applicantAvatar ||
-                          "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
-                      )
-                    }
-                    className="bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm cursor-pointer active:scale-95 transition flex items-center gap-1"
-                  >
-                    💬 Chat & Connect
-                  </button>
-                </div>
-              </div>
-            ))
+              )
+            })
           ) : (
             <div className="bg-white rounded-3xl p-8 text-center border border-slate-100 shadow-sm flex flex-col items-center gap-3">
               <span className="text-4xl">📩</span>
@@ -2887,15 +3033,21 @@ function HomePage({
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onApply(gig)
-                      }}
-                      className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
-                    >
-                      {poster.isOwner ? "View Applications" : "Apply ↗"}
-                    </button>
+                    {(gig as any).applicantSelected && !poster.isOwner ? (
+                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
+                        ✅ Selected
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onApply(gig)
+                        }}
+                        className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
+                      >
+                        {poster.isOwner ? "View Applications" : "Apply ↗"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
