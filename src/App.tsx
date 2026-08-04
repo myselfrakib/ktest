@@ -2405,15 +2405,15 @@ function resolveGigPosterDetails(
       gig.avatar ||
       gig.brandLogo ||
       "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
-    : gig.avatar ||
+    : matchedCreator?.avatar ||
+      gig.avatar ||
       gig.brandLogo ||
-      matchedCreator?.avatar ||
       matchedBrand?.logo ||
       "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
 
   const name = isOwner
     ? userProfile.name || gig.creatorName
-    : gig.creatorName || matchedCreator?.name || matchedBrand?.name
+    : matchedCreator?.name || gig.creatorName || matchedBrand?.name
 
   const handle = isOwner
     ? userProfile.handle || gig.handle
@@ -3098,7 +3098,6 @@ function PostGigPage({
       const newGigId = Date.now()
 
       const posterName =
-        brand.trim() ||
         userProfile?.name ||
         (userRole === "brand" ? "Kreator Brand" : "Kreator Creator")
 
