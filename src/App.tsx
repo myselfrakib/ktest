@@ -6554,7 +6554,7 @@ function AdminDashboardPage({
                       </div>
                     </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center gap-2 text-slate-550 group-hover:text-slate-350 transition-colors">
+                    <div className="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-slate-200 transition-colors">
                       <span className="text-4xl font-light leading-none">+</span>
                       <span className="text-[10px] font-black uppercase tracking-wider">Upload Event Cover</span>
                       <span className="text-[9px] text-slate-600 font-bold">Recommended 2:1 Landscape</span>
