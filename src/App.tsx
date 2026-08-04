@@ -15199,7 +15199,7 @@ export default function App() {
               </button>
               <button
                 onClick={answerCall}
-                className="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/40 active:scale-95 transition cursor-pointer animate-bounce"
+                className="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/40 active:scale-95 transition cursor-pointer"
                 title="Accept Call"
               >
                 <PhoneIcon />
