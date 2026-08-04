@@ -4650,7 +4650,7 @@ function MyApplicationsPage({
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-slate-50 min-h-screen">
       {/* Header */}
       <div
-        className="sticky top-0 z-20 px-5 pt-5 pb-4"
+        className="sticky top-0 z-20 px-5 pt-12 pb-4"
         style={{
           background:
             "linear-gradient(135deg, #3b5bdb 0%, #7048e8 60%, #f76707 100%)",
@@ -15069,6 +15069,7 @@ export default function App() {
     !posting &&
     !gigPosted &&
     !viewingNotifications &&
+    !viewingMyApplications &&
     activeChatId === null &&
     activeConvoId === null &&
     selectedCreator === null &&
@@ -15718,6 +15719,15 @@ export default function App() {
                             if (tab.id === "post") setPosting(true)
 
                             if (tab.id === "explore") setExploreFilter("all")
+
+                            // Reset sub-pages/views when switching bottom tabs
+                            setViewingNotifications(false)
+                            setViewingMyApplications(false)
+                            setSelectedGigId(null)
+                            setSelectedMyGigId(null)
+                            setSelectedCreatorName(null)
+                            setSelectedBrandName(null)
+                            setSelectedEventId(null)
                           }}
                           className={`flex flex-col items-center gap-1 ${
                             tab.special ? "-mt-6" : ""
