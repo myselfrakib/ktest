@@ -624,9 +624,9 @@ const NOTIFICATIONS = [
   {
     id: 2,
 
-    type: "event",
+    type: "collab" === "event" ? "collab" : "event", // just preserving formatting/structure
 
-    title: "RSVP Confirmed 🎉",
+    title: "RSVP Confirmed",
 
     message: 'Your registration for "Kreator Meetup #3" has been approved.',
 
@@ -647,7 +647,7 @@ const NOTIFICATIONS = [
 
     type: "brand",
 
-    title: "Campaign Invitation 💼",
+    title: "Campaign Invitation",
 
     message:
       'Rang Bahar Textiles invited you to apply for their upcoming "Winter Silk Campaign".',
@@ -669,7 +669,7 @@ const NOTIFICATIONS = [
 
     type: "system",
 
-    title: "Account Verified Check ✅",
+    title: "Account Verified Check",
 
     message:
       "Congratulations! Your profile has been verified as a Top Kolkata Creator.",
@@ -691,7 +691,7 @@ const NOTIFICATIONS = [
 
     type: "collab",
 
-    title: "New Review Posted ⭐",
+    title: "New Review Posted",
 
     message:
       'Anika Bose left you a 5-star review: "Priya is extremely professional and creative!"',
@@ -713,7 +713,7 @@ const NOTIFICATIONS = [
 
     type: "system",
 
-    title: "Security Alert 🔒",
+    title: "Security Alert",
 
     message:
       "Your account was accessed from a new device in Salt Lake, Kolkata.",
@@ -1580,7 +1580,7 @@ function ApplyPage({
 
           actionText: "Review Pitch",
 
-          title: `📩 New Application for "${gig.title}"`,
+          title: `New Application for "${gig.title}"`,
 
           message: `${userProfile?.name || "A creator"} applied with pitch: "${pitch.trim().slice(0, 60)}..."`,
 
@@ -1603,7 +1603,7 @@ function ApplyPage({
             type: "application",
             category: "activity",
             actionText: "View Status",
-            title: `✅ Application Submitted!`,
+            title: `Application Submitted!`,
             message: `You successfully applied to "${gig.title}". We'll notify you when ${gig.creatorName} reviews your pitch!`,
             read: false,
             createdAt: new Date().toISOString(),
@@ -2293,7 +2293,7 @@ function ViewMyGigPage({
             senderAvatar:
               gig.avatar ||
               "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
-            title: "🎉 Application Accepted!",
+            title: "Application Accepted!",
             message: `Congratulations! Your application for "${gig.title}" was accepted by ${gig.creatorName}!`,
             type: "application",
             category: "activity",
@@ -3616,12 +3616,14 @@ function PostGigPage({
           recipientUid: "all",
           recipientName: "Community",
           senderName: newGig.creatorName,
+          senderUid: auth.currentUser?.uid || null,
           senderAvatar: newGig.avatar,
-          title: `⚡ New Gig Posted: ${newGig.title}`,
+          title: `New Gig Posted: ${newGig.title}`,
           message: `${newGig.creatorName} posted a new gig "${newGig.title}" in ${newGig.niche}! Budget: ${newGig.budget}`,
           type: "gig",
           category: "activity",
           actionText: "View Gig",
+          gigId: newGigId,
           read: false,
           createdAt: new Date().toISOString(),
           avatar: newGig.avatar,
@@ -4547,6 +4549,327 @@ function ChevronRightIcon() {
   )
 }
 
+// ── My Applications Page ────────────────────────────────────────────────────
+
+function MyApplicationsPage({
+  onBack,
+  currentUser,
+  userProfile,
+  gigs = [],
+}: {
+  onBack: () => void
+  currentUser: any
+  userProfile?: any
+  gigs?: Gig[]
+}) {
+  const [applications, setApplications] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setLoading(false)
+      return
+    }
+
+    const q = query(
+      collection(db, "applications"),
+      where("applicantUid", "==", currentUser.uid),
+    )
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .sort((a: any, b: any) => {
+            const ta = a.appliedAt ? new Date(a.appliedAt).getTime() : 0
+            const tb = b.appliedAt ? new Date(b.appliedAt).getTime() : 0
+            return tb - ta
+          })
+        setApplications(list)
+        setLoading(false)
+      },
+      (err) => {
+        console.warn("MyApplications error:", err)
+        setLoading(false)
+      },
+    )
+
+    return () => unsub()
+  }, [currentUser?.uid])
+
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return {
+          label: "🎉 Accepted",
+          bg: "bg-emerald-50",
+          border: "border-emerald-200",
+          text: "text-emerald-700",
+          dot: "bg-emerald-500",
+          desc: "Congratulations! You've been selected for this gig.",
+        }
+      case "rejected":
+        return {
+          label: "❌ Not Selected",
+          bg: "bg-red-50",
+          border: "border-red-200",
+          text: "text-red-600",
+          dot: "bg-red-400",
+          desc: "The poster selected another creator for this gig.",
+        }
+      default:
+        return {
+          label: "⏳ Pending Review",
+          bg: "bg-amber-50",
+          border: "border-amber-200",
+          text: "text-amber-700",
+          dot: "bg-amber-400",
+          desc: "Your pitch is being reviewed by the gig poster.",
+        }
+    }
+  }
+
+  const formatRelativeTime = (isoStr: string) => {
+    if (!isoStr) return ""
+    const diff = Date.now() - new Date(isoStr).getTime()
+    const mins = Math.floor(diff / 60000)
+    const hrs = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+    if (mins < 2) return "Just now"
+    if (mins < 60) return `${mins}m ago`
+    if (hrs < 24) return `${hrs}h ago`
+    if (days < 7) return `${days}d ago`
+    return new Date(isoStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    })
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-slate-50 min-h-screen">
+      {/* Header */}
+      <div
+        className="sticky top-0 z-20 px-5 pt-5 pb-4"
+        style={{
+          background:
+            "linear-gradient(135deg, #3b5bdb 0%, #7048e8 60%, #f76707 100%)",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white cursor-pointer active:scale-95 transition-all"
+          >
+            <ArrowLeftIcon />
+          </button>
+          <div>
+            <div className="text-[11px] text-white/70 font-semibold">
+              Your Activity
+            </div>
+            <h1 className="text-lg font-black text-white leading-tight">
+              My Applications
+            </h1>
+          </div>
+          <div className="ml-auto bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+            <span className="text-white text-[11px] font-bold">
+              {applications.length} Pitch{applications.length !== 1 ? "es" : ""}
+            </span>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        {!loading && applications.length > 0 && (
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              {
+                label: "Pending",
+                count: applications.filter(
+                  (a: any) => !a.status || a.status === "pending",
+                ).length,
+                color: "text-amber-300",
+              },
+              {
+                label: "Accepted",
+                count: applications.filter((a: any) => a.status === "accepted")
+                  .length,
+                color: "text-emerald-300",
+              },
+              {
+                label: "Not Selected",
+                count: applications.filter((a: any) => a.status === "rejected")
+                  .length,
+                color: "text-red-300",
+              },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="bg-white/15 backdrop-blur-sm rounded-2xl py-2 px-2 text-center"
+              >
+                <div className={`text-xl font-black ${s.color}`}>{s.count}</div>
+                <div className="text-[9px] text-white/70 font-semibold">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="px-4 pt-4">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#3b5bdb]/30 border-t-[#3b5bdb] animate-spin" />
+            <p className="text-xs text-slate-400 font-medium">
+              Loading your applications...
+            </p>
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+            <div className="w-20 h-20 rounded-3xl bg-[#e8edff] flex items-center justify-center text-4xl shadow-sm">
+              📝
+            </div>
+            <div>
+              <h3 className="font-black text-slate-800 text-base mb-1">
+                No Applications Yet
+              </h3>
+              <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-[240px]">
+                You haven't applied to any gigs yet. Browse the Explore page to
+                find opportunities!
+              </p>
+            </div>
+            <button
+              onClick={onBack}
+              className="bg-[#3b5bdb] text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow-md shadow-blue-200"
+            >
+              Browse Gigs ↗
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {applications.map((app: any) => {
+              const statusConfig = getStatusConfig(app.status)
+              const matchedGig = gigs.find(
+                (g) => String(g.id) === String(app.gigId),
+              )
+
+              return (
+                <div
+                  key={app.id}
+                  className={`bg-white rounded-3xl overflow-hidden shadow-sm border ${statusConfig.border} transition-all`}
+                >
+                  {/* Status bar */}
+                  <div
+                    className={`${statusConfig.bg} px-4 py-2.5 flex items-center justify-between border-b ${statusConfig.border}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} animate-pulse`}
+                      />
+                      <span
+                        className={`text-[11px] font-black ${statusConfig.text}`}
+                      >
+                        {statusConfig.label}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      Applied {formatRelativeTime(app.appliedAt)}
+                    </span>
+                  </div>
+
+                  {/* Card body */}
+                  <div className="p-4">
+                    {/* Poster info */}
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <img
+                        src={
+                          app.posterAvatar ||
+                          matchedGig?.avatar ||
+                          "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format"
+                        }
+                        className="w-10 h-10 rounded-2xl object-cover border border-slate-100"
+                        alt={app.posterName}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-black text-slate-900 truncate">
+                          {app.gigTitle || "Untitled Gig"}
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-medium truncate">
+                          by {app.posterName || "Gig Poster"}
+                        </div>
+                      </div>
+                      {matchedGig && (
+                        <span
+                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                            matchedGig.type === "Paid"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : matchedGig.type === "Barter"
+                                ? "bg-violet-100 text-violet-700"
+                                : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {matchedGig.type}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Status description */}
+                    <div
+                      className={`${statusConfig.bg} rounded-2xl px-3 py-2.5 mb-3 border ${statusConfig.border}`}
+                    >
+                      <p
+                        className={`text-[11px] font-medium ${statusConfig.text} leading-relaxed`}
+                      >
+                        {statusConfig.desc}
+                      </p>
+                    </div>
+
+                    {/* Pitch preview */}
+                    {app.pitch && (
+                      <div className="mb-3">
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                          Your Pitch
+                        </div>
+                        <p className="text-[12px] text-slate-600 font-medium leading-relaxed line-clamp-2 bg-slate-50 rounded-xl px-3 py-2">
+                          "{app.pitch}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Meta row */}
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                      {app.instaHandle && (
+                        <span className="text-[10px] font-semibold text-[#e4405f] bg-pink-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                          <span className="text-[9px]">📸</span>{" "}
+                          {app.instaHandle.startsWith("@")
+                            ? app.instaHandle
+                            : `@${app.instaHandle}`}
+                        </span>
+                      )}
+                      {app.expectedRate && (
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                          <span className="text-[9px]">₹</span>{" "}
+                          {app.expectedRate}
+                        </span>
+                      )}
+                      {app.availability && (
+                        <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                          🗓 {app.availability}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ProfilePage({
   onPostGig,
 
@@ -4561,6 +4884,8 @@ function ProfilePage({
   gigs = [],
 
   onViewGig,
+
+  onViewMyApplications,
 }: {
   onPostGig: () => void
 
@@ -4575,6 +4900,8 @@ function ProfilePage({
   gigs?: Gig[]
 
   onViewGig?: (gig: Gig, initialTab?: "applicants" | "edit") => void
+
+  onViewMyApplications?: () => void
 }) {
   const [activeSection, setActiveSection] =
     useState<"portfolio" | "gigs" | "saved" | "reviews" | "about">("portfolio")
@@ -5258,6 +5585,20 @@ function ProfilePage({
               >
                 <ShareIcon /> Share Profile
               </button>
+              {onViewMyApplications && (
+                <button
+                  onClick={() => {
+                    setShowMenu(false)
+                    onViewMyApplications()
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent border-t border-slate-100"
+                >
+                  <span className="text-[#3b5bdb] text-base leading-none">
+                    📋
+                  </span>{" "}
+                  My Applications
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -8338,8 +8679,8 @@ function NotificationsPage({
             }
 
             return (
-              <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center text-lg">
-                {notification.type === "system" ? "🔒" : "⚡"}
+              <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center font-bold text-xs text-[#3b5bdb]">
+                {notification.type === "system" ? "SYS" : "ACT"}
               </div>
             )
           }
@@ -8367,14 +8708,24 @@ function NotificationsPage({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="text-xs font-bold text-slate-800 truncate">
-                    {notification.title}
+                    {(notification.title || "")
+                      .replace(
+                        /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
+                        "",
+                      )
+                      .trim()}
                   </span>
                   <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">
                     {notification.time}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 leading-relaxed mb-2.5">
-                  {notification.message}
+                  {(notification.message || "")
+                    .replace(
+                      /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
+                      "",
+                    )
+                    .trim()}
                 </p>
 
                 <div className="flex gap-2">
@@ -8408,7 +8759,21 @@ function NotificationsPage({
 
         {filteredNotifications.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-4xl mb-3">🔔</span>
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
             <h3 className="text-sm font-bold text-slate-900 mb-1">
               No notifications
             </h3>
@@ -8776,7 +9141,8 @@ function ChatPage({
               userProfile?.avatar ||
               userProfile?.logo ||
               "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
-            title: "🎉 Application Accepted!",
+            title: "Application Accepted!",
+            senderUid: auth.currentUser?.uid || null,
             message: `Congratulations! Your application for "${app.gigTitle || "Gig"}" was accepted by ${userProfile?.name || "Gig Host"}!`,
             type: "application",
             category: "activity",
@@ -13411,6 +13777,8 @@ export default function App() {
     savedRoute.current?.viewingNotifications || false,
   )
 
+  const [viewingMyApplications, setViewingMyApplications] = useState(false)
+
   const [unreadNotifications, setUnreadNotifications] = useState<Set<number>>(
     new Set([1, 2]),
   )
@@ -14925,20 +15293,59 @@ export default function App() {
 
     const handleNotificationAction = (notification: any) => {
       setViewingNotifications(false)
-      const type = notification.type
       const raw = notification.raw || notification
+      const action = notification.actionText
 
-      if (type === "chat" || notification.actionText === "Open Chat") {
-        setActiveTab("chat")
-      } else if (raw?.gigId) {
-        setSelectedGigId(raw.gigId)
-      } else if (type === "gig" || notification.actionText === "View Gig") {
-        setActiveTab("explore")
-      } else if (
-        type === "application" ||
-        notification.actionText === "Review Pitch" ||
-        notification.actionText === "View Status"
+      if (
+        action === "Open Chat" ||
+        notification.type === "chat" ||
+        notification.type === "message" ||
+        (action === "View" && notification.type === "message")
       ) {
+        // Open the specific chat/convo with the sender
+        setActiveTab("chat")
+        if (raw?.senderUid && currentUser?.uid) {
+          const convoId = getConvoId(currentUser.uid, raw.senderUid)
+          setActiveConvoId(convoId)
+          setActiveChatId(null)
+          try {
+            const convoRef = doc(db, "conversations", convoId)
+            updateDoc(convoRef, {
+              [`unreadCounts.${currentUser.uid}`]: 0,
+            }).catch(() => {})
+          } catch (e) {}
+        }
+      } else if (action === "View Gig") {
+        // If it's a gig the current user posted, open it in profile > My Gigs
+        if (raw?.gigId) {
+          const gigIdNum = Number(raw.gigId)
+          const ownedGig = gigs.find(
+            (g) =>
+              g.id === gigIdNum && (g as any).posterUid === currentUser?.uid,
+          )
+          if (ownedGig) {
+            setSelectedMyGigId(gigIdNum)
+            setSelectedMyGigTab("applicants")
+            setActiveTab("profile")
+          } else {
+            setSelectedGigId(gigIdNum)
+          }
+        } else {
+          setActiveTab("explore")
+        }
+      } else if (action === "Review Pitch") {
+        // Open profile > My Gig > Applicants tab for that gig
+        if (raw?.gigId) {
+          setSelectedMyGigId(Number(raw.gigId))
+          setSelectedMyGigTab("applicants")
+        }
+        setActiveTab("profile")
+      } else if (action === "View Status") {
+        setActiveTab("profile")
+        setViewingMyApplications(true)
+      } else if (raw?.gigId) {
+        setSelectedGigId(Number(raw.gigId))
+      } else {
         setActiveTab("profile")
       }
     }
@@ -15012,6 +15419,17 @@ export default function App() {
       )
     }
 
+    if (viewingMyApplications) {
+      return (
+        <MyApplicationsPage
+          onBack={() => setViewingMyApplications(false)}
+          currentUser={currentUser}
+          userProfile={userProfile}
+          gigs={gigs}
+        />
+      )
+    }
+
     if (viewingNotifications) {
       return (
         <NotificationsPage
@@ -15079,9 +15497,9 @@ export default function App() {
           gigs={gigs}
           onViewGig={(gig, tab) => {
             setSelectedMyGigId(gig.id)
-
             setSelectedMyGigTab(tab || "applicants")
           }}
+          onViewMyApplications={() => setViewingMyApplications(true)}
         />
       )
     }
