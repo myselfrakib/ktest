@@ -5889,6 +5889,13 @@ function AdminDashboardPage({
 
   const getCroppedImageBlob = (): Promise<Blob> => {
     return new Promise((resolve, reject) => {
+      const container = document.querySelector('.event-crop-container')
+      const rect = container?.getBoundingClientRect()
+      const previewW = rect?.width || 400
+      const previewH = rect?.height || 200
+      const scaleX = 800 / previewW
+      const scaleY = 400 / previewH
+
       const img = new Image()
       img.src = originalImage!
       img.onload = () => {
@@ -5902,7 +5909,7 @@ function AdminDashboardPage({
         ctx.fillRect(0, 0, 800, 400)
 
         ctx.save()
-        ctx.translate(400 + panX * 2, 200 + panY * 2)
+        ctx.translate(400 + panX * scaleX, 200 + panY * scaleY)
         ctx.scale(zoom, zoom)
         
         const iw = img.width
@@ -5965,6 +5972,7 @@ function AdminDashboardPage({
     setEventImage(''); setEventFile(null); setEventPreviewUrl(null)
     setEventDescription(''); setEventOrganizer('Kreator Kolkata Community')
     setEventEntryFee('Free RSVP'); setEventSpeakers('')
+    setOriginalImage(null)
   }
   const handleCreateEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -6436,7 +6444,7 @@ function AdminDashboardPage({
             </div>
             {originalImage ? (
               <div className="flex flex-col gap-4 select-none">
-                <div className="relative aspect-[2/1] w-full overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 cursor-grab active:cursor-grabbing"
+                <div className="event-crop-container relative aspect-[2/1] w-full overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 cursor-grab active:cursor-grabbing"
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
@@ -6457,11 +6465,12 @@ function AdminDashboardPage({
                   <img
                     src={originalImage}
                     alt="Original"
+                    onDragStart={e => e.preventDefault()}
                     style={{
                       transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
                       transformOrigin: 'center center',
                     }}
-                    className="w-full h-full object-contain pointer-events-none select-none"
+                    className="w-full h-full object-cover pointer-events-none select-none"
                   />
                   <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
                     <div className="border-r border-b border-white/20"></div>
