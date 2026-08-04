@@ -5767,14 +5767,6 @@ function ProfilePage({
             <span className="text-xs font-bold text-slate-700">
               Work Showcase ({portfolioItems.length})
             </span>
-            <button
-              onClick={() =>
-                document.getElementById("portfolio-direct-input")?.click()
-              }
-              className="bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm shadow-blue-200 active:scale-95 transition cursor-pointer flex items-center gap-1"
-            >
-              <span>＋</span> Add Work Image
-            </button>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
