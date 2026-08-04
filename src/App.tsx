@@ -8235,7 +8235,10 @@ function NotificationsPage({
           return (
             <div
               key={notification.id}
-              onClick={() => handleToggleRead(notification)}
+              onClick={() => {
+                handleToggleRead(notification)
+                if (onNotificationAction) onNotificationAction(notification)
+              }}
               className={`p-4 rounded-3xl bg-white border transition-all duration-200 cursor-pointer flex gap-3 relative ${
                 isUnread
                   ? "border-l-4 border-l-[#3b5bdb] border-slate-100 shadow-sm"
@@ -8267,6 +8270,8 @@ function NotificationsPage({
                     onClick={(e) => {
                       e.stopPropagation()
                       handleToggleRead(notification)
+                      if (onNotificationAction)
+                        onNotificationAction(notification)
                     }}
                     className="text-[10px] font-bold text-[#3b5bdb] bg-[#3b5bdb]/10 px-3 py-1.5 rounded-xl hover:bg-[#3b5bdb]/20 transition"
                   >
@@ -14722,6 +14727,29 @@ export default function App() {
       )
     }
 
+    const totalUnreadNotificationsCount =
+      dbNotifications.filter((n) => !n.read).length + unreadNotifications.size
+
+    const handleNotificationAction = (notification: any) => {
+      setViewingNotifications(false)
+      const type = notification.type
+      const raw = notification.raw || notification
+
+      if (type === "chat" || notification.actionText === "Open Chat") {
+        setActiveTab("chat")
+      } else if (raw?.gigId) {
+        setSelectedGigId(raw.gigId)
+      } else if (type === "gig" || notification.actionText === "View Gig") {
+        setActiveTab("explore")
+      } else if (
+        type === "application" ||
+        notification.actionText === "Review Pitch" ||
+        notification.actionText === "View Status"
+      ) {
+        setActiveTab("profile")
+      }
+    }
+
     if (gigPosted)
       return (
         <GigPostedSuccess
@@ -14797,6 +14825,7 @@ export default function App() {
           unreadNotifications={unreadNotifications}
           setUnreadNotifications={setUnreadNotifications}
           dbNotifications={dbNotifications}
+          onNotificationAction={handleNotificationAction}
         />
       )
     }
@@ -14896,7 +14925,7 @@ export default function App() {
           rsvpEvents={rsvpEvents}
           toggleRsvpEvent={toggleRsvpEvent}
           onBellClick={() => setViewingNotifications(true)}
-          unreadCount={unreadNotifications.size}
+          unreadCount={totalUnreadNotificationsCount}
           onCreatorClick={handleOpenCreatorProfile}
           onBrandClick={(b) => setSelectedBrandName(b.name)}
           searchQuery={exploreSearchQuery}
@@ -14921,7 +14950,7 @@ export default function App() {
         toggleSave={toggleSave}
         onApply={handleApply}
         onBellClick={() => setViewingNotifications(true)}
-        unreadCount={unreadNotifications.size}
+        unreadCount={totalUnreadNotificationsCount}
         onCreatorClick={handleOpenCreatorProfile}
         onBrandClick={(b) => setSelectedBrandName(b.name)}
         onEventClick={handleOpenEventsTab}
