@@ -1865,6 +1865,8 @@ function ViewMyGigPage({
   onBack,
 
   onOpenChat,
+
+  onCreatorClick,
 }: {
   gig: Gig
 
@@ -1873,6 +1875,8 @@ function ViewMyGigPage({
   onBack: () => void
 
   onOpenChat?: (applicantName: string, avatar: string) => void
+
+  onCreatorClick?: (name: string) => void
 }) {
   const [activeTab, setActiveTab] = useState<"applicants" | "edit">(initialTab)
 
@@ -2235,7 +2239,13 @@ function ViewMyGigPage({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div
+                      className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition"
+                      onClick={() =>
+                        onCreatorClick &&
+                        onCreatorClick(app.applicantName || "Creator")
+                      }
+                    >
                       <div className="relative">
                         <img
                           src={
@@ -2253,7 +2263,7 @@ function ViewMyGigPage({
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-bold text-slate-900">
+                          <h4 className="text-xs font-bold text-slate-900 underline-offset-2 hover:underline">
                             {app.applicantName || "Creator"}
                           </h4>
                           {isAccepted && (
@@ -13629,28 +13639,44 @@ export default function App() {
           gig={selectedMyGig}
           initialTab={selectedMyGigTab}
           onBack={() => setSelectedMyGigId(null)}
+          onCreatorClick={(name) => {
+            const matched =
+              creators.find(
+                (c) => c.name.toLowerCase() === name.toLowerCase(),
+              ) ||
+              CREATORS.find((c) => c.name.toLowerCase() === name.toLowerCase())
+            if (matched) {
+              setSelectedCreatorName(matched.name)
+            }
+          }}
           onOpenChat={(applicantName, avatar) => {
-            handleMessageCreator({
-              id: Date.now(),
-
-              name: applicantName,
-
-              avatar: avatar,
-
-              handle: `@${applicantName.toLowerCase().replace(/\s+/g, "")}`,
-
-              niche: "Creator",
-
-              followers: "10K",
-
-              engagement: "4.8%",
-
-              verified: true,
-
-              bio: "",
-
-              recentPost: "",
-            })
+            // Find or create thread, open chat tab — no auto-message
+            const existingThread = chats.find(
+              (c) => c.name.toLowerCase() === applicantName.toLowerCase(),
+            )
+            if (existingThread) {
+              handleOpenChat(existingThread.id)
+            } else {
+              const newThread = {
+                id: Date.now(),
+                name: applicantName,
+                avatar: avatar,
+                handle: `@${applicantName.toLowerCase().replace(/\s+/g, "")}`,
+                niche: "Creator",
+                followers: "10K",
+                engagement: "4.8%",
+                verified: true,
+                bio: "",
+                recentPost: "",
+                online: true,
+                unreadCount: 0,
+                messages: [],
+              }
+              setChats((prev) => [newThread, ...prev])
+              handleOpenChat(newThread.id)
+            }
+            setSelectedMyGigId(null)
+            setActiveTab("chat")
           }}
         />
       )
