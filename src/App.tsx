@@ -6522,9 +6522,24 @@ function AdminDashboardPage({
               </div>
             ) : (
               <form onSubmit={handleCreateEventSubmit} className="flex flex-col gap-3.5 overflow-y-auto max-h-[65vh] pr-1">
-                <div onClick={() => document.getElementById('event-file-input')?.click()} className="w-full h-28 rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/60 overflow-hidden relative group cursor-pointer flex items-center justify-center">
-                  {eventPreviewUrl || eventImage ? <img src={eventPreviewUrl || eventImage} alt="Cover" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center gap-1 text-slate-500"><span className="text-2xl">Image</span><span className="text-xs font-bold">Upload Event Cover Image</span></div>}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><span className="text-white text-xs font-bold">Change Cover</span></div>
+                <div 
+                  onClick={() => document.getElementById('event-file-input')?.click()} 
+                  className="w-full aspect-[2/1] rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/40 overflow-hidden relative group cursor-pointer flex items-center justify-center transition-colors hover:border-[#3b5bdb]"
+                >
+                  {eventPreviewUrl || eventImage ? (
+                    <>
+                      <img src={eventPreviewUrl || eventImage} alt="Cover" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                        <span className="text-white text-xs font-bold bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-700">Change Cover</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-2 text-slate-500 group-hover:text-slate-300 transition-colors">
+                      <span className="text-5xl font-light leading-none">+</span>
+                      <span className="text-xs font-bold">Upload Event Cover</span>
+                      <span className="text-[10px] text-slate-600 font-medium">Aspect Ratio 2:1</span>
+                    </div>
+                  )}
                 </div>
                 <input 
                   type="file" 
