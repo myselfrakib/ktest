@@ -9655,6 +9655,9 @@ function PublicProfilePage({
   )
 
   const [copied, setCopied] = useState(false)
+  const [showAvatarViewer, setShowAvatarViewer] = useState(false)
+  const [activePhotoViewerIndex, setActivePhotoViewerIndex] =
+    useState<number | null>(null)
 
   const isFollowing = followedCreators.has(creator.id)
 
@@ -9796,11 +9799,14 @@ function PublicProfilePage({
         </div>
 
         <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-          <div className="relative">
+          <div
+            className="relative cursor-pointer group active:scale-95 transition duration-150"
+            onClick={() => setShowAvatarViewer(true)}
+          >
             <img
               src={creator.avatar}
               alt={creator.name}
-              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md shadow-slate-200"
+              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md shadow-slate-200 group-hover:opacity-90"
             />
             {creator.verified && (
               <span className="absolute bottom-0.5 right-0.5 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
@@ -9920,11 +9926,12 @@ function PublicProfilePage({
       </div>
 
       {activeTab === "portfolio" && (
-        <div className="grid grid-cols-2 gap-3 px-5">
+        <div className="grid grid-cols-3 gap-2 px-5">
           {livePortfolio.map((img: string, i: number) => (
             <div
               key={i}
-              className="aspect-square bg-slate-200 rounded-3xl overflow-hidden shadow-sm border border-slate-100"
+              onClick={() => setActivePhotoViewerIndex(i)}
+              className="aspect-[3/4] bg-slate-200 rounded-2xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer active:opacity-90 transition duration-150"
             >
               <img
                 src={img}
@@ -9963,6 +9970,109 @@ function PublicProfilePage({
               </p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Fullscreen Avatar Viewer Overlay */}
+      {showAvatarViewer && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setShowAvatarViewer(false)}
+        >
+          <button
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg cursor-pointer active:scale-95 transition border-none"
+            onClick={() => setShowAvatarViewer(false)}
+          >
+            ✕
+          </button>
+          <img
+            src={creator.avatar}
+            alt={creator.name}
+            className="max-w-full max-h-[80vh] rounded-3xl object-contain shadow-2xl animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Fullscreen Film-strip / Instagram-like Portfolio Viewer Overlay */}
+      {activePhotoViewerIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setActivePhotoViewerIndex(null)}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg cursor-pointer active:scale-95 transition z-50 border-none"
+            onClick={() => setActivePhotoViewerIndex(null)}
+          >
+            ✕
+          </button>
+
+          {/* Film list container */}
+          <div
+            className="w-full max-w-md flex flex-col items-center relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Prev button */}
+            {activePhotoViewerIndex > 0 && (
+              <button
+                onClick={() =>
+                  setActivePhotoViewerIndex(activePhotoViewerIndex - 1)
+                }
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center text-lg cursor-pointer z-50 active:scale-95 transition border-none shadow-md"
+              >
+                ‹
+              </button>
+            )}
+
+            {/* Viewport container */}
+            <div className="w-full overflow-hidden relative">
+              <div
+                className="flex transition-transform duration-300 ease-out"
+                style={{
+                  transform: `translateX(-${activePhotoViewerIndex * 100}%)`,
+                }}
+              >
+                {livePortfolio.map((img: string, idx: number) => (
+                  <div key={idx} className="w-full flex-shrink-0 px-6">
+                    <div className="w-full aspect-[3/4] max-h-[70vh] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-950 flex items-center justify-center">
+                      <img
+                        src={img}
+                        alt={`Portfolio item ${idx + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Next button */}
+            {activePhotoViewerIndex < livePortfolio.length - 1 && (
+              <button
+                onClick={() =>
+                  setActivePhotoViewerIndex(activePhotoViewerIndex + 1)
+                }
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center text-lg cursor-pointer z-50 active:scale-95 transition border-none shadow-md"
+              >
+                ›
+              </button>
+            )}
+          </div>
+
+          {/* Dots Indicator */}
+          <div className="flex gap-1.5 mt-4 z-40">
+            {livePortfolio.map((_: any, idx: number) => (
+              <span
+                key={idx}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                  activePhotoViewerIndex === idx
+                    ? "bg-white scale-125"
+                    : "bg-white/30"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
