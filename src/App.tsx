@@ -9862,7 +9862,7 @@ function PublicProfilePage({
             onClick={() => onMessageCreator(creator)}
             className="flex-1 py-2.5 border border-slate-200 bg-white rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition"
           >
-            💬 Chat Message
+            Message
           </button>
         </div>
 
@@ -10238,7 +10238,7 @@ function PublicBrandProfilePage({
             onClick={() => onMessageBrand(brand)}
             className="flex-1 py-2.5 border border-slate-200 bg-white rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer"
           >
-            💬 Chat Message
+            Message
           </button>
         </div>
 
