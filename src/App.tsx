@@ -10998,7 +10998,7 @@ function AdminDashboardPage({
                   onClick={() =>
                     document.getElementById("event-file-input")?.click()
                   }
-                  className="w-full aspect-[2/1] rounded-[24px] border-2 border-dashed border-slate-200 bg-white overflow-hidden relative group cursor-pointer flex items-center justify-center transition-all duration-200 hover:border-[#3b5bdb] hover:bg-slate-50 shadow-sm"
+                  className="w-full aspect-[2/1] rounded-[24px] border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden relative group cursor-pointer flex items-center justify-center transition-all duration-200 hover:border-[#3b5bdb] hover:bg-[#f0f4ff] shadow-sm"
                 >
                   {eventPreviewUrl || eventImage ? (
                     <>
@@ -11014,16 +11014,18 @@ function AdminDashboardPage({
                       </div>
                     </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-slate-655 transition-colors">
-                      <span className="text-4xl font-light leading-none">
-                        +
-                      </span>
-                      <span className="text-[10px] font-black uppercase tracking-wider">
-                        Upload Event Cover
-                      </span>
-                      <span className="text-[9px] text-slate-455 font-bold">
-                        Recommended 2:1 Landscape
-                      </span>
+                    <div className="flex flex-col items-center justify-center gap-3 text-slate-400 group-hover:text-[#3b5bdb] transition-colors px-4 text-center">
+                      <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center group-hover:border-[#3b5bdb]/30 group-hover:bg-[#f0f4ff] transition">
+                        <span className="text-2xl">📸</span>
+                      </div>
+                      <div>
+                        <div className="text-xs font-black uppercase tracking-wider mb-0.5">
+                          Upload Event Cover
+                        </div>
+                        <div className="text-[9px] font-bold text-slate-400 group-hover:text-[#3b5bdb]/70">
+                          Tap to choose · Recommended 2:1 landscape
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -11034,20 +11036,12 @@ function AdminDashboardPage({
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0]
-
                     if (f) {
+                      setEventFile(f)
                       const reader = new FileReader()
-
                       reader.onload = (ev) => {
-                        setOriginalImage(ev.target?.result as string)
-
-                        setZoom(1.0)
-
-                        setPanX(0)
-
-                        setPanY(0)
+                        setEventPreviewUrl(ev.target?.result as string)
                       }
-
                       reader.readAsDataURL(f)
                     }
                   }}
