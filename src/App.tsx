@@ -8046,21 +8046,21 @@ function NotificationsPage({
 // ── Chat Page ───────────────────────────────────────────────────────────────
 
 function ChatPage({
-  chats,
+  chats = [],
   setChats,
   activeChatId,
   setActiveChatId,
   handleOpenChat,
   userProfile,
-  gigs,
-  conversations,
+  gigs = [],
+  conversations = [],
   setConversations,
   activeConvoId,
   setActiveConvoId,
-  activeMessages,
+  activeMessages = [],
   currentUser,
-  creators,
-  brands,
+  creators = [],
+  brands = [],
 }: {
   chats: ChatThread[]
   setChats: React.Dispatch<React.SetStateAction<ChatThread[]>>
@@ -8090,8 +8090,13 @@ function ChatPage({
     )
   const [gigPanelToast, setGigPanelToast] = useState<string | null>(null)
 
-  const activeConvo = conversations.find((c) => c.id === activeConvoId)
-  const activeChat = chats.find((c) => c.id === activeChatId)
+  const safeConversations = conversations || []
+  const safeChats = chats || []
+  const safeCreators = creators || []
+  const safeBrands = brands || []
+
+  const activeConvo = safeConversations.find((c) => c.id === activeConvoId)
+  const activeChat = safeChats.find((c) => c.id === activeChatId)
 
   const otherUid = activeConvo
     ? activeConvo.participants.find((uid) => uid !== currentUser?.uid) || ""
@@ -8106,8 +8111,8 @@ function ChatPage({
     ? activeConvo.participantHandles[otherUid] || ""
     : activeChat?.handle || ""
   const otherUserObj = activeConvo
-    ? creators.find((c: any) => c.uid === otherUid) ||
-      brands.find((b: any) => b.uid === otherUid)
+    ? safeCreators.find((c: any) => c.uid === otherUid) ||
+      safeBrands.find((b: any) => b.uid === otherUid)
     : null
   const otherLastSeen = otherUserObj?.lastSeen
   const chatOnline = activeConvo
@@ -14124,6 +14129,14 @@ export default function App() {
           handleOpenChat={handleOpenChat}
           userProfile={userProfile}
           gigs={gigs}
+          conversations={conversations}
+          setConversations={setConversations}
+          activeConvoId={activeConvoId}
+          setActiveConvoId={setActiveConvoId}
+          activeMessages={activeMessages}
+          currentUser={currentUser}
+          creators={creators}
+          brands={brands}
         />
       )
     }
