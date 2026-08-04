@@ -906,6 +906,34 @@ type ChatThread = typeof INITIAL_CHATS[0]
 
 type ChatMessage = typeof INITIAL_CHATS[0]["messages"][0]
 
+// ── Real-time Chat Types ────────────────────────────────────────────────────
+
+type Conversation = {
+  id: string
+  participants: string[]
+  participantNames: Record<string, string>
+  participantAvatars: Record<string, string>
+  participantHandles: Record<string, string>
+  lastMessage: string
+  lastMessageTime: string
+  lastSenderId: string
+  unreadCounts: Record<string, number>
+  createdAt: string
+}
+
+type LiveMessage = {
+  id: string
+  text: string
+  senderId: string
+  senderName: string
+  senderAvatar: string
+  timestamp: string
+}
+
+function getConvoId(uid1: string, uid2: string): string {
+  return [uid1, uid2].sort().join("_")
+}
+
 // ── Instagram API Constants ────────────────────────────────────────────────
 
 const INSTAGRAM_APP_ID = "1361228946204623"
@@ -8019,63 +8047,147 @@ function NotificationsPage({
 
 function ChatPage({
   chats,
-
   setChats,
-
   activeChatId,
-
   setActiveChatId,
-
   handleOpenChat,
-
   userProfile,
-
   gigs,
+  conversations,
+  setConversations,
+  activeConvoId,
+  setActiveConvoId,
+  activeMessages,
+  currentUser,
+  creators,
+  brands,
 }: {
   chats: ChatThread[]
-
   setChats: React.Dispatch<React.SetStateAction<ChatThread[]>>
-
   activeChatId: number | null
-
   setActiveChatId: (id: number | null) => void
-
   handleOpenChat: (id: number) => void
-
   userProfile?: any
-
   gigs?: any[]
+  conversations: Conversation[]
+  setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>
+  activeConvoId: string | null
+  setActiveConvoId: (id: string | null) => void
+  activeMessages: LiveMessage[]
+  currentUser?: any
+  creators: Creator[]
+  brands: Brand[]
 }) {
   const [searchQuery, setSearchQuery] = useState("")
-
   const [inputText, setInputText] = useState("")
-
   const [isTyping, setIsTyping] = useState(false)
-
   const [showGigPanel, setShowGigPanel] = useState(false)
-
   const [gigPanelApps, setGigPanelApps] = useState<any[]>([])
-
   const [gigPanelLoading, setGigPanelLoading] = useState(false)
-
   const [gigPanelAction, setGigPanelAction] =
     useState<Record<number, "accepting" | "rejecting" | "accepted" | "rejected">>(
       {},
     )
-
   const [gigPanelToast, setGigPanelToast] = useState<string | null>(null)
 
+  const activeConvo = conversations.find((c) => c.id === activeConvoId)
   const activeChat = chats.find((c) => c.id === activeChatId)
 
-  const filteredChats = chats.filter(
+  const otherUid = activeConvo
+    ? activeConvo.participants.find((uid) => uid !== currentUser?.uid) || ""
+    : ""
+  const chatName = activeConvo
+    ? activeConvo.participantNames[otherUid] || "Kreator Member"
+    : activeChat?.name || ""
+  const chatAvatar = activeConvo
+    ? activeConvo.participantAvatars[otherUid] || ""
+    : activeChat?.avatar || ""
+  const chatHandle = activeConvo
+    ? activeConvo.participantHandles[otherUid] || ""
+    : activeChat?.handle || ""
+  const otherUserObj = activeConvo
+    ? creators.find((c: any) => c.uid === otherUid) ||
+      brands.find((b: any) => b.uid === otherUid)
+    : null
+  const otherLastSeen = otherUserObj?.lastSeen
+  const chatOnline = activeConvo
+    ? otherLastSeen
+      ? new Date().getTime() - new Date(otherLastSeen).getTime() < 300000
+      : false
+    : activeChat?.online || false
+  const chatVerified = activeConvo
+    ? otherUserObj?.verified || false
+    : activeChat?.verified || false
+
+  const displayThreads = [
+    ...conversations.map((convo) => {
+      const oUid =
+        convo.participants.find((uid) => uid !== currentUser?.uid) || ""
+      const lastMsgText = convo.lastMessage || "No messages yet"
+      const lastMsgTime = convo.lastMessageTime
+        ? new Date(convo.lastMessageTime).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : ""
+      const uObj =
+        creators.find((c: any) => c.uid === oUid) ||
+        brands.find((b: any) => b.uid === oUid)
+      const uLastSeen = uObj?.lastSeen
+      const uOnline = uLastSeen
+        ? new Date().getTime() - new Date(uLastSeen).getTime() < 300000
+        : false
+      return {
+        id: convo.id,
+        isReal: true,
+        name: convo.participantNames[oUid] || "Kreator Member",
+        avatar:
+          convo.participantAvatars[oUid] ||
+          "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+        handle: convo.participantHandles[oUid] || "@member",
+        online: uOnline,
+        verified: uObj?.verified || false,
+        unreadCount: convo.unreadCounts?.[currentUser?.uid || ""] || 0,
+        lastMessageText: lastMsgText,
+        lastMessageTime: lastMsgTime,
+      }
+    }),
+    ...chats
+      .filter((c) => {
+        const hasRealConvo = conversations.some((convo) => {
+          const oUid =
+            convo.participants.find((uid) => uid !== currentUser?.uid) || ""
+          return (
+            convo.participantNames[oUid]?.toLowerCase() === c.name.toLowerCase()
+          )
+        })
+        return !hasRealConvo
+      })
+      .map((c) => {
+        const lastMsg = c.messages[c.messages.length - 1]
+        return {
+          id: c.id,
+          isReal: false,
+          name: c.name,
+          avatar: c.avatar,
+          handle: c.handle,
+          online: c.online,
+          verified: c.verified,
+          unreadCount: c.unreadCount,
+          lastMessageText: lastMsg ? lastMsg.text : "No messages yet",
+          lastMessageTime: lastMsg ? lastMsg.time : "",
+        }
+      }),
+  ]
+
+  const filteredChats = displayThreads.filter(
     (c) =>
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.niche.toLowerCase().includes(searchQuery.toLowerCase()),
+      c.handle.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   const getAutoReplyMessage = (name: string, userMsg: string): string => {
     const text = userMsg.toLowerCase()
-
     if (name.includes("Arjun")) {
       if (
         text.includes("weekend") ||
@@ -8084,7 +8196,6 @@ function ChatPage({
       ) {
         return "Saturday afternoon works perfectly for me! Let's meet near Kumartuli around 3 PM? 📸"
       }
-
       if (
         text.includes("hi") ||
         text.includes("hello") ||
@@ -8092,99 +8203,119 @@ function ChatPage({
       ) {
         return "Hey Priya! Glad we connected. I was just looking at some street shoots we could do. Are you free this weekend?"
       }
-
       return "That sounds like a plan! Let's catch up and lock in the shoot details. 🚀"
     }
-
-    if (name.includes("Bahar")) {
+    if (name.includes("Bahar"))
       return "Perfect! Our project manager will send over the agreement draft. Let us know if you have any questions about the deliverables. 💼"
-    }
-
-    if (name.includes("Tanisha")) {
+    if (name.includes("Tanisha"))
       return "Yay! Can't wait. Let's try that new cafe on Park Street, I heard their brews are amazing! ☕"
-    }
-
     return "Thanks for the message! Let's coordinate and get this moving. 👍"
   }
 
-  const handleSendMessage = () => {
-    if (!inputText.trim() || !activeChatId) return
-
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return
     const userMessageText = inputText.trim()
-
-    const now = new Date()
-
-    const timeStr = now.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-
-    const currentChat = chats.find((c) => c.id === activeChatId)
-
-    if (!currentChat) return
-
-    const userMessage = {
-      id: Date.now(),
-      text: userMessageText,
-      sender: "me",
-      time: timeStr,
-    }
-
-    const updatedMessages = [...currentChat.messages, userMessage]
-
-    updateDoc(doc(db, "chats", String(activeChatId)), {
-      messages: updatedMessages,
-    })
-
     setInputText("")
-
-    setIsTyping(true)
-
-    setTimeout(async () => {
-      setIsTyping(false)
-
-      const latestChat = chats.find((c) => c.id === activeChatId)
-
-      if (!latestChat) return
-
-      const replyText = getAutoReplyMessage(
-        latestChat.name || "",
-        userMessageText,
-      )
-
-      const replyMessage = {
-        id: Date.now() + 1,
-        text: replyText,
-        sender: "them",
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+    if (activeConvoId && currentUser) {
+      try {
+        const convoRef = doc(db, "conversations", activeConvoId)
+        const msgRef = collection(
+          db,
+          "conversations",
+          activeConvoId,
+          "messages",
+        )
+        await addDoc(msgRef, {
+          text: userMessageText,
+          senderId: currentUser.uid,
+          senderName: userProfile?.name || "Kreator Member",
+          senderAvatar:
+            userProfile?.avatar ||
+            userProfile?.logo ||
+            "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+          timestamp: new Date().toISOString(),
+        })
+        const oUid =
+          activeConvo?.participants.find((uid) => uid !== currentUser.uid) || ""
+        await updateDoc(convoRef, {
+          lastMessage: userMessageText,
+          lastMessageTime: new Date().toISOString(),
+          lastSenderId: currentUser.uid,
+          [`unreadCounts.${oUid}`]: increment(1),
+        })
+        await addDoc(collection(db, "notifications"), {
+          recipientUid: oUid,
+          recipientName: activeConvo?.participantNames[oUid] || "Creator",
+          senderName: userProfile?.name || "Kreator Member",
+          senderAvatar:
+            userProfile?.avatar ||
+            userProfile?.logo ||
+            "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+          type: "message",
+          title: `New message from ${userProfile?.name}!`,
+          message: userMessageText.slice(0, 60),
+          createdAt: new Date().toISOString(),
+          read: false,
+        })
+      } catch (err) {
+        console.warn("Failed to send message to Firestore:", err)
       }
-
-      await updateDoc(doc(db, "chats", String(activeChatId)), {
-        messages: [...latestChat.messages, replyMessage],
+    } else if (activeChatId) {
+      const now = new Date()
+      const timeStr = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
       })
-    }, 1500)
+      const currentChat = chats.find((c) => c.id === activeChatId)
+      if (!currentChat) return
+      const userMessage = {
+        id: Date.now(),
+        text: userMessageText,
+        sender: "me",
+        time: timeStr,
+      }
+      await updateDoc(doc(db, "chats", String(activeChatId)), {
+        messages: [...currentChat.messages, userMessage],
+      })
+      setIsTyping(true)
+      setTimeout(async () => {
+        setIsTyping(false)
+        const latestChat = chats.find((c) => c.id === activeChatId)
+        if (!latestChat) return
+        const replyText = getAutoReplyMessage(
+          latestChat.name || "",
+          userMessageText,
+        )
+        await updateDoc(doc(db, "chats", String(activeChatId)), {
+          messages: [
+            ...latestChat.messages,
+            {
+              id: Date.now() + 1,
+              text: replyText,
+              sender: "them",
+              time: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
+          ],
+        })
+      }, 1500)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSendMessage()
-    }
+    if (e.key === "Enter") handleSendMessage()
   }
 
-  // Fetch gigs this chat person applied to (from MY posted gigs)
   const openGigPanel = async () => {
-    if (!activeChat) return
+    if (!chatName) return
     setShowGigPanel(true)
     setGigPanelLoading(true)
     try {
-      // Find applications where the applicantName matches the chat person's name
-      // OR applicantUid matches (if stored in thread)
       const q = query(
         collection(db, "applications"),
-        where("applicantName", "==", activeChat.name),
+        where("applicantName", "==", chatName),
       )
       const snap = await getDocs(q)
       const apps = snap.docs.map((d) => ({
@@ -8192,7 +8323,6 @@ function ChatPage({
         docRef: d.ref,
         ...d.data(),
       }))
-      // Filter to only gigs that belong to the current user (posted by me)
       const myGigIds = new Set(
         (gigs || [])
           .filter(
@@ -8221,17 +8351,14 @@ function ChatPage({
       [app.gigId]: action === "accept" ? "accepting" : "rejecting",
     }))
     try {
-      // Update gig doc
       const qGigs = query(collection(db, "gigs"), where("id", "==", app.gigId))
       const gigSnap = await getDocs(qGigs)
       if (!gigSnap.empty) {
         if (action === "accept") {
           await updateDoc(gigSnap.docs[0].ref, {
             applicantSelected: true,
-            selectedApplicantName:
-              app.applicantName || activeChat?.name || "Creator",
-            selectedApplicantAvatar:
-              app.applicantAvatar || activeChat?.avatar || null,
+            selectedApplicantName: app.applicantName || chatName || "Creator",
+            selectedApplicantAvatar: app.applicantAvatar || chatAvatar || null,
             selectedApplicantHandle:
               app.instaHandle || app.applicantHandle || "",
             selectedApplicantUid: app.applicantUid || null,
@@ -8239,19 +8366,17 @@ function ChatPage({
           })
         }
       }
-      // Update application status
-      if (app.docRef) {
+      if (app.docRef)
         await updateDoc(app.docRef, {
           status: action === "accept" ? "accepted" : "rejected",
         })
-      }
       setGigPanelAction((prev) => ({
         ...prev,
         [app.gigId]: action === "accept" ? "accepted" : "rejected",
       }))
       if (action === "accept") {
         setGigPanelToast(
-          `✅ Accepted ${app.applicantName || activeChat?.name} for "${app.gigTitle || "Gig"}"!`,
+          `✅ Accepted ${app.applicantName || chatName} for "${app.gigTitle || "Gig"}"!`,
         )
         setTimeout(() => setGigPanelToast(null), 4000)
       }
@@ -8265,37 +8390,40 @@ function ChatPage({
     }
   }
 
-  if (activeChat) {
+  if (activeConvoId || activeChatId) {
+    const messagesToRender = activeConvoId
+      ? activeMessages
+      : activeChat?.messages || []
     return (
       <div className="flex-1 bg-slate-50 flex flex-col h-screen relative">
-        {/* Chat Header */}
         <div className="px-4 pt-12 pb-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => {
+                setActiveConvoId(null)
                 setActiveChatId(null)
                 setShowGigPanel(false)
               }}
-              className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition"
+              className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition cursor-pointer"
             >
               <ArrowLeftIcon />
             </button>
             <div className="relative flex-shrink-0">
               <img
-                src={activeChat.avatar}
-                alt={activeChat.name}
+                src={chatAvatar}
+                alt={chatName}
                 className="w-10 h-10 rounded-full object-cover border border-slate-100"
               />
-              {activeChat.online && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
+              {chatOnline && (
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm animate-pulse" />
               )}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1">
                 <span className="text-sm font-bold text-slate-900 truncate">
-                  {activeChat.name}
+                  {chatName}
                 </span>
-                {activeChat.verified && (
+                {chatVerified && (
                   <span className="w-3.5 h-3.5 bg-[#3b5bdb] rounded-full flex items-center justify-center flex-shrink-0">
                     <svg width="6" height="6" viewBox="0 0 10 10" fill="none">
                       <path
@@ -8311,26 +8439,32 @@ function ChatPage({
                 )}
               </div>
               <span className="text-[10px] text-slate-400 font-semibold">
-                {activeChat.online ? "Online" : "Offline"}
+                {chatOnline ? "Online" : "Offline"}
               </span>
             </div>
           </div>
-
           <div className="flex items-center gap-1.5">
-            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition">
+            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition cursor-pointer">
               📞
             </button>
-            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition">
+            <button className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 active:scale-95 transition cursor-pointer">
               📹
             </button>
           </div>
         </div>
-
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3.5 pb-24 scrollbar-hide">
-          {activeChat.messages.map((msg) => {
-            const isMe = msg.sender === "me"
-
+          {messagesToRender.map((msg: any) => {
+            const isMe = activeConvoId
+              ? msg.senderId === currentUser?.uid
+              : msg.sender === "me"
+            const formattedTime = activeConvoId
+              ? msg.timestamp
+                ? new Date(msg.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : ""
+              : msg.time
             return (
               <div
                 key={msg.id}
@@ -8348,12 +8482,11 @@ function ChatPage({
                   {msg.text}
                 </div>
                 <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">
-                  {msg.time}
+                  {formattedTime}
                 </span>
               </div>
             )
           })}
-
           {isTyping && (
             <div className="flex flex-col items-start self-start max-w-[75%]">
               <div className="px-4 py-3 rounded-3xl bg-white border border-slate-100 rounded-tl-sm flex gap-1 items-center shadow-sm">
@@ -8371,17 +8504,15 @@ function ChatPage({
                 />
               </div>
               <span className="text-[9px] text-slate-400 font-medium mt-1 px-1">
-                {activeChat.name} is typing...
+                {chatName} is typing...
               </span>
             </div>
           )}
         </div>
-
-        {/* Input Bar */}
         <div className="absolute bottom-0 inset-x-0 bg-white border-t border-slate-100 px-4 py-3 flex items-center gap-2 z-10 shadow-lg">
           <button
             onClick={openGigPanel}
-            className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-lg text-slate-500 hover:bg-[#e8edff] hover:text-[#3b5bdb] transition active:scale-95"
+            className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-lg text-slate-500 hover:bg-[#e8edff] hover:text-[#3b5bdb] transition active:scale-95 cursor-pointer"
           >
             ＋
           </button>
@@ -8396,7 +8527,7 @@ function ChatPage({
           <button
             onClick={handleSendMessage}
             disabled={!inputText.trim()}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md transition cursor-pointer ${
               inputText.trim()
                 ? "bg-[#3b5bdb] active:scale-95"
                 : "bg-slate-200 cursor-not-allowed shadow-none"
@@ -8405,49 +8536,37 @@ function ChatPage({
             ➔
           </button>
         </div>
-
-        {/* Gig Action Panel — Bottom Sheet */}
         {showGigPanel && (
           <>
-            {/* Backdrop */}
             <div
               className="absolute inset-0 bg-black/30 z-20"
               onClick={() => setShowGigPanel(false)}
             />
-
-            {/* Toast */}
             {gigPanelToast && (
               <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2">
                 {gigPanelToast}
               </div>
             )}
-
-            {/* Sheet */}
             <div className="absolute bottom-0 inset-x-0 z-30 bg-white rounded-t-[28px] shadow-2xl border-t border-slate-100 flex flex-col max-h-[70vh]">
-              {/* Handle */}
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1 bg-slate-200 rounded-full" />
               </div>
-
-              {/* Header */}
               <div className="px-5 pt-2 pb-4 border-b border-slate-100 flex items-center justify-between">
                 <div>
                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
                     Gig Applications
                   </div>
                   <div className="text-sm font-black text-slate-900">
-                    {activeChat.name}'s Applications
+                    {chatName}'s Applications
                   </div>
                 </div>
                 <button
                   onClick={() => setShowGigPanel(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition text-xs font-bold"
+                  className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition text-xs font-bold cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
-
-              {/* Content */}
               <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3 scrollbar-hide">
                 {gigPanelLoading ? (
                   <div className="flex flex-col items-center py-10 gap-3">
@@ -8463,27 +8582,25 @@ function ChatPage({
                       No Applications Found
                     </div>
                     <p className="text-xs text-slate-400 max-w-[220px]">
-                      {activeChat.name} hasn't applied to any of your posted
-                      gigs yet.
+                      {chatName} hasn't applied to any of your posted gigs yet.
                     </p>
                   </div>
                 ) : (
                   gigPanelApps.map((app: any) => {
-                    const panelAction = gigPanelAction[app.gigId]
+                    const statusText = gigPanelAction[app.gigId] || app.status
                     const isDone =
-                      panelAction === "accepted" || panelAction === "rejected"
+                      statusText === "accepted" || statusText === "rejected"
                     return (
                       <div
                         key={app.id}
                         className={`rounded-2xl border p-4 flex flex-col gap-3 transition ${
-                          panelAction === "accepted"
+                          statusText === "accepted"
                             ? "bg-emerald-50 border-emerald-200"
-                            : panelAction === "rejected"
+                            : statusText === "rejected"
                               ? "bg-slate-50 border-slate-200 opacity-60"
                               : "bg-white border-slate-100 shadow-sm"
                         }`}
                       >
-                        {/* Gig Info */}
                         <div className="flex items-start gap-3">
                           <div className="w-9 h-9 rounded-xl bg-[#e8edff] flex items-center justify-center flex-shrink-0">
                             <span className="text-base">📋</span>
@@ -8501,26 +8618,22 @@ function ChatPage({
                           {isDone && (
                             <span
                               className={`text-[9px] font-black px-2 py-1 rounded-full flex-shrink-0 ${
-                                panelAction === "accepted"
+                                statusText === "accepted"
                                   ? "text-emerald-700 bg-emerald-100"
                                   : "text-slate-500 bg-slate-100"
                               }`}
                             >
-                              {panelAction === "accepted"
+                              {statusText === "accepted"
                                 ? "✅ Accepted"
                                 : "❌ Rejected"}
                             </span>
                           )}
                         </div>
-
-                        {/* Pitch preview */}
                         {app.pitch && (
                           <div className="bg-slate-50 rounded-xl px-3 py-2 text-[10px] text-slate-500 leading-relaxed border border-slate-100 italic line-clamp-2">
                             "{app.pitch}"
                           </div>
                         )}
-
-                        {/* Action Buttons */}
                         {!isDone && (
                           <div className="flex gap-2">
                             <button
@@ -8528,7 +8641,7 @@ function ChatPage({
                               onClick={() =>
                                 handleGigPanelAction(app, "accept")
                               }
-                              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95 disabled:opacity-60 flex items-center justify-center gap-1"
+                              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95 disabled:opacity-60 flex items-center justify-center gap-1 cursor-pointer"
                             >
                               {gigPanelAction[app.gigId] === "accepting" ? (
                                 <svg
@@ -8555,7 +8668,7 @@ function ChatPage({
                               onClick={() =>
                                 handleGigPanelAction(app, "reject")
                               }
-                              className="flex-1 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 text-xs font-bold py-2.5 rounded-xl transition active:scale-95 disabled:opacity-60 flex items-center justify-center gap-1 border border-slate-200 hover:border-red-200"
+                              className="flex-1 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 text-xs font-bold py-2.5 rounded-xl transition active:scale-95 disabled:opacity-60 flex items-center justify-center gap-1 border border-slate-200 hover:border-red-200 cursor-pointer"
                             >
                               {gigPanelAction[app.gigId] === "rejecting" ? (
                                 <svg
@@ -8593,7 +8706,6 @@ function ChatPage({
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-slate-50 flex flex-col min-h-screen">
-      {/* Header */}
       <div className="px-5 pt-12 pb-4 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
         <div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-0.5">
@@ -8604,12 +8716,10 @@ function ChatPage({
             Chats <span className="text-[#3b5bdb]">Messages</span>
           </h1>
         </div>
-        <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition border border-slate-100">
+        <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition border border-slate-100 cursor-pointer">
           📝
         </button>
       </div>
-
-      {/* Search */}
       <div className="px-4 py-3 bg-white border-b border-slate-100 mb-2">
         <div className="flex items-center gap-2.5 bg-slate-50 rounded-2xl px-4 py-2.5 border border-slate-100">
           <span className="text-slate-400">
@@ -8624,18 +8734,20 @@ function ChatPage({
           />
         </div>
       </div>
-
-      {/* List */}
       <div className="flex-1 px-4 py-2 flex flex-col gap-2.5">
         {filteredChats.map((thread) => {
-          const lastMsg = thread.messages[thread.messages.length - 1]
-
           const isUnread = thread.unreadCount > 0
-
           return (
             <div
               key={thread.id}
-              onClick={() => handleOpenChat(thread.id)}
+              onClick={() => {
+                if (thread.isReal) {
+                  setActiveConvoId(String(thread.id))
+                  setActiveChatId(null)
+                } else {
+                  handleOpenChat(Number(thread.id))
+                }
+              }}
               className="p-3.5 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer transition active:scale-[0.99]"
             >
               <div className="relative flex-shrink-0">
@@ -8645,10 +8757,9 @@ function ChatPage({
                   className="w-12 h-12 rounded-full object-cover border border-slate-100 shadow-sm"
                 />
                 {thread.online && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm" />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm animate-pulse" />
                 )}
               </div>
-
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
                   <div className="flex items-center gap-1 min-w-0">
@@ -8676,7 +8787,7 @@ function ChatPage({
                     )}
                   </div>
                   <span className="text-[10px] text-slate-400 font-semibold">
-                    {lastMsg ? lastMsg.time : ""}
+                    {thread.lastMessageTime}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
@@ -8687,7 +8798,7 @@ function ChatPage({
                         : "text-slate-400 font-medium"
                     }`}
                   >
-                    {lastMsg ? lastMsg.text : "No messages yet"}
+                    {thread.lastMessageText}
                   </p>
                   {isUnread && (
                     <span className="bg-[#3b5bdb] text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center">
@@ -12653,6 +12764,8 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
+  const [currentUser, setCurrentUser] = useState<any>(null)
+
   const [introPage, setIntroPage] = useState(0)
 
   // Instagram OAuth callback handler state
@@ -12741,12 +12854,34 @@ export default function App() {
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setIsLoggedIn(!!user)
+      setCurrentUser(user)
 
       unsubs.forEach((un) => un())
-
       unsubs = []
 
       if (user) {
+        // Subscribe to real-time conversations
+        const qConvos = query(
+          collection(db, "conversations"),
+          where("participants", "array-contains", user.uid),
+        )
+        const unsubConvos = onSnapshot(
+          qConvos,
+          (snap) => {
+            const list = snap.docs.map(
+              (d) => ({ id: d.id, ...d.data() }) as Conversation,
+            )
+            list.sort(
+              (a, b) =>
+                new Date(b.lastMessageTime || b.createdAt).getTime() -
+                new Date(a.lastMessageTime || a.createdAt).getTime(),
+            )
+            setConversations(list)
+          },
+          (err) => console.warn("Conversations snapshot error:", err),
+        )
+        unsubs.push(unsubConvos)
+
         let foundProfile = false
 
         const adminRef = doc(db, "admins", user.uid)
@@ -12860,9 +12995,13 @@ export default function App() {
 
         unsubs.push(() => clearTimeout(timer))
       } else {
+        setCurrentUser(null)
+
         setUserProfile(null)
 
         setUserRole(null)
+
+        setConversations([])
       }
     })
 
@@ -12902,7 +13041,9 @@ export default function App() {
             await setDoc(doc(db, "creators", String(c.id)), c)
           })
         } else {
-          const list = snapshot.docs.map((doc) => doc.data() as Creator)
+          const list = snapshot.docs.map(
+            (doc) => ({ uid: doc.id, ...doc.data() }) as any,
+          )
 
           list.sort((a, b) => a.id - b.id)
 
@@ -12920,7 +13061,9 @@ export default function App() {
             await setDoc(doc(db, "brands", String(b.id)), b)
           })
         } else {
-          const list = snapshot.docs.map((doc) => doc.data() as Brand)
+          const list = snapshot.docs.map(
+            (doc) => ({ uid: doc.id, ...doc.data() }) as any,
+          )
 
           list.sort((a, b) => a.id - b.id)
 
@@ -12978,6 +13121,64 @@ export default function App() {
       unsubscribeChats()
     }
   }, [])
+
+  // Real-time messages subcollection fetcher for the active conversation
+  useEffect(() => {
+    if (!activeConvoId) {
+      setActiveMessages([])
+      return
+    }
+
+    if (currentUser) {
+      const convoRef = doc(db, "conversations", activeConvoId)
+      updateDoc(convoRef, {
+        [`unreadCounts.${currentUser.uid}`]: 0,
+      }).catch((e) => console.warn("Error marking read:", e))
+    }
+
+    const qMsgs = query(
+      collection(db, "conversations", activeConvoId, "messages"),
+      orderBy("timestamp", "asc"),
+    )
+
+    const unsubscribe = onSnapshot(
+      qMsgs,
+      (snap) => {
+        const list = snap.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as LiveMessage,
+        )
+        setActiveMessages(list)
+      },
+      (err) => console.warn("Messages fetch error:", err),
+    )
+
+    return () => unsubscribe()
+  }, [activeConvoId, currentUser])
+
+  // Presence / lastSeen Updater
+  useEffect(() => {
+    if (!currentUser || !userRole) return
+    const collectionName =
+      userRole === "admin" || userRole === "admin_pending"
+        ? "admins"
+        : userRole === "brand"
+          ? "brands"
+          : "creators"
+
+    const updatePresence = async () => {
+      try {
+        await updateDoc(doc(db, collectionName, currentUser.uid), {
+          lastSeen: new Date().toISOString(),
+        })
+      } catch (e) {
+        console.warn("Failed to update presence:", e)
+      }
+    }
+
+    updatePresence()
+    const interval = setInterval(updatePresence, 60000)
+    return () => clearInterval(interval)
+  }, [currentUser, userRole])
 
   const touchStartX = useRef<number | null>(null)
 
@@ -13049,6 +13250,13 @@ export default function App() {
   const [activeChatId, setActiveChatId] = useState<number | null>(
     savedRoute.current?.activeChatId || null,
   )
+
+  // Real-time chat state
+  const [conversations, setConversations] = useState<Conversation[]>([])
+
+  const [activeConvoId, setActiveConvoId] = useState<string | null>(null)
+
+  const [activeMessages, setActiveMessages] = useState<LiveMessage[]>([])
 
   const [followedCreators, setFollowedCreators] = useState<Set<number>>(
     new Set(),
@@ -13309,104 +13517,217 @@ export default function App() {
     }
   }
 
-  const handleMessageCreator = (creator: Creator) => {
-    const existingThread = chats.find(
-      (c) => c.name.toLowerCase() === creator.name.toLowerCase(),
-    )
+  const handleMessageCreator = async (creator: Creator) => {
+    const otherUid = (creator as any).uid
+    const isRealUser = currentUser && otherUid && otherUid.length > 10
 
-    if (existingThread) {
-      handleOpenChat(existingThread.id)
+    if (isRealUser) {
+      const convoId = getConvoId(currentUser.uid, otherUid)
+      try {
+        const convoRef = doc(db, "conversations", convoId)
+        const snap = await getDoc(convoRef)
+        if (!snap.exists()) {
+          await setDoc(
+            convoRef,
+            {
+              id: convoId,
+              participants: [currentUser.uid, otherUid],
+              participantNames: {
+                [currentUser.uid]: userProfile?.name || "Kreator Member",
+                [otherUid]: creator.name || "Kreator Creator",
+              },
+              participantAvatars: {
+                [currentUser.uid]:
+                  userProfile?.avatar ||
+                  userProfile?.logo ||
+                  "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
+                [otherUid]:
+                  creator.avatar ||
+                  "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
+              },
+              participantHandles: {
+                [currentUser.uid]: userProfile?.handle || "@member",
+                [otherUid]: creator.handle || "@creator",
+              },
+              lastMessage: "",
+              lastMessageTime: new Date().toISOString(),
+              lastSenderId: "",
+              unreadCounts: {
+                [currentUser.uid]: 0,
+                [otherUid]: 0,
+              },
+              createdAt: new Date().toISOString(),
+            },
+            { merge: true },
+          )
+        }
+
+        setActiveConvoId(convoId)
+        setActiveChatId(null)
+        await updateDoc(convoRef, {
+          [`unreadCounts.${currentUser.uid}`]: 0,
+        })
+      } catch (err) {
+        console.warn("Error creating conversation:", err)
+      }
+      setSelectedCreatorName(null)
+      setActiveTab("chat")
     } else {
-      const newThread = {
-        id: Date.now(),
+      const existingThread = chats.find(
+        (c) => c.name.toLowerCase() === creator.name.toLowerCase(),
+      )
 
-        name: creator.name,
+      if (existingThread) {
+        handleOpenChat(existingThread.id)
+      } else {
+        const newThread = {
+          id: Date.now(),
 
-        avatar: creator.avatar,
+          name: creator.name,
 
-        handle: creator.handle,
+          avatar: creator.avatar,
 
-        niche: creator.niche,
+          handle: creator.handle,
 
-        online: true,
+          niche: creator.niche,
 
-        verified: creator.verified,
+          online: true,
 
-        unreadCount: 0,
+          verified: creator.verified,
 
-        messages: [
-          {
-            id: Date.now(),
-            text: `Hi ${creator.name}! I saw your profile and would love to collaborate.`,
-            sender: "me",
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          },
-        ],
+          unreadCount: 0,
+
+          messages: [
+            {
+              id: Date.now(),
+              text: `Hi ${creator.name}! I saw your profile and would love to collaborate.`,
+              sender: "me",
+              time: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
+          ],
+        }
+
+        setChats((prev) => [newThread, ...prev])
+
+        handleOpenChat(newThread.id)
       }
 
-      setChats((prev) => [newThread, ...prev])
+      setSelectedCreatorName(null)
 
-      handleOpenChat(newThread.id)
+      setActiveTab("chat")
     }
-
-    setSelectedCreatorName(null)
-
-    setActiveTab("chat")
   }
 
-  const handleMessageBrand = (brand: Brand) => {
-    const existingThread = chats.find(
-      (c) => c.name.toLowerCase() === brand.name.toLowerCase(),
-    )
+  const handleMessageBrand = async (brand: Brand) => {
+    const otherUid = (brand as any).uid
+    const isRealUser = currentUser && otherUid && otherUid.length > 10
 
-    if (existingThread) {
-      handleOpenChat(existingThread.id)
+    if (isRealUser) {
+      const convoId = getConvoId(currentUser.uid, otherUid)
+      try {
+        const convoRef = doc(db, "conversations", convoId)
+        const snap = await getDoc(convoRef)
+        if (!snap.exists()) {
+          await setDoc(
+            convoRef,
+            {
+              id: convoId,
+              participants: [currentUser.uid, otherUid],
+              participantNames: {
+                [currentUser.uid]: userProfile?.name || "Kreator Member",
+                [otherUid]: brand.name || "Kreator Brand",
+              },
+              participantAvatars: {
+                [currentUser.uid]:
+                  userProfile?.avatar ||
+                  userProfile?.logo ||
+                  "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
+                [otherUid]:
+                  brand.logo ||
+                  "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
+              },
+              participantHandles: {
+                [currentUser.uid]: userProfile?.handle || "@member",
+                [otherUid]: "Brand Account",
+              },
+              lastMessage: "",
+              lastMessageTime: new Date().toISOString(),
+              lastSenderId: "",
+              unreadCounts: {
+                [currentUser.uid]: 0,
+                [otherUid]: 0,
+              },
+              createdAt: new Date().toISOString(),
+            },
+            { merge: true },
+          )
+        }
+
+        setActiveConvoId(convoId)
+        setActiveChatId(null)
+        await updateDoc(convoRef, {
+          [`unreadCounts.${currentUser.uid}`]: 0,
+        })
+      } catch (err) {
+        console.warn("Error creating conversation:", err)
+      }
+      setSelectedBrandName(null)
+      setActiveTab("chat")
     } else {
-      const newThread = {
-        id: Date.now(),
+      const existingThread = chats.find(
+        (c) => c.name.toLowerCase() === brand.name.toLowerCase(),
+      )
 
-        name: brand.name,
+      if (existingThread) {
+        handleOpenChat(existingThread.id)
+      } else {
+        const newThread = {
+          id: Date.now(),
 
-        avatar: brand.logo,
+          name: brand.name,
 
-        handle: "Brand Account",
+          avatar: brand.logo,
 
-        niche: brand.industry,
+          handle: "Brand Account",
 
-        online: false,
+          niche: brand.industry,
 
-        verified: brand.verified,
+          online: false,
 
-        unreadCount: 0,
+          verified: brand.verified,
 
-        messages: [
-          {
-            id: Date.now(),
-            text: `Hi ${brand.name}! I saw your brand profile and would love to collaborate on your campaigns.`,
-            sender: "me",
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          },
-        ],
+          unreadCount: 0,
+
+          messages: [
+            {
+              id: Date.now(),
+              text: `Hi ${brand.name}! I saw your brand profile and would love to collaborate on your campaigns.`,
+              sender: "me",
+              time: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
+          ],
+        }
+
+        setChats((prev) => [newThread, ...prev])
+
+        handleOpenChat(newThread.id)
       }
 
-      setChats((prev) => [newThread, ...prev])
+      setSelectedBrandName(null)
 
-      handleOpenChat(newThread.id)
+      setActiveTab("chat")
     }
-
-    setSelectedBrandName(null)
-
-    setActiveTab("chat")
   }
 
   const handleOpenChat = (id: number) => {
     setActiveChatId(id)
+    setActiveConvoId(null)
 
     setChats((prev) =>
       prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c)),
@@ -13650,33 +13971,28 @@ export default function App() {
             }
           }}
           onOpenChat={(applicantName, avatar) => {
-            // Find or create thread, open chat tab — no auto-message
-            const existingThread = chats.find(
-              (c) => c.name.toLowerCase() === applicantName.toLowerCase(),
-            )
-            if (existingThread) {
-              handleOpenChat(existingThread.id)
+            const matched =
+              creators.find(
+                (c) => c.name.toLowerCase() === applicantName.toLowerCase(),
+              ) ||
+              CREATORS.find(
+                (c) => c.name.toLowerCase() === applicantName.toLowerCase(),
+              )
+            if (matched) {
+              handleMessageCreator(matched)
             } else {
-              const newThread = {
+              handleMessageCreator({
                 id: Date.now(),
                 name: applicantName,
                 avatar: avatar,
                 handle: `@${applicantName.toLowerCase().replace(/\s+/g, "")}`,
                 niche: "Creator",
                 followers: "10K",
-                engagement: "4.8%",
                 verified: true,
                 bio: "",
-                recentPost: "",
-                online: true,
-                unreadCount: 0,
-                messages: [],
-              }
-              setChats((prev) => [newThread, ...prev])
-              handleOpenChat(newThread.id)
+              } as any)
             }
             setSelectedMyGigId(null)
-            setActiveTab("chat")
           }}
         />
       )
@@ -13985,65 +14301,82 @@ export default function App() {
 
               {renderMain()}
 
-              {showNav && (
-                <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 px-6 pt-3 pb-6 flex items-center justify-around shadow-xl z-20">
-                  {[
-                    { id: "home", label: "Home", icon: "⊞" },
+              {showNav &&
+                (() => {
+                  const unreadChatUsersCount = currentUser
+                    ? conversations.filter(
+                        (c) => (c.unreadCounts?.[currentUser.uid] || 0) > 0,
+                      ).length
+                    : chats.filter((c) => c.unreadCount > 0).length
 
-                    { id: "explore", label: "Explore", icon: "🧭" },
+                  return (
+                    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-slate-100 px-6 pt-3 pb-6 flex items-center justify-around shadow-xl z-20">
+                      {[
+                        { id: "home", label: "Home", icon: "⊞" },
 
-                    { id: "post", label: "", icon: "＋", special: true },
+                        { id: "explore", label: "Explore", icon: "🧭" },
 
-                    { id: "chat", label: "Chat", icon: "💬" },
+                        { id: "post", label: "", icon: "＋", special: true },
 
-                    { id: "profile", label: "Profile", icon: "👤" },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        setActiveTab(tab.id)
+                        { id: "chat", label: "Chat", icon: "💬" },
 
-                        if (tab.id === "post") setPosting(true)
+                        { id: "profile", label: "Profile", icon: "👤" },
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setActiveTab(tab.id)
 
-                        if (tab.id === "explore") setExploreFilter("all")
-                      }}
-                      className={`flex flex-col items-center gap-1 ${
-                        tab.special ? "-mt-6" : ""
-                      }`}
-                    >
-                      {tab.special ? (
-                        <span className="w-14 h-14 rounded-full bg-[#3b5bdb] flex items-center justify-center text-2xl text-white shadow-lg shadow-blue-300">
-                          {tab.icon}
-                        </span>
-                      ) : (
-                        <>
-                          <span
-                            className={`text-lg leading-none ${
-                              activeTab === tab.id
-                                ? "opacity-100"
-                                : "opacity-40"
-                            }`}
-                          >
-                            {tab.icon}
-                          </span>
-                          <span
-                            className={`text-[10px] font-bold ${
-                              activeTab === tab.id
-                                ? "text-[#3b5bdb]"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            {tab.label}
-                          </span>
-                          {activeTab === tab.id && (
-                            <span className="w-1 h-1 rounded-full bg-[#3b5bdb]" />
+                            if (tab.id === "post") setPosting(true)
+
+                            if (tab.id === "explore") setExploreFilter("all")
+                          }}
+                          className={`flex flex-col items-center gap-1 ${
+                            tab.special ? "-mt-6" : ""
+                          }`}
+                        >
+                          {tab.special ? (
+                            <span className="w-14 h-14 rounded-full bg-[#3b5bdb] flex items-center justify-center text-2xl text-white shadow-lg shadow-blue-300">
+                              {tab.icon}
+                            </span>
+                          ) : (
+                            <>
+                              <div className="relative flex items-center justify-center">
+                                <span
+                                  className={`text-lg leading-none ${
+                                    activeTab === tab.id
+                                      ? "opacity-100"
+                                      : "opacity-40"
+                                  }`}
+                                >
+                                  {tab.icon}
+                                </span>
+                                {tab.id === "chat" &&
+                                  unreadChatUsersCount > 0 && (
+                                    <span className="absolute -top-1.5 -right-2.5 bg-[#3b5bdb] text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                                      {unreadChatUsersCount}
+                                    </span>
+                                  )}
+                              </div>
+                              <span
+                                className={`text-[10px] font-bold ${
+                                  activeTab === tab.id
+                                    ? "text-[#3b5bdb]"
+                                    : "text-slate-400"
+                                }`}
+                              >
+                                {tab.label}
+                              </span>
+                              {activeTab === tab.id && (
+                                <span className="w-1 h-1 rounded-full bg-[#3b5bdb]" />
+                              )}
+                            </>
                           )}
-                        </>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
+                        </button>
+                      ))}
+                    </div>
+                  )
+                })()}
             </>
           )
         ) : (
