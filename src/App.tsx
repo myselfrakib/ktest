@@ -6807,8 +6807,13 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
       await new Promise((resolve) => {
         avatarImg!.onload = () => resolve(null);
         avatarImg!.onerror = () => {
-          useFallbackAvatar = true;
-          resolve(null);
+          // If direct load fails (e.g. CORS missing on bucket), fall back to public CORS proxy
+          if (avatarImg && !avatarImg.src.includes('allorigins.win')) {
+            avatarImg.src = `https://api.allorigins.win/raw?url=${encodeURIComponent(avatarUrl)}`;
+          } else {
+            useFallbackAvatar = true;
+            resolve(null);
+          }
         };
       });
     } catch (e) {
