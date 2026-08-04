@@ -1413,6 +1413,18 @@ function ApplyPage({
     ) ||
     CREATORS.find((c) => c.name.toLowerCase() === gig.creatorName.toLowerCase())
 
+  const matchedBrand =
+    brands.find(
+      (b) =>
+        b.name?.toLowerCase() === gig.creatorName?.toLowerCase() ||
+        b.brand?.toLowerCase() === gig.creatorName?.toLowerCase(),
+    ) ||
+    BRANDS.find(
+      (b) =>
+        b.name?.toLowerCase() === gig.creatorName?.toLowerCase() ||
+        b.brand?.toLowerCase() === gig.creatorName?.toLowerCase(),
+    )
+
   const followersCount =
     (matchedCreator as any)?.instagram?.followersFormatted ||
     matchedCreator?.followers ||
@@ -1511,10 +1523,19 @@ function ApplyPage({
       }
 
       // 3. Send Notification to poster in Firestore
-
       try {
+        const posterUid =
+          (gig as any).posterUid ||
+          (gig as any).userId ||
+          (gig as any).uid ||
+          (matchedCreator as any)?.uid ||
+          (matchedCreator as any)?.id ||
+          (matchedBrand as any)?.uid ||
+          (matchedBrand as any)?.id ||
+          "all"
+
         await addDoc(collection(db, "notifications"), {
-          recipientUid: (gig as any).userId || (gig as any).uid || null,
+          recipientUid: posterUid,
 
           recipientName: gig.creatorName,
 
@@ -3304,6 +3325,8 @@ function PostGigPage({
   userProfile,
 
   userRole,
+
+  currentUser,
 }: {
   onBack: () => void
 
@@ -3312,6 +3335,8 @@ function PostGigPage({
   userProfile?: any
 
   userRole?: any
+
+  currentUser?: any
 }) {
   const [step, setStep] = useState<1 | 2 | 3>(1)
 
@@ -3470,6 +3495,10 @@ function PostGigPage({
 
       const newGig: Gig = {
         id: newGigId,
+
+        userId: userProfile?.uid || currentUser?.uid || null,
+
+        posterUid: userProfile?.uid || currentUser?.uid || null,
 
         creatorName: posterName,
 
@@ -14779,6 +14808,7 @@ export default function App() {
         <PostGigPage
           userProfile={userProfile}
           userRole={userRole}
+          currentUser={currentUser}
           onBack={handleBack}
           onPosted={() => {
             setPosting(false)
