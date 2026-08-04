@@ -2383,6 +2383,28 @@ function ProfilePage({
     }
   }
 
+  // Hamburger Menu & Share Actions
+  const [showMenu, setShowMenu] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleShareProfile = () => {
+    const shareUrl = `${window.location.origin}/?creator=${userProfile?.handle || userProfile?.name || 'profile'}`
+    navigator.clipboard.writeText(shareUrl)
+    setShareCopied(true)
+    setTimeout(() => setShareCopied(false), 2000)
+  }
+
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState('')
@@ -2547,18 +2569,71 @@ function ProfilePage({
         <div className="h-36 w-full" style={{ background: 'linear-gradient(135deg, #3b5bdb 0%, #7048e8 60%, #f76707 100%)' }}>
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
         </div>
-        {/* Settings + Share row */}
-        <div className="absolute top-10 left-0 right-0 flex items-center justify-between px-5">
-          <button className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 text-white cursor-pointer hover:bg-white/30 transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+
+        {/* Hamburger Menu on top-right */}
+        <div className="absolute top-4 right-4 z-20" ref={menuRef}>
+          <button 
+            onClick={() => setShowMenu(!showMenu)} 
+            className="w-9 h-9 rounded-full bg-black/25 backdrop-blur-md flex items-center justify-center border border-white/20 text-white cursor-pointer hover:bg-black/35 transition-all duration-150 active:scale-95 shadow-md"
+            aria-label="Menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
+          
+          {showMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
+              {userRole === 'admin' && onSwitchToAdmin && (
+                <button 
+                  onClick={() => {
+                    setShowMenu(false)
+                    onSwitchToAdmin()
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent"
+                >
+                  <span className="text-amber-500">⚡</span> Admin Dashboard
+                </button>
+              )}
+              <button 
+                onClick={() => {
+                  setShowMenu(false)
+                  setEditName(name)
+                  setEditBio(bio)
+                  setEditLocation(userProfile?.location || 'Kolkata, WB')
+                  setEditNiche(userProfile?.niche || userProfile?.industry || 'Lifestyle & Fashion')
+                  setSelectedFile(null)
+                  setPreviewUrl(null)
+                  setIsEditing(true)
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <EditIcon /> Edit Profile
+              </button>
+              <button 
+                onClick={() => {
+                  setShowMenu(false)
+                  handleShareProfile()
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <ShareIcon /> Share Profile
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Avatar */}
-        <div className="absolute -bottom-12 left-5">
+        {/* Share Copied Tooltip Toast */}
+        {shareCopied && (
+          <div className="absolute top-16 right-4 bg-slate-900/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-lg z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+            Link copied!
+          </div>
+        )}
+
+        {/* Centered Avatar */}
+        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
           <div className="relative">
             <img
               src={avatar}
@@ -2574,42 +2649,13 @@ function ProfilePage({
         </div>
       </div>
 
-      {/* Edit profile + Share profile buttons */}
-      <div className="flex justify-end gap-2 px-5 pt-3 pb-0">
-        {userRole === 'admin' && onSwitchToAdmin && (
-          <button 
-            onClick={onSwitchToAdmin}
-            className="flex items-center gap-1.5 border border-slate-800 bg-[#0a1628] text-white rounded-xl px-3 py-2 text-xs font-bold shadow-md cursor-pointer hover:bg-slate-900 transition-colors"
-          >
-            <span>⚡</span> Admin Dashboard
-          </button>
-        )}
-        <button 
-          onClick={() => {
-            setEditName(name)
-            setEditBio(bio)
-            setEditLocation(userProfile?.location || 'Kolkata, WB')
-            setEditNiche(userProfile?.niche || userProfile?.industry || 'Lifestyle & Fashion')
-            setSelectedFile(null)
-            setPreviewUrl(null)
-            setIsEditing(true)
-          }}
-          className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors"
-        >
-          <EditIcon /> Edit Profile
-        </button>
-        <button className="flex items-center gap-1.5 border border-slate-200 bg-white rounded-xl px-3 py-2 text-xs font-bold text-slate-600 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
-          <ShareIcon /> Share Profile
-        </button>
-      </div>
-
       {/* Name & bio */}
-      <div className="px-5 pt-10 pb-4">
-        <div className="flex items-center gap-2 mb-0.5">
+      <div className="px-5 pt-16 pb-4 flex flex-col items-center text-center">
+        <div className="flex items-center justify-center gap-2 mb-0.5">
           <h2 className="font-display text-2xl font-black text-slate-900">{name}</h2>
           {userProfile?.verified && <span className="text-[#3b5bdb] text-sm">✓</span>}
         </div>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center justify-center gap-2 mb-2">
           <span className="text-sm text-slate-500 font-medium">{handleOrIndustry}</span>
           {userRole !== 'brand' && (
             <>
@@ -2618,17 +2664,17 @@ function ProfilePage({
             </>
           )}
         </div>
-        <p className="text-sm text-slate-600 leading-relaxed mb-3">
+        <p className="text-sm text-slate-600 leading-relaxed mb-3 max-w-sm">
           {bio}
         </p>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-3">
+        <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 font-medium mb-3">
           <MapPinIcon /><span>{userProfile?.location || 'Kolkata, West Bengal'} · Joined Aug 2026</span>
         </div>
 
         {/* Instagram row */}
         {userRole !== 'brand' && (
           isInstagramConnected ? (
-            <div className="flex items-center gap-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-2.5 mb-4">
+            <div className="w-full flex items-center gap-2 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-100 rounded-2xl px-3 py-2.5 mb-4">
               <span className="text-[#e4405f]">
                 <InstagramIcon />
               </span>
@@ -2661,13 +2707,13 @@ function ProfilePage({
           )
         )}
         {igError && (
-          <div className="bg-red-50 border border-red-100 rounded-2xl px-3 py-2 mb-4 text-xs text-red-600 font-medium">
+          <div className="w-full bg-red-50 border border-red-100 rounded-2xl px-3 py-2 mb-4 text-xs text-red-600 font-medium">
             ⚠️ {igError}
           </div>
         )}
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2 w-full">
           {stats.map(s => (
             <div key={s.label} className="bg-white rounded-2xl py-3 px-2 text-center shadow-sm border border-slate-100">
               <div className="text-base font-black text-slate-900 leading-none mb-1">{s.value}</div>
