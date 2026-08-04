@@ -12799,6 +12799,94 @@ export default function App() {
 
   const [generatingShareCard, setGeneratingShareCard] = useState(false)
 
+  // Route restoration & Session storage persistence
+  const touchStartX = useRef<number | null>(null)
+
+  const getInitialRouteState = () => {
+    try {
+      const saved = sessionStorage.getItem("kreator_route")
+
+      if (saved) return JSON.parse(saved)
+    } catch (e) {}
+
+    return null
+  }
+
+  const savedRoute = useRef(getInitialRouteState())
+
+  const [activeTab, setActiveTab] = useState(
+    savedRoute.current?.activeTab || "home",
+  )
+
+  const [selectedGigId, setSelectedGigId] = useState<number | null>(
+    savedRoute.current?.selectedGigId || null,
+  )
+
+  const [selectedCreatorName, setSelectedCreatorName] = useState<string | null>(
+    savedRoute.current?.selectedCreatorName || null,
+  )
+
+  const [selectedBrandName, setSelectedBrandName] = useState<string | null>(
+    savedRoute.current?.selectedBrandName || null,
+  )
+
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(
+    savedRoute.current?.selectedEventId || null,
+  )
+
+  const [selectedMyGigId, setSelectedMyGigId] = useState<number | null>(
+    savedRoute.current?.selectedMyGigId || null,
+  )
+
+  const [selectedMyGigTab, setSelectedMyGigTab] =
+    useState<"applicants" | "edit">(
+      savedRoute.current?.selectedMyGigTab || "applicants",
+    )
+
+  const [posting, setPosting] = useState(savedRoute.current?.posting || false)
+
+  const [gigPosted, setGigPosted] = useState(false)
+
+  const [savedGigs, setSavedGigs] = useState<Set<number>>(new Set([2, 5]))
+
+  const [followedBrands, setFollowedBrands] = useState<Set<number>>(
+    new Set([1]),
+  )
+
+  const [rsvpEvents, setRsvpEvents] = useState<Set<number>>(new Set([1]))
+
+  const [viewingNotifications, setViewingNotifications] = useState(
+    savedRoute.current?.viewingNotifications || false,
+  )
+
+  const [unreadNotifications, setUnreadNotifications] = useState<Set<number>>(
+    new Set([1, 2]),
+  )
+
+  const [chats, setChats] = useState<ChatThread[]>(INITIAL_CHATS)
+
+  const [activeChatId, setActiveChatId] = useState<number | null>(
+    savedRoute.current?.activeChatId || null,
+  )
+
+  // Real-time chat state
+  const [conversations, setConversations] = useState<Conversation[]>([])
+
+  const [activeConvoId, setActiveConvoId] = useState<string | null>(null)
+
+  const [activeMessages, setActiveMessages] = useState<LiveMessage[]>([])
+
+  const [followedCreators, setFollowedCreators] = useState<Set<number>>(
+    new Set(),
+  )
+
+  const [exploreFilter, setExploreFilter] =
+    useState<"all" | "creators" | "brands" | "gigs" | "events">(
+      savedRoute.current?.exploreFilter || "all",
+    )
+
+  const [exploreSearchQuery, setExploreSearchQuery] = useState("")
+
   const handleShareGig = async (gig: Gig) => {
     setGeneratingShareCard(true)
 
@@ -13179,95 +13267,6 @@ export default function App() {
     const interval = setInterval(updatePresence, 60000)
     return () => clearInterval(interval)
   }, [currentUser, userRole])
-
-  const touchStartX = useRef<number | null>(null)
-
-  // Route restoration & Session storage persistence
-
-  const getInitialRouteState = () => {
-    try {
-      const saved = sessionStorage.getItem("kreator_route")
-
-      if (saved) return JSON.parse(saved)
-    } catch (e) {}
-
-    return null
-  }
-
-  const savedRoute = useRef(getInitialRouteState())
-
-  const [activeTab, setActiveTab] = useState(
-    savedRoute.current?.activeTab || "home",
-  )
-
-  const [selectedGigId, setSelectedGigId] = useState<number | null>(
-    savedRoute.current?.selectedGigId || null,
-  )
-
-  const [selectedCreatorName, setSelectedCreatorName] = useState<string | null>(
-    savedRoute.current?.selectedCreatorName || null,
-  )
-
-  const [selectedBrandName, setSelectedBrandName] = useState<string | null>(
-    savedRoute.current?.selectedBrandName || null,
-  )
-
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(
-    savedRoute.current?.selectedEventId || null,
-  )
-
-  const [selectedMyGigId, setSelectedMyGigId] = useState<number | null>(
-    savedRoute.current?.selectedMyGigId || null,
-  )
-
-  const [selectedMyGigTab, setSelectedMyGigTab] =
-    useState<"applicants" | "edit">(
-      savedRoute.current?.selectedMyGigTab || "applicants",
-    )
-
-  const [posting, setPosting] = useState(savedRoute.current?.posting || false)
-
-  const [gigPosted, setGigPosted] = useState(false)
-
-  const [savedGigs, setSavedGigs] = useState<Set<number>>(new Set([2, 5]))
-
-  const [followedBrands, setFollowedBrands] = useState<Set<number>>(
-    new Set([1]),
-  )
-
-  const [rsvpEvents, setRsvpEvents] = useState<Set<number>>(new Set([1]))
-
-  const [viewingNotifications, setViewingNotifications] = useState(
-    savedRoute.current?.viewingNotifications || false,
-  )
-
-  const [unreadNotifications, setUnreadNotifications] = useState<Set<number>>(
-    new Set([1, 2]),
-  )
-
-  const [chats, setChats] = useState<ChatThread[]>(INITIAL_CHATS)
-
-  const [activeChatId, setActiveChatId] = useState<number | null>(
-    savedRoute.current?.activeChatId || null,
-  )
-
-  // Real-time chat state
-  const [conversations, setConversations] = useState<Conversation[]>([])
-
-  const [activeConvoId, setActiveConvoId] = useState<string | null>(null)
-
-  const [activeMessages, setActiveMessages] = useState<LiveMessage[]>([])
-
-  const [followedCreators, setFollowedCreators] = useState<Set<number>>(
-    new Set(),
-  )
-
-  const [exploreFilter, setExploreFilter] =
-    useState<"all" | "creators" | "brands" | "gigs" | "events">(
-      savedRoute.current?.exploreFilter || "all",
-    )
-
-  const [exploreSearchQuery, setExploreSearchQuery] = useState("")
 
   // Derived object states from IDs/names
 
