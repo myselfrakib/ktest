@@ -1,7 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp } from "firebase/app"
+import { getAuth } from "firebase/auth"
+import { getFirestore } from "firebase/firestore"
+import { getStorage } from "firebase/storage"
 
 const firebaseConfig = {
   apiKey: "AIzaSyCLIkZiiLCtgux7faHH4e2_z8LAG4omEiY",
@@ -11,14 +11,14 @@ const firebaseConfig = {
   storageBucket: "kreatorkolkata.firebasestorage.app",
   messagingSenderId: "882651352678",
   appId: "1:882651352678:web:5ec49cb746ba88ff2fa7a7",
-  measurementId: "G-46DJKQ74CE"
-};
+  measurementId: "G-46DJKQ74CE",
+}
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig)
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+export const auth = getAuth(app)
+export const db = getFirestore(app)
+export const storage = getStorage(app)
 
-export default app;
+export default app
