@@ -6799,7 +6799,11 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
     try {
       avatarImg = new Image();
       avatarImg.crossOrigin = 'anonymous';
-      avatarImg.src = poster.avatar;
+      let avatarUrl = poster.avatar;
+      if (poster.avatar.startsWith('http')) {
+        avatarUrl = poster.avatar + (poster.avatar.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+      }
+      avatarImg.src = avatarUrl;
       await new Promise((resolve) => {
         avatarImg!.onload = () => resolve(null);
         avatarImg!.onerror = () => {
