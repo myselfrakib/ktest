@@ -13785,6 +13785,7 @@ export default function App() {
     !gigPosted &&
     !viewingNotifications &&
     activeChatId === null &&
+    activeConvoId === null &&
     selectedCreator === null &&
     selectedBrand === null
 
