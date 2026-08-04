@@ -13060,7 +13060,83 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 
 // ── Share Gig Popup Modal Removed ──
 
-// ── Root App ───────────────────────────────────────────────────────────────
+// ── Web Audio Synthesized Notification & Call Ringtone Engine ──────────────
+
+function playNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+
+    const playTone = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = "sine"
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start)
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + start)
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + start + duration,
+      )
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(ctx.currentTime + start)
+      osc.stop(ctx.currentTime + start + duration)
+    }
+
+    playTone(523.25, 0, 0.25) // C5
+    playTone(659.25, 0.1, 0.3) // E5
+    playTone(783.99, 0.2, 0.45) // G5
+  } catch (e) {
+    console.warn("Notification sound error:", e)
+  }
+}
+
+let ringtoneIntervalId: any = null
+
+function playCallRingtone() {
+  stopCallRingtone()
+
+  const playRingPulse = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioCtx) return
+      const ctx = new AudioCtx()
+
+      const osc1 = ctx.createOscillator()
+      const osc2 = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc1.type = "sine"
+      osc2.type = "sine"
+      osc1.frequency.setValueAtTime(440, ctx.currentTime)
+      osc2.frequency.setValueAtTime(480, ctx.currentTime)
+
+      gain.gain.setValueAtTime(0.18, ctx.currentTime)
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + 1.2)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5)
+
+      osc1.connect(gain)
+      osc2.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc1.start(ctx.currentTime)
+      osc2.start(ctx.currentTime)
+      osc1.stop(ctx.currentTime + 1.5)
+      osc2.stop(ctx.currentTime + 1.5)
+    } catch (e) {}
+  }
+
+  playRingPulse()
+  ringtoneIntervalId = setInterval(playRingPulse, 2800)
+}
+
+function stopCallRingtone() {
+  if (ringtoneIntervalId) {
+    clearInterval(ringtoneIntervalId)
+    ringtoneIntervalId = null
+  }
+}
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -13635,7 +13711,18 @@ export default function App() {
     return () => clearInterval(interval)
   }, [activeCall?.status])
 
+  // 4. Call Ringtone Controller Hook
+  useEffect(() => {
+    if (incomingCall || (activeCall && activeCall.status === "calling")) {
+      playCallRingtone()
+    } else {
+      stopCallRingtone()
+    }
+    return () => stopCallRingtone()
+  }, [incomingCall?.id, activeCall?.status])
+
   const handleCleanupCall = () => {
+    stopCallRingtone()
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop())
       localStreamRef.current = null
@@ -13877,6 +13964,7 @@ export default function App() {
 
             if (!data.read && isRecent) {
               setLiveToast(data)
+              playNotificationSound()
               setTimeout(() => setLiveToast(null), 6000)
 
               if (
