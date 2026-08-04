@@ -8017,6 +8017,10 @@ function ChatPage({
   setActiveChatId,
 
   handleOpenChat,
+
+  userProfile,
+
+  gigs,
 }: {
   chats: ChatThread[]
 
@@ -8027,12 +8031,29 @@ function ChatPage({
   setActiveChatId: (id: number | null) => void
 
   handleOpenChat: (id: number) => void
+
+  userProfile?: any
+
+  gigs?: any[]
 }) {
   const [searchQuery, setSearchQuery] = useState("")
 
   const [inputText, setInputText] = useState("")
 
   const [isTyping, setIsTyping] = useState(false)
+
+  const [showGigPanel, setShowGigPanel] = useState(false)
+
+  const [gigPanelApps, setGigPanelApps] = useState<any[]>([])
+
+  const [gigPanelLoading, setGigPanelLoading] = useState(false)
+
+  const [gigPanelAction, setGigPanelAction] =
+    useState<Record<number, "accepting" | "rejecting" | "accepted" | "rejected">>(
+      {},
+    )
+
+  const [gigPanelToast, setGigPanelToast] = useState<string | null>(null)
 
   const activeChat = chats.find((c) => c.id === activeChatId)
 
@@ -8143,6 +8164,97 @@ function ChatPage({
     }
   }
 
+  // Fetch gigs this chat person applied to (from MY posted gigs)
+  const openGigPanel = async () => {
+    if (!activeChat) return
+    setShowGigPanel(true)
+    setGigPanelLoading(true)
+    try {
+      // Find applications where the applicantName matches the chat person's name
+      // OR applicantUid matches (if stored in thread)
+      const q = query(
+        collection(db, "applications"),
+        where("applicantName", "==", activeChat.name),
+      )
+      const snap = await getDocs(q)
+      const apps = snap.docs.map((d) => ({
+        id: d.id,
+        docRef: d.ref,
+        ...d.data(),
+      }))
+      // Filter to only gigs that belong to the current user (posted by me)
+      const myGigIds = new Set(
+        (gigs || [])
+          .filter(
+            (g: any) =>
+              g.userId === (userProfile?.uid || null) ||
+              g.creatorName === userProfile?.name,
+          )
+          .map((g: any) => g.id),
+      )
+      const relevant = apps.filter((a: any) => myGigIds.has(a.gigId))
+      setGigPanelApps(relevant)
+    } catch (err) {
+      console.warn("GigPanel fetch error:", err)
+      setGigPanelApps([])
+    } finally {
+      setGigPanelLoading(false)
+    }
+  }
+
+  const handleGigPanelAction = async (
+    app: any,
+    action: "accept" | "reject",
+  ) => {
+    setGigPanelAction((prev) => ({
+      ...prev,
+      [app.gigId]: action === "accept" ? "accepting" : "rejecting",
+    }))
+    try {
+      // Update gig doc
+      const qGigs = query(collection(db, "gigs"), where("id", "==", app.gigId))
+      const gigSnap = await getDocs(qGigs)
+      if (!gigSnap.empty) {
+        if (action === "accept") {
+          await updateDoc(gigSnap.docs[0].ref, {
+            applicantSelected: true,
+            selectedApplicantName:
+              app.applicantName || activeChat?.name || "Creator",
+            selectedApplicantAvatar:
+              app.applicantAvatar || activeChat?.avatar || null,
+            selectedApplicantHandle:
+              app.instaHandle || app.applicantHandle || "",
+            selectedApplicantUid: app.applicantUid || null,
+            status: "Closed",
+          })
+        }
+      }
+      // Update application status
+      if (app.docRef) {
+        await updateDoc(app.docRef, {
+          status: action === "accept" ? "accepted" : "rejected",
+        })
+      }
+      setGigPanelAction((prev) => ({
+        ...prev,
+        [app.gigId]: action === "accept" ? "accepted" : "rejected",
+      }))
+      if (action === "accept") {
+        setGigPanelToast(
+          `✅ Accepted ${app.applicantName || activeChat?.name} for "${app.gigTitle || "Gig"}"!`,
+        )
+        setTimeout(() => setGigPanelToast(null), 4000)
+      }
+    } catch (err: any) {
+      alert(err.message || "Action failed")
+      setGigPanelAction((prev) => {
+        const n = { ...prev }
+        delete n[app.gigId]
+        return n
+      })
+    }
+  }
+
   if (activeChat) {
     return (
       <div className="flex-1 bg-slate-50 flex flex-col h-screen relative">
@@ -8150,7 +8262,10 @@ function ChatPage({
         <div className="px-4 pt-12 pb-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3 min-w-0">
             <button
-              onClick={() => setActiveChatId(null)}
+              onClick={() => {
+                setActiveChatId(null)
+                setShowGigPanel(false)
+              }}
               className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition"
             >
               <ArrowLeftIcon />
@@ -8254,7 +8369,10 @@ function ChatPage({
 
         {/* Input Bar */}
         <div className="absolute bottom-0 inset-x-0 bg-white border-t border-slate-100 px-4 py-3 flex items-center gap-2 z-10 shadow-lg">
-          <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-lg text-slate-500 hover:bg-slate-100 transition">
+          <button
+            onClick={openGigPanel}
+            className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-lg text-slate-500 hover:bg-[#e8edff] hover:text-[#3b5bdb] transition active:scale-95"
+          >
             ＋
           </button>
           <input
@@ -8277,6 +8395,188 @@ function ChatPage({
             ➔
           </button>
         </div>
+
+        {/* Gig Action Panel — Bottom Sheet */}
+        {showGigPanel && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/30 z-20"
+              onClick={() => setShowGigPanel(false)}
+            />
+
+            {/* Toast */}
+            {gigPanelToast && (
+              <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2">
+                {gigPanelToast}
+              </div>
+            )}
+
+            {/* Sheet */}
+            <div className="absolute bottom-0 inset-x-0 z-30 bg-white rounded-t-[28px] shadow-2xl border-t border-slate-100 flex flex-col max-h-[70vh]">
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-slate-200 rounded-full" />
+              </div>
+
+              {/* Header */}
+              <div className="px-5 pt-2 pb-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                    Gig Applications
+                  </div>
+                  <div className="text-sm font-black text-slate-900">
+                    {activeChat.name}'s Applications
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowGigPanel(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition text-xs font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3 scrollbar-hide">
+                {gigPanelLoading ? (
+                  <div className="flex flex-col items-center py-10 gap-3">
+                    <div className="w-7 h-7 rounded-full border-3 border-slate-200 border-t-[#3b5bdb] animate-spin" />
+                    <span className="text-xs text-slate-400 font-medium">
+                      Loading applications...
+                    </span>
+                  </div>
+                ) : gigPanelApps.length === 0 ? (
+                  <div className="flex flex-col items-center py-10 gap-3 text-center">
+                    <span className="text-4xl">📭</span>
+                    <div className="text-sm font-bold text-slate-800">
+                      No Applications Found
+                    </div>
+                    <p className="text-xs text-slate-400 max-w-[220px]">
+                      {activeChat.name} hasn't applied to any of your posted
+                      gigs yet.
+                    </p>
+                  </div>
+                ) : (
+                  gigPanelApps.map((app: any) => {
+                    const panelAction = gigPanelAction[app.gigId]
+                    const isDone =
+                      panelAction === "accepted" || panelAction === "rejected"
+                    return (
+                      <div
+                        key={app.id}
+                        className={`rounded-2xl border p-4 flex flex-col gap-3 transition ${
+                          panelAction === "accepted"
+                            ? "bg-emerald-50 border-emerald-200"
+                            : panelAction === "rejected"
+                              ? "bg-slate-50 border-slate-200 opacity-60"
+                              : "bg-white border-slate-100 shadow-sm"
+                        }`}
+                      >
+                        {/* Gig Info */}
+                        <div className="flex items-start gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-[#e8edff] flex items-center justify-center flex-shrink-0">
+                            <span className="text-base">📋</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-black text-slate-900 leading-tight mb-0.5 truncate">
+                              {app.gigTitle || "Untitled Gig"}
+                            </div>
+                            {app.expectedRate && (
+                              <div className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
+                                {app.expectedRate}
+                              </div>
+                            )}
+                          </div>
+                          {isDone && (
+                            <span
+                              className={`text-[9px] font-black px-2 py-1 rounded-full flex-shrink-0 ${
+                                panelAction === "accepted"
+                                  ? "text-emerald-700 bg-emerald-100"
+                                  : "text-slate-500 bg-slate-100"
+                              }`}
+                            >
+                              {panelAction === "accepted"
+                                ? "✅ Accepted"
+                                : "❌ Rejected"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Pitch preview */}
+                        {app.pitch && (
+                          <div className="bg-slate-50 rounded-xl px-3 py-2 text-[10px] text-slate-500 leading-relaxed border border-slate-100 italic line-clamp-2">
+                            "{app.pitch}"
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        {!isDone && (
+                          <div className="flex gap-2">
+                            <button
+                              disabled={!!gigPanelAction[app.gigId]}
+                              onClick={() =>
+                                handleGigPanelAction(app, "accept")
+                              }
+                              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95 disabled:opacity-60 flex items-center justify-center gap-1"
+                            >
+                              {gigPanelAction[app.gigId] === "accepting" ? (
+                                <svg
+                                  className="animate-spin w-3 h-3"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="white"
+                                    strokeWidth="3"
+                                    strokeDasharray="60"
+                                    strokeDashoffset="20"
+                                  />
+                                </svg>
+                              ) : (
+                                "✅ Accept"
+                              )}
+                            </button>
+                            <button
+                              disabled={!!gigPanelAction[app.gigId]}
+                              onClick={() =>
+                                handleGigPanelAction(app, "reject")
+                              }
+                              className="flex-1 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 text-xs font-bold py-2.5 rounded-xl transition active:scale-95 disabled:opacity-60 flex items-center justify-center gap-1 border border-slate-200 hover:border-red-200"
+                            >
+                              {gigPanelAction[app.gigId] === "rejecting" ? (
+                                <svg
+                                  className="animate-spin w-3 h-3"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    strokeDasharray="60"
+                                    strokeDashoffset="20"
+                                  />
+                                </svg>
+                              ) : (
+                                "❌ Reject"
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     )
   }
@@ -13481,6 +13781,8 @@ export default function App() {
           activeChatId={activeChatId}
           setActiveChatId={setActiveChatId}
           handleOpenChat={handleOpenChat}
+          userProfile={userProfile}
+          gigs={gigs}
         />
       )
     }
