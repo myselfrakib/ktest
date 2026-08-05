@@ -12286,75 +12286,59 @@ export default function App() {
         unsubs.push(unsubConvos)
 
         let foundProfile = false
+        let isAdminUser = false
 
         const adminRef = doc(db, "admins", user.uid)
-
         const unsubAdmin = onSnapshot(
           adminRef,
           (snap) => {
             if (snap.exists()) {
               foundProfile = true
-
+              isAdminUser = true
               const data = snap.data()
-
               if (data.isAdmin === true) {
                 setUserRole("admin")
-
                 setUserProfile(data)
               } else {
                 setUserRole("admin_pending")
-
                 setUserProfile(data)
               }
             }
           },
           (err) => console.warn("Admin snapshot error:", err),
         )
-
         unsubs.push(unsubAdmin)
 
         const creatorRef = doc(db, "creators", user.uid)
-
         const unsubCreator = onSnapshot(
           creatorRef,
           (snap) => {
-            if (snap.exists()) {
+            if (snap.exists() && !isAdminUser) {
               foundProfile = true
-
               setUserRole("creator")
-
               setUserProfile(snap.data())
             }
           },
           (err) => console.warn("Creator snapshot error:", err),
         )
-
         unsubs.push(unsubCreator)
 
         const brandRef = doc(db, "brands", user.uid)
-
         const unsubBrand = onSnapshot(
           brandRef,
           (snap) => {
-            if (snap.exists()) {
+            if (snap.exists() && !isAdminUser) {
               foundProfile = true
-
               setUserRole("brand")
-
               setUserProfile(snap.data())
             }
           },
           (err) => console.warn("Brand snapshot error:", err),
         )
-
         unsubs.push(unsubBrand)
 
-        // Fallback: If no document exists in admins, creators, or brands after 1.8s,
-
-        // auto-initialize a creator profile for this user so they are never stuck!
-
         const timer = setTimeout(async () => {
-          if (!foundProfile) {
+          if (!foundProfile && !isAdminUser) {
             console.log(
               "[AUTH FALLBACK] Auto-initializing profile doc for UID:",
               user.uid,
