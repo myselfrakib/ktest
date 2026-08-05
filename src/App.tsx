@@ -11060,46 +11060,62 @@ function AuthScreen({
           minHeight: "100svh",
         }}
       >
-        {/* back */}
-        <button
-          onClick={onBack}
-          style={{
-            marginTop: 56,
+        {/* header row with back button & top-right Admin capital A redirect button */}
+        <div style={{ marginTop: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button
+            onClick={onBack}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#adb3cc",
+              fontFamily: "'Instrument Sans', sans-serif",
+              fontSize: 13,
+              padding: 0,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M13 8H3M7 4L3 8l4 4"
+                stroke="#adb3cc"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back
+          </button>
 
-            alignSelf: "flex-start",
-
-            display: "flex",
-
-            alignItems: "center",
-
-            gap: 6,
-
-            background: "none",
-
-            border: "none",
-
-            cursor: "pointer",
-
-            color: "#adb3cc",
-
-            fontFamily: "'Instrument Sans', sans-serif",
-
-            fontSize: 13,
-
-            padding: 0,
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M13 8H3M7 4L3 8l4 4"
-              stroke="#adb3cc"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back
-        </button>
+          <button
+            onClick={() => {
+              setRole("admin")
+              setMode("login")
+            }}
+            title="Admin Portal Login"
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              background: role === "admin" ? "#3b5bdb" : "#ffffff",
+              color: role === "admin" ? "#ffffff" : "#3b5bdb",
+              border: role === "admin" ? "none" : "1.5px solid #d0d7f7",
+              fontSize: 15,
+              fontWeight: 900,
+              fontFamily: "'DM Serif Display', serif",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(59,91,219,0.15)",
+              transition: "all 0.2s",
+            }}
+          >
+            A
+          </button>
+        </div>
 
         {/* brand */}
         <div style={{ marginTop: 36, marginBottom: 32 }}>
@@ -11220,7 +11236,7 @@ function AuthScreen({
               marginBottom: 16,
             }}
           >
-            {(["creator", "brand", "admin"] as const).map((r) => (
+            {(["creator", "brand"] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRole(r)}
