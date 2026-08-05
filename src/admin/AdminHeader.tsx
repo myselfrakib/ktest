@@ -1,9 +1,8 @@
 interface AdminHeaderProps {
   onLogout: () => void
-  onSwitchToPlatform?: () => void
 }
 
-export function AdminHeader({ onLogout, onSwitchToPlatform }: AdminHeaderProps) {
+export function AdminHeader({ onLogout }: AdminHeaderProps) {
   return (
     <div className="bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
       <div className="flex items-center gap-3">
@@ -25,19 +24,11 @@ export function AdminHeader({ onLogout, onSwitchToPlatform }: AdminHeaderProps) 
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {onSwitchToPlatform && (
-          <button
-            onClick={onSwitchToPlatform}
-            className="text-xs font-bold bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white px-3.5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
-          >
-            <span>📱</span> User View
-          </button>
-        )}
         <button
           onClick={onLogout}
-          className="text-xs font-bold bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-3.5 py-2 rounded-xl transition cursor-pointer shadow-sm"
+          className="text-xs font-bold bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-3.5 py-2 rounded-xl transition cursor-pointer shadow-sm hover:border-slate-300"
         >
-          Logout
+          Sign Out 🚪
         </button>
       </div>
     </div>

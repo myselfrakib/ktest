@@ -28,14 +28,12 @@ export function AdminDashboardPage({
   creators,
   brands,
   onLogout,
-  onSwitchToPlatform,
 }: {
   gigs: Gig[]
   events: Event[]
   creators: Creator[]
   brands: Brand[]
   onLogout: () => void
-  onSwitchToPlatform?: () => void
 }) {
   const [activeTab, setActiveTab] = useState<
     "overview" | "events" | "gigs" | "admins" | "users" | "notifications"
@@ -704,10 +702,7 @@ export function AdminDashboardPage({
 
   return (
     <div className="flex-1 bg-[#f8fafc] min-h-screen text-slate-800 flex flex-col pb-20">
-      <AdminHeader
-        onLogout={onLogout}
-        onSwitchToPlatform={onSwitchToPlatform}
-      />
+      <AdminHeader onLogout={onLogout} />
       <div className="p-5 flex flex-col gap-5">
         <div className="grid grid-cols-2 gap-3">
           {[

@@ -5754,18 +5754,6 @@ function ProfilePage({
 
           {showMenu && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
-              {userRole === "admin" && onSwitchToAdmin && (
-                <button
-                  onClick={() => {
-                    setShowMenu(false)
-
-                    onSwitchToAdmin()
-                  }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent"
-                >
-                  <span className="text-amber-500">⚡</span> Admin Dashboard
-                </button>
-              )}
               <button
                 onClick={() => {
                   setShowMenu(false)
@@ -14050,14 +14038,13 @@ export default function App() {
         )}
 
         {isLoggedIn ? (
-          userRole === "admin" && adminViewMode === "dashboard" ? (
+          userRole === "admin" ? (
             <AdminDashboardPage
               gigs={gigs}
               events={events}
               creators={creators}
               brands={brands}
               onLogout={handleLogout}
-              onSwitchToPlatform={() => setAdminViewMode("platform")}
             />
           ) : userRole === "admin_pending" ? (
             <AdminPendingPage
