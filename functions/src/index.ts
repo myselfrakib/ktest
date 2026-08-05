@@ -379,22 +379,32 @@ export const onNotificationCreated = onDocumentCreated("notifications/{notificat
   }
 
   try {
-    const tokenDoc = await admin.firestore().collection("fcmTokens").doc(recipientUid).get()
-    if (!tokenDoc.exists) {
-      console.log(`No FCM tokens registered for user: ${recipientUid}`)
-      return
+    let tokens: string[] = []
+
+    if (recipientUid === "all") {
+      const allTokensSnap = await admin.firestore().collection("fcmTokens").get()
+      allTokensSnap.forEach((docSnap) => {
+        const tList: string[] = docSnap.data()?.tokens || []
+        tokens.push(...tList)
+      })
+      // Deduplicate tokens
+      tokens = Array.from(new Set(tokens))
+    } else {
+      const tokenDoc = await admin.firestore().collection("fcmTokens").doc(recipientUid).get()
+      if (tokenDoc.exists) {
+        tokens = tokenDoc.data()?.tokens || []
+      }
     }
 
-    const tokenData = tokenDoc.data()
-    const tokens: string[] = tokenData?.tokens || []
     if (tokens.length === 0) {
-      console.log(`FCM tokens array is empty for user: ${recipientUid}`)
+      console.log(`No FCM tokens found for target: ${recipientUid}`)
       return
     }
 
     const messageTitle = notification.title || "Kreator Kolkata"
     const messageBody = notification.message || ""
-    const messageImage = notification.senderAvatar || ""
+    const messageImage = notification.senderAvatar || notification.avatar || ""
+    const clickLink = notification.link || notification.actionUrl || notification.click_action || "/messages"
 
     const payload = {
       notification: {
@@ -404,8 +414,9 @@ export const onNotificationCreated = onDocumentCreated("notifications/{notificat
       },
       data: {
         notificationId: snap.id,
-        type: notification.type || "general",
-        click_action: "/messages",
+        type: notification.type || "custom",
+        click_action: clickLink,
+        link: clickLink,
       },
     }
 
@@ -416,7 +427,7 @@ export const onNotificationCreated = onDocumentCreated("notifications/{notificat
     })
 
     console.log(
-      `Successfully sent ${response.successCount} push notifications to user ${recipientUid}. Failed: ${response.failureCount}`
+      `Successfully sent ${response.successCount} push notifications to target [${recipientUid}]. Failed: ${response.failureCount}`
     )
 
     const invalidTokens: string[] = []
@@ -432,7 +443,7 @@ export const onNotificationCreated = onDocumentCreated("notifications/{notificat
       }
     })
 
-    if (invalidTokens.length > 0) {
+    if (invalidTokens.length > 0 && recipientUid !== "all") {
       console.log(`Cleaning up ${invalidTokens.length} expired/invalid FCM tokens for user ${recipientUid}`)
       await admin.firestore().collection("fcmTokens").doc(recipientUid).update({
         tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),

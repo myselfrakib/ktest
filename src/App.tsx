@@ -10961,7 +10961,33 @@ function AdminDashboardPage({
   onSwitchToPlatform?: () => void
 }) {
   const [activeTab, setActiveTab] =
-    useState<"overview" | "events" | "gigs" | "admins" | "users">("overview")
+    useState<
+      "overview" | "events" | "gigs" | "admins" | "users" | "notifications"
+    >("overview")
+
+  const [notifTitle, setNotifTitle] = useState(
+    "View what Priya Sengupta posted 🌟",
+  )
+
+  const [notifMessage, setNotifMessage] = useState(
+    "Check out the new Ethnic Fashion reel collab in Kolkata.",
+  )
+
+  const [notifLink, setNotifLink] = useState("/explore")
+
+  const [targetType, setTargetType] = useState<
+    "all" | "creators" | "brands" | "selected"
+  >("all")
+
+  const [selectedUserUids, setSelectedUserUids] = useState<string[]>([])
+
+  const [targetUserSearch, setTargetUserSearch] = useState("")
+
+  const [sendingNotif, setSendingNotif] = useState(false)
+
+  const [notifSuccessToast, setNotifSuccessToast] = useState<string | null>(
+    null,
+  )
 
   const [showCreateEventModal, setShowCreateEventModal] = useState(false)
 
@@ -12061,6 +12087,8 @@ function AdminDashboardPage({
                   ? `Admins (${pendingAdmins.length})`
                   : "Admins",
             },
+
+            { id: "notifications", label: "Push Notifications" },
           ] as const).map(({ id, label }) => (
             <button
               key={id}
@@ -12374,51 +12402,436 @@ function AdminDashboardPage({
 
                 return (
                   <div
-                    key={`${role}-${user.id}`}
-                    className="bg-white rounded-2xl p-3 border border-slate-100 hover:border-slate-350 shadow-sm transition flex items-center gap-3 cursor-pointer"
-                    onClick={() => setSelectedAdminUser({ user, role })}
-                  >
-                    <img
-                      src={avatar}
-                      alt={user.name}
-                      className="w-12 h-12 rounded-2xl object-cover border border-slate-700 flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <div className="text-xs font-bold text-slate-800 truncate">
-                          {user.name}
-                        </div>
-                        {user.verified && (
-                          <span className="text-[9px] text-blue-500 font-bold">
-                            ✓
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] text-slate-555 truncate mt-0.5">
-                        {isCreator
-                          ? `${user.handle} - ${user.niche}`
-                          : `${user.industry} - ${user.location || "Kolkata"}`}
-                      </div>
-                      {isCreator &&
-                        ((user as any).instagram?.followersFormatted ||
-                          user.followers) && (
-                          <div className="text-[10px] text-[#e4405f] font-bold mt-0.5">
-                            {(user as any).instagram?.followersFormatted ||
-                              user.followers}{" "}
-                            followers
-                          </div>
-                        )}
+                 {activeTab === "admins" && (
+          <div className="flex flex-col gap-4">
+            <h3 className="text-xs font-black text-slate-450 uppercase tracking-widest">
+              Admin User Management
+            </h3>
+            <div className="flex flex-col gap-3">
+              {adminsList.map((a) => (
+                <div
+                  key={a.uid}
+                  className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm flex items-center gap-3"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-[#3b5bdb]/10 flex items-center justify-center text-[#3b5bdb] font-black flex-shrink-0">
+                    {(a.name || "A")[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-slate-800 truncate">
+                      {a.name || "Admin User"}
+                    </h4>
+                    <div className="text-xs text-slate-555 truncate">
+                      {a.email}
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span
-                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                          isCreator
-                            ? "bg-blue-50 text-blue-655 border border-blue-100"
-                            : "bg-rose-50 text-rose-655 border border-rose-100"
-                        }`}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      className={`text-[9px] font-black px-2.5 py-0.5 rounded-full ${
+                        a.isAdmin
+                          ? "bg-emerald-55 text-emerald-600 border border-emerald-100"
+                          : "bg-amber-55 text-amber-600 border border-amber-100"
+                      }`}
+                    >
+                      {a.isAdmin ? "ACTIVE" : "PENDING"}
+                    </span>
+                    {!a.isAdmin && (
+                      <button
+                        onClick={() => handleApproveAdmin(a.uid)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition shadow-sm"
                       >
-                        {isCreator ? "Creator" : "Brand"}
+                        Approve
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {adminsList.length === 0 && (
+                <div className="text-center py-10 text-slate-500 text-xs">
+                  No admin accounts yet.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {activeTab === "notifications" && (
+          <div className="flex flex-col gap-6">
+            {notifSuccessToast && (
+              <div className="bg-emerald-600 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-fade-in">
+                <span>{notifSuccessToast}</span>
+                <button
+                  onClick={() => setNotifSuccessToast(null)}
+                  className="text-white/80 hover:text-white font-bold ml-3"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col gap-6">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-black text-[#3b5bdb] uppercase tracking-widest mb-1">
+                  <span>🔔 FCM Broadcast Manager</span>
+                </div>
+                <h3 className="text-lg font-black text-slate-900 leading-tight">
+                  Create Custom Push Notification
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Send real-time Web Push notifications directly to users' browsers and mobile devices.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Form Fields */}
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Notification Title
+                    </label>
+                    <input
+                      type="text"
+                      value={notifTitle}
+                      onChange={(e) => setNotifTitle(e.target.value)}
+                      placeholder='e.g., "View what Priya Sengupta posted 🌟"'
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-800 font-medium outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Message / Body Text
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={notifMessage}
+                      onChange={(e) => setNotifMessage(e.target.value)}
+                      placeholder="e.g., Check out the new Ethnic Fashion reel collab in Kolkata."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-xs text-slate-800 font-medium outline-none focus:border-[#3b5bdb] focus:ring-1 focus:ring-[#3b5bdb]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Redirect Page / Link
+                    </label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {[
+                        { label: "✨ Explore", value: "/explore" },
+                        { label: "💼 Browse Gigs", value: "/gigs" },
+                        { label: "🎉 Events", value: "/events" },
+                        { label: "👤 Profile", value: "/profile" },
+                        { label: "💬 Messages", value: "/messages" },
+                      ].map((preset) => (
+                        <button
+                          key={preset.value}
+                          type="button"
+                          onClick={() => setNotifLink(preset.value)}
+                          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition cursor-pointer ${
+                            notifLink === preset.value
+                              ? "bg-[#3b5bdb] text-white shadow-sm"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={notifLink}
+                      onChange={(e) => setNotifLink(e.target.value)}
+                      placeholder="Custom link (e.g., /gigs or https://...)"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 font-medium outline-none focus:border-[#3b5bdb]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                      Target Audience
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: "all", label: "🌐 All Users (Broadcast)" },
+                        { id: "creators", label: "🎨 Creators Only" },
+                        { id: "brands", label: "🏢 Brands Only" },
+                        { id: "selected", label: "👤 Selected Individuals" },
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => setTargetType(t.id as any)}
+                          className={`p-3 rounded-2xl border text-left text-xs font-bold transition cursor-pointer ${
+                            targetType === t.id
+                              ? "border-[#3b5bdb] bg-[#3b5bdb]/5 text-[#3b5bdb] shadow-xs"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                          }`}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {targetType === "selected" && (
+                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700">
+                          Select Recipients ({selectedUserUids.length} selected)
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedUserUids(
+                                allUsers.map((u) => u.user.uid || String(u.user.id)),
+                              )
+                            }
+                            className="text-[10px] font-bold text-[#3b5bdb] hover:underline"
+                          >
+                            Select All
+                          </button>
+                          <span className="text-slate-300">|</span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserUids([])}
+                            className="text-[10px] font-bold text-slate-500 hover:underline"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        value={targetUserSearch}
+                        onChange={(e) => setTargetUserSearch(e.target.value)}
+                        placeholder="Filter users by name..."
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 outline-none"
+                      />
+                      <div className="max-h-48 overflow-y-auto flex flex-col gap-1.5 pr-1 scrollbar-hide">
+                        {allUsers
+                          .filter(({ user }) =>
+                            (user.name || "")
+                              .toLowerCase()
+                              .includes(targetUserSearch.toLowerCase()),
+                          )
+                          .map(({ user, role }) => {
+                            const uid = user.uid || String(user.id)
+                            const isSelected = selectedUserUids.includes(uid)
+                            const avatar = role === "creator" ? user.avatar : user.logo
+                            return (
+                              <div
+                                key={`${role}-${uid}`}
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setSelectedUserUids((prev) =>
+                                      prev.filter((id) => id !== uid),
+                                    )
+                                  } else {
+                                    setSelectedUserUids((prev) => [...prev, uid])
+                                  }
+                                }}
+                                className={`p-2 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                                  isSelected
+                                    ? "bg-blue-50/80 border-blue-200"
+                                    : "bg-white border-slate-100 hover:bg-slate-100/50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => {}}
+                                    className="rounded border-slate-300 text-[#3b5bdb]"
+                                  />
+                                  <img
+                                    src={avatar}
+                                    alt={user.name}
+                                    className="w-7 h-7 rounded-full object-cover border border-slate-200 flex-shrink-0"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-slate-800 truncate">
+                                      {user.name}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 truncate">
+                                      {role === "creator"
+                                        ? user.handle
+                                        : user.industry}
+                                    </div>
+                                  </div>
+                                </div>
+                                <span
+                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                    role === "creator"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : "bg-rose-100 text-rose-700"
+                                  }`}
+                                >
+                                  {role}
+                                </span>
+                              </div>
+                            )
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    disabled={sendingNotif}
+                    onClick={async () => {
+                      if (!notifTitle.trim() || !notifMessage.trim()) {
+                        alert("Please provide both title and message text.")
+                        return
+                      }
+                      setSendingNotif(true)
+                      try {
+                        let recipientList: string[] = []
+                        if (targetType === "all") {
+                          recipientList = ["all"]
+                        } else if (targetType === "creators") {
+                          recipientList = creators
+                            .map((c) => c.uid || String(c.id))
+                            .filter(Boolean)
+                        } else if (targetType === "brands") {
+                          recipientList = brands
+                            .map((b) => b.uid || String(b.id))
+                            .filter(Boolean)
+                        } else if (targetType === "selected") {
+                          recipientList = selectedUserUids
+                        }
+
+                        if (recipientList.length === 0) {
+                          alert("No recipient users found for selected audience!")
+                          setSendingNotif(false)
+                          return
+                        }
+
+                        const promises = recipientList.map((uid) =>
+                          addDoc(collection(db, "notifications"), {
+                            recipientUid: uid,
+                            title: notifTitle.trim(),
+                            message: notifMessage.trim(),
+                            link: notifLink.trim(),
+                            actionText: "View Now",
+                            type: "custom",
+                            category: "announcement",
+                            createdAt: new Date().toISOString(),
+                            senderName: "Kreator Kolkata Admin",
+                            senderAvatar:
+                              "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+                            read: false,
+                          }),
+                        )
+
+                        await Promise.all(promises)
+
+                        const recipientDesc =
+                          targetType === "all"
+                            ? "all registered users"
+                            : targetType === "creators"
+                              ? "all creators"
+                              : targetType === "brands"
+                                ? "all brands"
+                                : `${recipientList.length} selected user(s)`
+
+                        setNotifSuccessToast(
+                          `🚀 Real-time Push Notification sent to ${recipientDesc}!`,
+                        )
+                        setTimeout(() => setNotifSuccessToast(null), 5000)
+
+                        setNotifTitle("View what Priya Sengupta posted 🌟")
+                        setNotifMessage(
+                          "Check out the new Ethnic Fashion reel collab in Kolkata.",
+                        )
+                        setNotifLink("/explore")
+                      } catch (err: any) {
+                        console.error("Push error:", err)
+                        alert("Error sending notification: " + err.message)
+                      } finally {
+                        setSendingNotif(false)
+                      }
+                    }}
+                    className={`w-full py-4 rounded-2xl font-black text-xs text-white shadow-lg transition cursor-pointer flex items-center justify-center gap-2 ${
+                      sendingNotif
+                        ? "bg-slate-400 cursor-not-allowed shadow-none"
+                        : "bg-[#3b5bdb] hover:bg-blue-700 shadow-blue-200 active:scale-98"
+                    }`}
+                  >
+                    {sendingNotif ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                        <span>Sending Push Notification...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🚀 Send Push Notification</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Live Preview Panel */}
+                <div className="flex flex-col gap-4 bg-slate-50 rounded-3xl p-5 border border-slate-200">
+                  <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">
+                    📱 Live Devices Preview
+                  </h4>
+
+                  {/* Browser/Desktop Push Banner */}
+                  <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-xl border border-slate-800">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                        System Push Notification
                       </span>
+                      <span>Now</span>
+                    </div>
+                    <div className="flex gap-3 items-start">
+                      <img
+                        src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
+                        alt="Logo"
+                        className="w-10 h-10 rounded-xl object-cover border border-slate-700 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-white truncate leading-tight">
+                          {notifTitle || "Notification Title"}
+                        </div>
+                        <div className="text-[11px] text-slate-300 mt-1 line-clamp-2 leading-relaxed">
+                          {notifMessage || "Notification message content..."}
+                        </div>
+                        <div className="text-[10px] font-bold text-[#3b5bdb] mt-2 flex items-center gap-1">
+                          <span>Target Action: {notifLink || "/"}</span>
+                          <span>→</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* In-App Bell Notification Card Preview */}
+                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                      In-App Bell Card Preview
+                    </div>
+                    <div className="flex gap-3 items-start border-l-4 border-l-[#3b5bdb] pl-3 py-1">
+                      <div className="w-9 h-9 rounded-full bg-blue-50 text-[#3b5bdb] font-black text-xs flex items-center justify-center flex-shrink-0">
+                        K
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-slate-900 truncate">
+                          {notifTitle || "Title"}
+                        </div>
+                        <div className="text-[11px] text-slate-600 mt-0.5 line-clamp-2">
+                          {notifMessage || "Message"}
+                        </div>
+                        <div className="mt-2 inline-block bg-[#3b5bdb]/10 text-[#3b5bdb] text-[10px] font-bold px-2.5 py-1 rounded-lg">
+                          View Now
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}                     </span>
                       <span className="text-slate-600">{">"}</span>
                     </div>
                   </div>
@@ -15628,6 +16041,19 @@ export default function App() {
       setViewingNotifications(false)
       const raw = notification.raw || notification
       const action = notification.actionText
+
+      if (raw?.link || raw?.actionUrl) {
+        const link = (raw.link || raw.actionUrl).toLowerCase()
+        if (link.includes("explore")) setActiveTab("explore")
+        else if (link.includes("gig") || link.includes("browse"))
+          setActiveTab("home")
+        else if (link.includes("event")) setActiveTab("events")
+        else if (link.includes("chat") || link.includes("message"))
+          setActiveTab("chat")
+        else if (link.includes("profile")) setActiveTab("profile")
+        else setActiveTab("home")
+        return
+      }
 
       if (
         action === "Open Chat" ||

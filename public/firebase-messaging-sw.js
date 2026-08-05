@@ -20,10 +20,37 @@ messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
   
   const notificationTitle = payload.notification?.title || "Kreator Kolkata";
+  const clickAction = payload.data?.click_action || payload.data?.link || '/';
   const notificationOptions = {
     body: payload.notification?.body || "",
     icon: payload.notification?.image || '/icon.png',
+    data: {
+      click_action: clickAction,
+      ...payload.data,
+    },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Handle notification click to focus tab or open link
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const clickAction = event.notification.data?.click_action || event.notification.data?.link || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(clickAction);
+          }
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(clickAction);
+      }
+    })
+  );
 });
