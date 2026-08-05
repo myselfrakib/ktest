@@ -2939,6 +2939,10 @@ function HomePage({
 
   const [localSearch, setLocalSearch] = useState("")
 
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [filterLocation, setFilterLocation] = useState("All")
+  const [filterBudget, setFilterBudget] = useState("All")
+
   const userAvatar =
     userProfile?.avatar ||
     userProfile?.logo ||
@@ -2950,11 +2954,30 @@ function HomePage({
     }
   }
 
+  const isGigExpired = (deadline: string): boolean => {
+    if (!deadline) return false
+    const parsed = new Date(deadline)
+    if (isNaN(parsed.getTime())) return false
+    // Gig expires at 00:00 of the day after deadline
+    const expiry = new Date(parsed)
+    expiry.setDate(expiry.getDate() + 1)
+    expiry.setHours(0, 0, 0, 0)
+    return new Date() >= expiry
+  }
+
+  const activeFilterCount =
+    (activeFilter !== "All Gigs" ? 1 : 0) +
+    (activeNiche !== "All" ? 1 : 0) +
+    (filterLocation !== "All" ? 1 : 0) +
+    (filterBudget !== "All" ? 1 : 0)
+
   const filteredGigs = gigs
     .filter((g) => {
+      // Remove expired gigs
+      if (isGigExpired((g as any).deadline || "")) return false
+
       const matchType =
         activeFilter === "All Gigs" ||
-        activeFilter === "Collab" ||
         g.type === activeFilter
 
       const matchNiche =
@@ -2962,7 +2985,21 @@ function HomePage({
         g.niche.includes(activeNiche) ||
         g.tags.includes(activeNiche)
 
-      return matchType && matchNiche
+      const matchLocation =
+        filterLocation === "All" ||
+        ((g as any).location || "").toLowerCase().includes(filterLocation.toLowerCase())
+
+      const matchBudget = (() => {
+        if (filterBudget === "All") return true
+        const budget = (g.budget || "").toLowerCase()
+        if (filterBudget === "Free / Barter") return g.type === "Barter" || g.type === "Collab"
+        if (filterBudget === "Under ₹10k") return budget.includes("₹") && !budget.includes("20,000") && !budget.includes("35,000") && !budget.includes("15,000")
+        if (filterBudget === "₹10k – ₹30k") return budget.includes("15,000") || budget.includes("20,000")
+        if (filterBudget === "₹30k+") return budget.includes("35,000")
+        return true
+      })()
+
+      return matchType && matchNiche && matchLocation && matchBudget
     })
     .sort((a, b) => {
       const aFeat = (a as any).isFeatured ? 1 : 0
@@ -3031,8 +3068,20 @@ function HomePage({
               className="flex-1 text-sm text-slate-700 placeholder:text-slate-400 outline-none bg-transparent font-medium"
             />
           </div>
-          <button className="w-12 h-12 rounded-2xl bg-[#3b5bdb] flex items-center justify-center text-white shadow-md shadow-blue-200">
+          <button
+            onClick={() => setShowFilterPanel(true)}
+            className={`relative w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md transition active:scale-95 ${
+              activeFilterCount > 0
+                ? "bg-[#f76707] shadow-orange-200"
+                : "bg-[#3b5bdb] shadow-blue-200"
+            }`}
+          >
             <FilterIcon />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-[#f76707] text-[9px] font-black rounded-full flex items-center justify-center border border-orange-200 shadow-sm">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -3169,6 +3218,122 @@ function HomePage({
           ))}
         </div>
       </div>
+
+      {/* Filter Panel Overlay */}
+      {showFilterPanel && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-40 backdrop-blur-[2px]"
+            onClick={() => setShowFilterPanel(false)}
+          />
+          <div className="fixed bottom-0 inset-x-0 max-w-[430px] mx-auto z-50 bg-white rounded-t-[28px] shadow-2xl border-t border-slate-100 flex flex-col max-h-[80vh]">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-slate-200 rounded-full" />
+            </div>
+            {/* Header */}
+            <div className="px-5 pt-3 pb-4 flex items-center justify-between border-b border-slate-100">
+              <div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Refine Search</div>
+                <div className="text-base font-black text-slate-900">Filter Gigs</div>
+              </div>
+              <button
+                onClick={() => { setActiveFilter("All Gigs"); setActiveNiche("All"); setFilterLocation("All"); setFilterBudget("All") }}
+                className="text-[11px] font-bold text-[#f76707] bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 cursor-pointer"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-6 scrollbar-hide">
+              {/* Type Filter */}
+              <div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Gig Type</div>
+                <div className="flex flex-wrap gap-2">
+                  {["All Gigs", "Paid", "Barter", "Collab"].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setActiveFilter(f)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        activeFilter === f
+                          ? "bg-[#3b5bdb] text-white shadow-md shadow-blue-200"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      {f === "Paid" ? "💰 Paid" : f === "Barter" ? "🔄 Barter" : f === "Collab" ? "🤝 Collab" : "✨ All Gigs"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Niche Filter */}
+              <div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Category / Niche</div>
+                <div className="flex flex-wrap gap-2">
+                  {["All", "Fashion", "Food", "Photography", "Video", "Wellness"].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setActiveNiche(n)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        activeNiche === n
+                          ? "bg-[#f76707] text-white shadow-sm"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Location Filter */}
+              <div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Location</div>
+                <div className="flex flex-wrap gap-2">
+                  {["All", "North Kolkata", "Park Street", "Salt Lake", "New Town"].map((loc) => (
+                    <button
+                      key={loc}
+                      onClick={() => setFilterLocation(loc)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        filterLocation === loc
+                          ? "bg-emerald-600 text-white shadow-sm"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      {loc === "All" ? "📍 All" : loc}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Budget Filter */}
+              <div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Budget Range</div>
+                <div className="flex flex-wrap gap-2">
+                  {["All", "Free / Barter", "Under ₹10k", "₹10k – ₹30k", "₹30k+"].map((b) => (
+                    <button
+                      key={b}
+                      onClick={() => setFilterBudget(b)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        filterBudget === b
+                          ? "bg-violet-600 text-white shadow-sm"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* Apply Button */}
+            <div className="px-5 py-4 border-t border-slate-100">
+              <button
+                onClick={() => setShowFilterPanel(false)}
+                className="w-full py-3.5 rounded-2xl bg-[#3b5bdb] text-white font-black text-sm shadow-lg shadow-blue-200 active:scale-[0.98] transition cursor-pointer"
+              >
+                Show {filteredGigs.length} Gig{filteredGigs.length !== 1 ? "s" : ""}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Gig Cards */}
       <div className="px-5 flex flex-col gap-3">
@@ -7172,7 +7337,7 @@ function ViewEventPage({
                   key={sp}
                   className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200/80 flex items-center gap-1.5"
                 >
-                  🎙️ {sp}
+                  {sp}
                 </span>
               ))
             ) : (
@@ -9509,7 +9674,7 @@ function ChatPage({
           </h1>
         </div>
         <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition border border-slate-100 cursor-pointer">
-          📝
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
         </button>
       </div>
       <div className="px-4 py-3 bg-white border-b border-slate-100 mb-2">
