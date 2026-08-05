@@ -44,6 +44,48 @@ import { getToken } from "firebase/messaging"
 
 const FCM_VAPID_KEY = "YOUR_FCM_VAPID_KEY" // Update this with your VAPID key from Firebase Console
 
+const INTRO_BLUE = "#2b4ef7"
+
+const SLIDES = [
+  {
+    id: 1,
+    tag: "01 — Welcome",
+    headline: "Let's Collab,",
+    headlineAccent: "Kolkata!",
+    sub: "Kolkata's first hyperlocal platform for creators, PR collabs, and brand deals — built by the city, for the city.",
+    img: "https://images.unsplash.com/photo-1766676219472-bafcced3b3f7?w=900&h=1200&fit=crop&auto=format&q=80",
+    alt: "Howrah Bridge at sunset",
+  },
+  {
+    id: 2,
+    tag: "02 — Community",
+    headline: "The City Is",
+    headlineAccent: "Your Team.",
+    sub: "From Park Street to New Town — every corner of Kolkata has a creator ready to collaborate with you.",
+    img: "https://images.unsplash.com/photo-1737391591935-b10cec322512?w=900&h=1200&fit=crop&auto=format&q=80",
+    alt: "Kolkata street community",
+  },
+  {
+    id: 3,
+    tag: "03 — Creators",
+    headline: "Find Your",
+    headlineAccent: "Crew.",
+    sub: "Photographers, stylists, writers, reels creators — find your people and make things happen together.",
+    img: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=900&h=1200&fit=crop&auto=format&q=80",
+    alt: "Creators collaborating",
+  },
+  {
+    id: 4,
+    tag: "04 — Growth",
+    headline: "Grow",
+    headlineAccent: "Together.",
+    sub: "Land real brand deals, paid gigs, and PR collabs. Build your name right here in Kolkata.",
+    img: "https://images.unsplash.com/photo-1782187859788-c00888c7e277?w=900&h=1200&fit=crop&auto=format&q=80",
+    alt: "Kolkata river at dawn",
+  },
+]
+
+
 
 const GIGS = [
   {
@@ -10580,74 +10622,6 @@ function PublicBrandProfilePage({
 }
 
 // ── Slidable Intro Pages ───────────────────────────────────────────────────
-
-const SLIDES = [
-  {
-    id: 1,
-
-    tag: "01 — Welcome",
-
-    headline: "Let's Collab,",
-
-    headlineAccent: "Kolkata!",
-
-    sub: "Kolkata's first hyperlocal platform for creators, PR collabs, and brand deals — built by the city, for the city.",
-
-    img: "https://images.unsplash.com/photo-1766676219472-bafcced3b3f7?w=900&h=1200&fit=crop&auto=format&q=80",
-
-    alt: "Howrah Bridge at sunset",
-  },
-
-  {
-    id: 2,
-
-    tag: "02 — Community",
-
-    headline: "The City Is",
-
-    headlineAccent: "Your Team.",
-
-    sub: "From Park Street to New Town — every corner of Kolkata has a creator ready to collaborate with you.",
-
-    img: "https://images.unsplash.com/photo-1737391591935-b10cec322512?w=900&h=1200&fit=crop&auto=format&q=80",
-
-    alt: "Kolkata street community",
-  },
-
-  {
-    id: 3,
-
-    tag: "03 — Creators",
-
-    headline: "Find Your",
-
-    headlineAccent: "Crew.",
-
-    sub: "Photographers, stylists, writers, reels creators — find your people and make things happen together.",
-
-    img: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=900&h=1200&fit=crop&auto=format&q=80",
-
-    alt: "Creators collaborating",
-  },
-
-  {
-    id: 4,
-
-    tag: "04 — Growth",
-
-    headline: "Grow",
-
-    headlineAccent: "Together.",
-
-    sub: "Land real brand deals, paid gigs, and PR collabs. Build your name right here in Kolkata.",
-
-    img: "https://images.unsplash.com/photo-1782187859788-c00888c7e277?w=900&h=1200&fit=crop&auto=format&q=80",
-
-    alt: "Kolkata river at dawn",
-  },
-]
-
-const INTRO_BLUE = "#2b4ef7"
 
 function SlideScreen({
   slide,
