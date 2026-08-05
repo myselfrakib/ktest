@@ -104,6 +104,8 @@ export function AdminDashboardPage({
     "Kreator Kolkata Community",
   )
   const [eventEntryFee, setEventEntryFee] = useState("Free RSVP")
+  const [eventIsPaid, setEventIsPaid] = useState<boolean>(false)
+  const [eventPrice, setEventPrice] = useState<string>("499")
   const [eventSpeakers, setEventSpeakers] = useState("")
   const [creatingEvent, setCreatingEvent] = useState(false)
 
@@ -291,6 +293,8 @@ export function AdminDashboardPage({
     setEventDescription("")
     setEventOrganizer("Kreator Kolkata Community")
     setEventEntryFee("Free RSVP")
+    setEventIsPaid(false)
+    setEventPrice("499")
     setEventSpeakers("")
     setZoom(1.0)
     setPanX(0)
@@ -380,7 +384,9 @@ export function AdminDashboardPage({
           eventDescription.trim() ||
           "Join Kolkata's premier creator networking meetup!",
         organizer: eventOrganizer.trim() || "Kreator Kolkata Community",
-        entryFee: eventEntryFee.trim() || "Free RSVP",
+        entryFee: eventIsPaid ? `₹${eventPrice}` : "Free RSVP",
+        isPaid: eventIsPaid,
+        price: eventIsPaid ? (Number(eventPrice) || 499) : 0,
         speakers:
           parsedSpeakers.length > 0
             ? parsedSpeakers
@@ -1492,6 +1498,56 @@ export function AdminDashboardPage({
                 className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none"
               />
             </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Registration Type
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEventIsPaid(false)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                    !eventIsPaid
+                      ? "bg-[#3b5bdb] text-white border-[#3b5bdb] shadow-xs"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  Free
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEventIsPaid(true)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                    eventIsPaid
+                      ? "bg-[#3b5bdb] text-white border-[#3b5bdb] shadow-xs"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  Paid
+                </button>
+              </div>
+            </div>
+            {eventIsPaid && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Registration Amount (₹ INR) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2 text-xs font-bold text-slate-500">
+                    ₹
+                  </span>
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    value={eventPrice}
+                    onChange={(e) => setEventPrice(e.target.value)}
+                    placeholder="499"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-800 outline-none font-bold"
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 Banner Image

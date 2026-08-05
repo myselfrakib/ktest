@@ -7151,6 +7151,20 @@ function ProfileSetupPage({
 
 // ── View Event Page ─────────────────────────────────────────────────────────
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true)
+      return
+    }
+    const script = document.createElement("script")
+    script.src = "https://checkout.razorpay.com/v1/checkout.js"
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
+
 function ViewEventPage({
   event,
 
@@ -7178,6 +7192,13 @@ function ViewEventPage({
 
   const isFeat = (event as any).isFeatured || false
 
+  const eventPriceVal = (event as any).price
+    ? Number((event as any).price)
+    : (event as any).entryFee && typeof (event as any).entryFee === "string" && (event as any).entryFee.includes("₹")
+      ? parseInt((event as any).entryFee.replace(/[^0-9]/g, ""), 10)
+      : 0
+  const isPaidEvent = (event as any).isPaid || eventPriceVal > 0
+
   const handleShare = () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href)
@@ -7194,10 +7215,42 @@ function ViewEventPage({
     setShowConfirmToast(true)
   }
 
-  const handleConfirmRegister = () => {
+  const handleConfirmRegister = async () => {
     setShowConfirmToast(false)
 
-    toggleRsvpEvent(event.id)
+    if (isPaidEvent && eventPriceVal > 0) {
+      const loaded = await loadRazorpayScript()
+      if (!loaded) {
+        alert("Failed to load Razorpay Payment Gateway. Please check your internet connection.")
+        return
+      }
+
+      const options = {
+        key: "rzp_test_KreatorKolkataKey",
+        amount: eventPriceVal * 100,
+        currency: "INR",
+        name: "Kreator Kolkata",
+        description: `Event Registration: ${event.title}`,
+        image: "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=120&h=120&fit=crop&auto=format",
+        handler: function (response: any) {
+          alert(`🎉 Payment Successful!\nPayment ID: ${response.razorpay_payment_id}\n\nYou are now registered for ${event.title}.`)
+          toggleRsvpEvent(event.id)
+        },
+        prefill: {
+          name: userProfile?.name || "Kreator Member",
+          email: userProfile?.email || "member@kreatorkolkata.com",
+          contact: "9876543210",
+        },
+        theme: {
+          color: "#3b5bdb",
+        },
+      }
+
+      const razorpayObj = new (window as any).Razorpay(options)
+      razorpayObj.open()
+    } else {
+      toggleRsvpEvent(event.id)
+    }
   }
 
   const speakers =
@@ -7211,7 +7264,7 @@ function ViewEventPage({
     (event as any).description ||
     "Join Kolkata's premier creator networking meetup! Connect with top lifestyle, food, and tech creators, meet hiring brand managers, and participate in exclusive collab pitch sessions."
 
-  const entryFee = (event as any).entryFee || "Free RSVP"
+  const entryFee = (event as any).entryFee || (isPaidEvent ? `₹${eventPriceVal}` : "Free RSVP")
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-32 bg-[#f8fafc]">
@@ -7418,7 +7471,11 @@ function ViewEventPage({
               : "bg-[#3b5bdb] text-white shadow-blue-200 hover:bg-[#2b4ef7] cursor-pointer"
           }`}
         >
-          {isRsvp ? "✓ Registered" : "Register Now 🎉"}
+          {isRsvp
+            ? "✓ Registered"
+            : isPaidEvent
+              ? `Register Now · ₹${eventPriceVal}`
+              : "Register Now 🎉"}
         </button>
       </div>
 
@@ -7435,14 +7492,15 @@ function ViewEventPage({
                   Confirm Registration
                 </div>
                 <div className="text-[10px] text-slate-500 font-medium mt-0.5">
-                  This action cannot be undone
+                  {isPaidEvent ? `Amount Payable: ₹${eventPriceVal}` : "This action cannot be undone"}
                 </div>
               </div>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed mb-4">
               Are you sure you want to register for{" "}
-              <span className="font-bold text-slate-900">"{event.title}"</span>?
-              Once registered, you cannot unregister.
+              <span className="font-bold text-slate-900">"{event.title}"</span>
+              {isPaidEvent ? ` for ₹${eventPriceVal}` : ""}?
+              {isPaidEvent ? " You will be redirected to Razorpay to complete your payment securely." : " Once registered, you cannot unregister."}
             </p>
             <div className="flex gap-3">
               <button
@@ -7455,7 +7513,7 @@ function ViewEventPage({
                 onClick={handleConfirmRegister}
                 className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-2xl shadow-lg shadow-blue-200 hover:bg-[#2b4ef7] transition cursor-pointer"
               >
-                Yes, Register Me ✓
+                {isPaidEvent ? `Pay ₹${eventPriceVal} & Register` : "Yes, Register Me ✓"}
               </button>
             </div>
           </div>
@@ -7869,7 +7927,11 @@ function ExplorePage({
                           : "bg-[#3b5bdb] text-white cursor-pointer"
                       }`}
                     >
-                      {isRsvp ? "✓ Registered" : "Register Now"}
+                      {isRsvp
+                        ? "✓ Registered"
+                        : (event as any).isPaid || (event as any).price
+                          ? `Register Now · ₹${(event as any).price}`
+                          : "Register Now"}
                     </button>
                   </div>
                 )
@@ -8314,7 +8376,11 @@ function ExplorePage({
                               : "bg-white text-slate-800 cursor-pointer"
                           }`}
                         >
-                          {isRsvp ? "✓ Registered" : "Register Now"}
+                          {isRsvp
+                            ? "✓ Registered"
+                            : (event as any).isPaid || (event as any).price
+                              ? `Register Now · ₹${(event as any).price}`
+                              : "Register Now"}
                         </button>
                       </div>
                       <div>
@@ -8685,7 +8751,11 @@ function ExplorePage({
                           : "bg-white text-slate-800 hover:bg-slate-50 cursor-pointer"
                       }`}
                     >
-                      {isRsvp ? "✓ Registered" : "Register Now"}
+                      {isRsvp
+                        ? "✓ Registered"
+                        : (event as any).isPaid || (event as any).price
+                          ? `Register Now · ₹${(event as any).price}`
+                          : "Register Now"}
                     </button>
                   </div>
 

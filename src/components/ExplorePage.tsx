@@ -379,7 +379,11 @@ export function ExplorePage({
                             : "bg-[#3b5bdb] text-white cursor-pointer"
                         }`}
                       >
-                        {isRsvp ? "✓ Registered" : "Register Now"}
+                        {isRsvp
+                          ? "✓ Registered"
+                          : (event as any).isPaid || (event as any).price
+                            ? `Register Now · ₹${(event as any).price}`
+                            : "Register Now"}
                       </button>
                     </div>
                   )

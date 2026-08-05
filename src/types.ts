@@ -75,6 +75,8 @@ export interface Event {
   entryFee: string
   speakers?: string[]
   isFeatured?: boolean
+  isPaid?: boolean
+  price?: number | string
 }
 
 export interface ChatMessage {
