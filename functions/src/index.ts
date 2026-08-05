@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions"
 import * as admin from "firebase-admin"
 import axios from "axios"
+import { onDocumentCreated } from "firebase-functions/v2/firestore"
 
 admin.initializeApp()
 const db = admin.firestore()
@@ -364,3 +365,81 @@ export const instagramDeleteData = functions.https.onRequest(
     }
   },
 )
+
+export const onNotificationCreated = onDocumentCreated("notifications/{notificationId}", async (event) => {
+  const snap = event.data
+  if (!snap) return
+  const notification = snap.data()
+  if (!notification) return
+
+  const recipientUid = notification.recipientUid
+  if (!recipientUid) {
+    console.log("No recipientUid found on notification:", snap.id)
+    return
+  }
+
+  try {
+    const tokenDoc = await admin.firestore().collection("fcmTokens").doc(recipientUid).get()
+    if (!tokenDoc.exists) {
+      console.log(`No FCM tokens registered for user: ${recipientUid}`)
+      return
+    }
+
+    const tokenData = tokenDoc.data()
+    const tokens: string[] = tokenData?.tokens || []
+    if (tokens.length === 0) {
+      console.log(`FCM tokens array is empty for user: ${recipientUid}`)
+      return
+    }
+
+    const messageTitle = notification.title || "Kreator Kolkata"
+    const messageBody = notification.message || ""
+    const messageImage = notification.senderAvatar || ""
+
+    const payload = {
+      notification: {
+        title: messageTitle,
+        body: messageBody,
+        ...(messageImage ? { image: messageImage } : {}),
+      },
+      data: {
+        notificationId: snap.id,
+        type: notification.type || "general",
+        click_action: "/messages",
+      },
+    }
+
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens: tokens,
+      notification: payload.notification,
+      data: payload.data,
+    })
+
+    console.log(
+      `Successfully sent ${response.successCount} push notifications to user ${recipientUid}. Failed: ${response.failureCount}`
+    )
+
+    const invalidTokens: string[] = []
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success && resp.error) {
+        const code = resp.error.code
+        if (
+          code === "messaging/invalid-registration-token" ||
+          code === "messaging/registration-token-not-registered"
+        ) {
+          invalidTokens.push(tokens[idx])
+        }
+      }
+    })
+
+    if (invalidTokens.length > 0) {
+      console.log(`Cleaning up ${invalidTokens.length} expired/invalid FCM tokens for user ${recipientUid}`)
+      await admin.firestore().collection("fcmTokens").doc(recipientUid).update({
+        tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+      })
+    }
+  } catch (error) {
+    console.error("Error sending FCM notification:", error)
+  }
+})
+

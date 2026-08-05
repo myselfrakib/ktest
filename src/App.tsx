@@ -33,7 +33,11 @@ import {
 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
-import { auth, db, storage } from "./firebase"
+import { auth, db, storage, messaging } from "./firebase"
+import { getToken } from "firebase/messaging"
+
+const FCM_VAPID_KEY = "YOUR_FCM_VAPID_KEY" // Update this with your VAPID key from Firebase Console
+
 
 const GIGS = [
   {
@@ -14135,6 +14139,53 @@ export default function App() {
     }
   }
 
+  const setupFCM = async (userId: string) => {
+    if (
+      typeof window === "undefined" ||
+      !("serviceWorker" in navigator) ||
+      !("Notification" in window)
+    ) {
+      console.warn("FCM: Notifications or service workers are not supported by this browser.")
+      return
+    }
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== "granted") {
+        console.warn("FCM: Notification permission denied.")
+        return
+      }
+
+      if (!messaging) {
+        console.warn("FCM: Messaging service is not initialized.")
+        return
+      }
+
+      const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js")
+
+      const token = await getToken(messaging, {
+        serviceWorkerRegistration: registration,
+        vapidKey: FCM_VAPID_KEY === "YOUR_FCM_VAPID_KEY" ? undefined : FCM_VAPID_KEY,
+      })
+
+      if (token) {
+        const tokenRef = doc(db, "fcmTokens", userId)
+        await setDoc(
+          tokenRef,
+          {
+            tokens: arrayUnion(token),
+            updatedAt: new Date().toISOString(),
+          },
+          { merge: true },
+        )
+        console.log("FCM: Token registered successfully:", token)
+      } else {
+        console.warn("FCM: No registration token available.")
+      }
+    } catch (err) {
+      console.error("FCM: Error setting up FCM:", err)
+    }
+  }
+
   // Auth State changed hook
 
   useEffect(() => {
@@ -14148,6 +14199,7 @@ export default function App() {
       unsubs = []
 
       if (user) {
+        setupFCM(user.uid)
         // Subscribe to real-time conversations
         const qConvos = query(
           collection(db, "conversations"),
