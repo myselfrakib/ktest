@@ -7809,9 +7809,8 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        if (!isRsvp) toggleRsvpEvent(event.id)
+                        onSelectEvent && onSelectEvent(event)
                       }}
-                      disabled={isRsvp}
                       className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition ${
                         isRsvp
                           ? "bg-emerald-50 text-emerald-600 cursor-default"
@@ -8255,9 +8254,8 @@ function ExplorePage({
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            if (!isRsvp) toggleRsvpEvent(event.id)
+                            onSelectEvent && onSelectEvent(event)
                           }}
-                          disabled={isRsvp}
                           className={`text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md active:scale-95 transition ${
                             isRsvp
                               ? "bg-emerald-100 text-emerald-700 cursor-default"
@@ -8627,9 +8625,8 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        if (!isRsvp) toggleRsvpEvent(event.id)
+                        onSelectEvent && onSelectEvent(event)
                       }}
-                      disabled={isRsvp}
                       className={`text-[10px] font-bold px-3.5 py-1.5 rounded-full shadow-md active:scale-95 transition ${
                         isRsvp
                           ? "bg-emerald-500/20 backdrop-blur-md text-emerald-300 border border-emerald-500/30 cursor-default"
