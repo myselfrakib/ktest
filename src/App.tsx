@@ -9644,90 +9644,12 @@ function PublicProfilePage({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const getPortfolioItems = (id: number) => {
-    const galleries: Record<number, string[]> = {
-      1: [
-        "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=300&h=300&fit=crop&auto=format",
-      ],
-
-      2: [
-        "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=300&h=300&fit=crop&auto=format",
-      ],
-
-      3: [
-        "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=300&fit=crop&auto=format",
-      ],
-
-      4: [
-        "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&h=300&fit=crop&auto=format",
-      ],
-
-      5: [
-        "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?w=300&h=300&fit=crop&auto=format",
-      ],
-
-      6: [
-        "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=300&h=300&fit=crop&auto=format",
-
-        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&h=300&fit=crop&auto=format",
-      ],
-    }
-
-    return galleries[id] || galleries[1]
+  const getPortfolioItems = (id: number): string[] => {
+    return []
   }
 
-  const getReviews = (name: string) => {
-    return [
-      {
-        id: 1,
-        author: "Rang Bahar Textiles",
-        rating: 5,
-        text: `Absolute pleasure collaborating with ${name}. Content was high-quality and delivered on time!`,
-        date: "1 month ago",
-      },
-
-      {
-        id: 2,
-        author: "The Calcutta Table",
-        rating: 5,
-        text: `Great engagement on the post. Highly recommend collaborating!`,
-        date: "2 months ago",
-      },
-    ]
+  const getReviews = (name: string): any[] => {
+    return []
   }
 
   const livePortfolio =
@@ -9903,50 +9825,68 @@ function PublicProfilePage({
       </div>
 
       {activeTab === "portfolio" && (
-        <div className="grid grid-cols-3 gap-2 px-5">
-          {livePortfolio.map((img: string, i: number) => (
-            <div
-              key={i}
-              onClick={() => setActivePhotoViewerIndex(i)}
-              className="aspect-[3/4] bg-slate-200 rounded-2xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer active:opacity-90 transition duration-150"
-            >
-              <img
-                src={img}
-                alt="portfolio item"
-                className="w-full h-full object-cover"
-              />
+        <div className="w-full">
+          {livePortfolio.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2 px-5">
+              {livePortfolio.map((img: string, i: number) => (
+                <div
+                  key={i}
+                  onClick={() => setActivePhotoViewerIndex(i)}
+                  className="aspect-[3/4] bg-slate-200 rounded-2xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer active:opacity-90 transition duration-150"
+                >
+                  <img
+                    src={img}
+                    alt="portfolio item"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-14 text-center px-5">
+              <div className="text-3xl mb-3">📷</div>
+              <div className="text-sm font-bold text-slate-700 mb-1">No portfolio items</div>
+              <div className="text-xs text-slate-400">This creator hasn't uploaded any portfolio images yet.</div>
+            </div>
+          )}
         </div>
       )}
 
       {activeTab === "reviews" && (
         <div className="px-5 flex flex-col gap-3">
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm flex flex-col gap-2"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">
-                  {review.author}
-                </span>
-                <span className="text-[9px] text-slate-400 font-semibold">
-                  {review.date}
-                </span>
-              </div>
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span key={star} className="text-amber-400 text-xs">
-                    ★
+          {reviews.length > 0 ? (
+            reviews.map((review) => (
+              <div
+                key={review.id}
+                className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm flex flex-col gap-2"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800">
+                    {review.author}
                   </span>
-                ))}
+                  <span className="text-[9px] text-slate-400 font-semibold">
+                    {review.date}
+                  </span>
+                </div>
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span key={star} className="text-amber-400 text-xs">
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  {review.text}
+                </p>
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                {review.text}
-              </p>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-14 text-center">
+              <div className="text-3xl mb-3">⭐</div>
+              <div className="text-sm font-bold text-slate-700 mb-1">No reviews yet</div>
+              <div className="text-xs text-slate-400">Reviews from brands and collaborators will appear here.</div>
             </div>
-          ))}
+          )}
         </div>
       )}
 
