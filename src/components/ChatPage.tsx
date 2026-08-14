@@ -268,8 +268,9 @@ export function ChatPage({
       ? activeMessages
       : activeChat?.messages || []
     return (
-      <div className="flex-1 bg-slate-50 flex flex-col h-screen relative">
-        <div className="px-4 pt-12 pb-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+      <div className="flex-1 bg-slate-50 flex flex-col h-[100dvh] relative overflow-hidden">
+        {/* Header (Constant Topbar) */}
+        <div className="px-4 pt-12 pb-3 bg-white border-b border-slate-100 flex items-center justify-between absolute top-0 inset-x-0 z-20 shadow-xs">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => {
@@ -331,7 +332,8 @@ export function ChatPage({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3.5 pb-24 scrollbar-hide">
+        {/* Message Thread List (Scrollable Area) */}
+        <div className="flex-1 overflow-y-auto px-4 pt-[104px] pb-[96px] flex flex-col gap-3.5 scrollbar-hide">
           {messagesToRender.map((msg: any) => {
             const isMe = activeConvoId
               ? msg.senderId === currentUser?.uid
@@ -368,7 +370,8 @@ export function ChatPage({
           })}
         </div>
 
-        <div className="absolute bottom-0 inset-x-0 bg-white border-t border-slate-100 px-4 py-3 flex items-center gap-2 z-10 shadow-lg">
+        {/* Message Input Panel (Constant Bottom Input) */}
+        <div className="absolute bottom-0 inset-x-0 bg-white border-t border-slate-100 px-4 py-4 pb-6 flex items-center gap-2 z-20 shadow-md">
           <input
             type="text"
             placeholder="Type a message..."
