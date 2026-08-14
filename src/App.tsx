@@ -3235,7 +3235,9 @@ function HomePage({
                 onClick={() => setShowFilterPanel(false)}
                 className="w-full py-3.5 rounded-2xl bg-[#3b5bdb] text-white font-black text-sm shadow-lg shadow-blue-200 active:scale-[0.98] transition cursor-pointer"
               >
-                Show {filteredGigs.length} Gig{filteredGigs.length !== 1 ? "s" : ""}
+                {activeNiche === "All" && filterLocation === "All" && filterBudget === "All"
+                  ? "Show Gigs"
+                  : `Show ${filteredGigs.length} Gig${filteredGigs.length !== 1 ? "s" : ""}`}
               </button>
             </div>
           </div>
