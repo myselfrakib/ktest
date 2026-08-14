@@ -3508,7 +3508,6 @@ function PostGigPage({
 
   const [brand, setBrand] = useState(userProfile?.name || "")
 
-  const [contactMode, setContactMode] = useState("")
 
   const [minFollowers, setMinFollowers] = useState("")
 
@@ -4183,26 +4182,6 @@ function PostGigPage({
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-700 mb-1.5 block">
-                    Preferred Contact
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {["In-App Chat", "Instagram DM", "WhatsApp"].map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setContactMode(c)}
-                        className={`py-2.5 px-2 rounded-xl text-[11px] font-bold border transition text-center ${
-                          contactMode === c
-                            ? "bg-[#3b5bdb] text-white border-[#3b5bdb]"
-                            : "bg-slate-50 text-slate-500 border-slate-200"
-                        }`}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 mb-1.5 block">
                     Brand / Company Name{" "}
                     <span className="text-slate-400 font-normal">
                       (optional)
@@ -4445,101 +4424,13 @@ function GigPostedSuccess({
 
 // ── Profile Page ───────────────────────────────────────────────────────────
 
-const MY_POSTED_GIGS: Gig[] = [
-  {
-    ...GIGS[0],
+const MY_POSTED_GIGS: Gig[] = []
 
-    id: 101,
+const SAVED_GIGS_DATA: Gig[] = []
 
-    title: "Brand Collab for Ethnic Fashion Launch",
+const PORTFOLIO_ITEMS: Array<{ id: number; img: string; likes: string }> = []
 
-    type: "Paid",
-
-    budget: "₹8,000 – ₹15,000",
-
-    applicants: 12,
-  },
-
-  {
-    ...GIGS[1],
-
-    id: 102,
-
-    title: "Looking for Lifestyle Photographer",
-
-    type: "Barter",
-
-    budget: "Products + Credit",
-
-    applicants: 4,
-  },
-]
-
-const SAVED_GIGS_DATA = [GIGS[1], GIGS[4]]
-
-const PORTFOLIO_ITEMS = [
-  {
-    id: 1,
-    img: "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=200&h=200&fit=crop&auto=format",
-    likes: "2.1K",
-  },
-
-  {
-    id: 2,
-    img: "https://images.unsplash.com/photo-1648440108249-30567222448a?w=200&h=200&fit=crop&auto=format",
-    likes: "3.8K",
-  },
-
-  {
-    id: 3,
-    img: "https://images.unsplash.com/photo-1661061968438-97ab151ac32e?w=200&h=200&fit=crop&auto=format",
-    likes: "1.5K",
-  },
-
-  {
-    id: 4,
-    img: "https://images.unsplash.com/photo-1650477574222-ea46446ef5b2?w=200&h=200&fit=crop&auto=format",
-    likes: "4.2K",
-  },
-
-  {
-    id: 5,
-    img: "https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=200&h=200&fit=crop&auto=format",
-    likes: "980",
-  },
-
-  {
-    id: 6,
-    img: "https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=200&h=200&fit=crop&auto=format",
-    likes: "2.7K",
-  },
-]
-
-const REVIEWS = [
-  {
-    name: "Rang Bahar Textiles",
-    avatar: "🧵",
-    text: "Priya was professional, creative, and delivered ahead of deadline. Highly recommend!",
-    rating: 5,
-    date: "Jul 2026",
-  },
-
-  {
-    name: "Souvik Chatterjee",
-    avatar: "🎬",
-    text: "Great energy and super easy to work with. The reels got amazing engagement.",
-    rating: 5,
-    date: "Jun 2026",
-  },
-
-  {
-    name: "The Calcutta Table",
-    avatar: "🍽️",
-    text: "Really authentic content. Our restaurant saw a 30% spike in footfall that week.",
-    rating: 4,
-    date: "May 2026",
-  },
-]
+const REVIEWS: Array<{ name: string; avatar: string; text: string; rating: number; date: string }> = []
 
 function StarIcon({ filled }: { filled: boolean }) {
   return (
@@ -5900,7 +5791,7 @@ function ProfilePage({
                     createdAt: new Date().toISOString(),
                   }
                   const currentList =
-                    userProfile?.portfolioItems || PORTFOLIO_ITEMS
+                    userProfile?.portfolioItems || []
                   const updatedList = [newItem, ...currentList]
                   const docCollection =
                     userRole === "brand" ? "brands" : "creators"
@@ -6026,40 +5917,6 @@ function ProfilePage({
       {/* Saved Gigs */}
       {activeSection === "saved" && (
         <div className="px-5 flex flex-col gap-3">
-          {SAVED_GIGS_DATA.map((gig) => (
-            <div
-              key={gig.id}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3"
-            >
-              <img
-                src={gig.avatar}
-                alt={gig.creatorName}
-                className="w-12 h-12 rounded-full object-cover border-2 border-[#e8edff] flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-slate-900 truncate">
-                  {gig.title}
-                </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}
-                  >
-                    {gig.type}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium truncate">
-                    {formatBudget(gig.budget, gig.type)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 mt-0.5 text-[10px] text-[#e4405f] font-bold">
-                  <InstagramIcon />
-                  {gig.followers}
-                </div>
-              </div>
-              <button className="flex-shrink-0">
-                <BookmarkIcon filled={true} />
-              </button>
-            </div>
-          ))}
           {SAVED_GIGS_DATA.length === 0 && (
             <div className="text-center py-10 text-slate-400 text-sm font-medium">
               No saved gigs yet
@@ -6067,67 +5924,75 @@ function ProfilePage({
           )}
         </div>
       )}
-
       {/* Reviews */}
       {activeSection === "reviews" && (
         <div className="px-5 flex flex-col gap-3">
-          <div className="bg-[#3b5bdb] rounded-2xl p-4 flex items-center gap-4 shadow-md">
-            <div className="text-center">
-              <div className="text-4xl font-black text-white leading-none">
-                4.9
-              </div>
-              <div className="flex gap-0.5 justify-center mt-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <StarIcon key={i} filled={i <= 5} />
-                ))}
-              </div>
-              <div className="text-white/60 text-[10px] font-medium mt-1">
-                3 reviews
-              </div>
-            </div>
-            <div className="flex-1">
-              {[5, 4, 3, 2, 1].map((star) => (
-                <div key={star} className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] text-white/60 w-2">{star}</span>
-                  <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-white rounded-full"
-                      style={{
-                        width: star === 5 ? "80%" : star === 4 ? "20%" : "0%",
-                      }}
-                    />
+          {REVIEWS.length > 0 ? (
+            <>
+              <div className="bg-[#3b5bdb] rounded-2xl p-4 flex items-center gap-4 shadow-md">
+                <div className="text-center">
+                  <div className="text-4xl font-black text-white leading-none">
+                    {(REVIEWS.reduce((sum, r) => sum + r.rating, 0) / REVIEWS.length).toFixed(1)}
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {REVIEWS.map((r, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100"
-            >
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-9 h-9 rounded-full bg-[#e8edff] flex items-center justify-center text-lg flex-shrink-0">
-                  {r.avatar}
+                  <div className="flex gap-0.5 justify-center mt-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <StarIcon key={i} filled={i <= Math.round(REVIEWS.reduce((sum, r) => sum + r.rating, 0) / REVIEWS.length)} />
+                    ))}
+                  </div>
+                  <div className="text-white/60 text-[10px] font-medium mt-1">
+                    {REVIEWS.length} {REVIEWS.length === 1 ? "review" : "reviews"}
+                  </div>
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-bold text-slate-900">
-                    {r.name}
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-medium">
-                    {r.date}
-                  </div>
-                </div>
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <StarIcon key={i} filled={i <= r.rating} />
+                  {[5, 4, 3, 2, 1].map((star) => (
+                    <div key={star} className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] text-white/60 w-2">{star}</span>
+                      <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-white rounded-full"
+                          style={{
+                            width: `${Math.round((REVIEWS.filter(r => r.rating === star).length / REVIEWS.length) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed">{r.text}</p>
+              {REVIEWS.map((r, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100"
+                >
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-9 h-9 rounded-full bg-[#e8edff] flex items-center justify-center text-lg flex-shrink-0">
+                      {r.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-slate-900">
+                        {r.name}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-medium">
+                        {r.date}
+                      </div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <StarIcon key={i} filled={i <= r.rating} />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">{r.text}</p>
+                </div>
+              ))}
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-14 text-center">
+              <div className="text-3xl mb-3">⭐</div>
+              <div className="text-sm font-bold text-slate-700 mb-1">No reviews yet</div>
+              <div className="text-xs text-slate-400">Reviews from brands and collaborators will appear here.</div>
             </div>
-          ))}
+          )}
         </div>
       )}
 
