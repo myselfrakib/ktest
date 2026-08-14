@@ -1812,7 +1812,7 @@ function ApplyPage({
             ) : (
               <button
                 onClick={() => setStep("form")}
-                className="w-full bg-[#3b5bdb] text-white font-bold py-4 rounded-2xl shadow-md shadow-blue-200 text-base"
+                className="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-base"
               >
                 Apply for this Gig ↗
               </button>
