@@ -4838,6 +4838,9 @@ function ProfilePage({
 
   const [showLogoutToast, setShowLogoutToast] = useState(false)
 
+  const [deletingGig, setDeletingGig] = useState<Gig | null>(null)
+  const [deleteSuccessToast, setDeleteSuccessToast] = useState<string | null>(null)
+
   // Edit Gig State
 
   const [editingGig, setEditingGig] = useState<Gig | null>(null)
@@ -5423,6 +5426,61 @@ function ProfilePage({
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
+      {/* Custom delete confirmation modal */}
+      {deletingGig && (
+        <div className="fixed inset-0 z-55 bg-black/60 backdrop-blur-sm flex items-center justify-center p-5 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 text-lg">⚠️</span>
+              <div className="text-left">
+                <h3 className="text-sm font-black text-slate-900">Delete Gig Campaign</h3>
+                <p className="text-[11px] text-slate-400 font-semibold">Are you sure you want to delete this campaign?</p>
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 font-medium text-left">
+              {deletingGig.title}
+            </div>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setDeletingGig(null)}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition cursor-pointer active:scale-95 border-none"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await deleteDoc(doc(db, "gigs", String(deletingGig.id)))
+                    // Also delete related applications
+                    const qApps = query(collection(db, "applications"), where("gigId", "==", deletingGig.id))
+                    const snapApps = await getDocs(qApps)
+                    const appDeletions = snapApps.docs.map(d => deleteDoc(d.ref))
+                    await Promise.all(appDeletions)
+                    
+                    const title = deletingGig.title
+                    setDeletingGig(null)
+                    // Show a simple success toast
+                    setDeleteSuccessToast(title)
+                    setTimeout(() => setDeleteSuccessToast(null), 3000)
+                  } catch (err: any) {
+                    alert(err.message || "Failed to delete gig campaign")
+                  }
+                }}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl shadow-md shadow-red-100 transition cursor-pointer active:scale-95 border-none"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete success toast */}
+      {deleteSuccessToast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-55 bg-slate-900 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
+          <span>🗑️</span> Campaign deleted successfully!
+        </div>
+      )}
       {/* Hero banner */}
       <div className="relative">
         <div
@@ -5860,6 +5918,12 @@ function ProfilePage({
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => setDeletingGig(g)}
+                      className="text-xs font-bold text-red-500 border border-red-200 hover:bg-rose-50 px-2.5 py-1.5 rounded-xl transition cursor-pointer active:scale-95"
+                    >
+                      Delete
+                    </button>
                     <button
                       onClick={() => onViewGig && onViewGig(g, "edit")}
                       className="text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition cursor-pointer"
