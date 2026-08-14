@@ -3576,6 +3576,18 @@ function PostGigPage({
 
     if (!location) e.location = "Select a location"
 
+    if (!deadline) {
+      e.deadline = "Please select an application deadline"
+    } else {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const selDate = new Date(deadline)
+      selDate.setHours(0, 0, 0, 0)
+      if (selDate < today) {
+        e.deadline = "Deadline cannot be in the past"
+      }
+    }
+
     return e
   }
 
@@ -4051,9 +4063,20 @@ function PostGigPage({
                   <input
                     type="date"
                     value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-700 outline-none focus:border-[#3b5bdb] transition"
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => {
+                      setDeadline(e.target.value)
+                      setErrors((p) => ({ ...p, deadline: "" }))
+                    }}
+                    className={`w-full bg-slate-50 border ${
+                      errors.deadline ? "border-red-400 focus:border-red-400" : "border-slate-200 focus:border-[#3b5bdb]"
+                    } rounded-2xl px-4 py-3 text-sm text-slate-700 outline-none transition`}
                   />
+                  {errors.deadline && (
+                    <span className="text-[10px] font-bold text-red-500 mt-1 block">
+                      {errors.deadline}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-700 mb-2 block">
