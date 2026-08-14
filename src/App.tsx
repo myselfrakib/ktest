@@ -11675,6 +11675,101 @@ function stopCallRingtone() {
   }
 }
 
+// --- URL routing (hash-based) -------------------------------------------
+// Mirrors the existing `routeState` object (previously sessionStorage-only)
+// into window.location.hash so every screen is a real, shareable,
+// bookmarkable, back-button-aware URL, e.g. #/gigs?selectedGigId=3
+// This does not touch any component's JSX, props, or styling.
+
+type RouteState = {
+  activeTab: string
+  selectedGigId: number | null
+  selectedEventId: number | null
+  selectedCreatorName: string | null
+  selectedBrandName: string | null
+  selectedMyGigId: number | null
+  selectedMyGigTab: "applicants" | "edit"
+  posting: boolean
+  viewingNotifications: boolean
+  activeChatId: number | null
+  adminViewMode: "dashboard" | "platform"
+  exploreFilter: "all" | "creators" | "brands" | "gigs" | "events"
+}
+
+const ROUTE_QUERY_KEYS: (keyof RouteState)[] = [
+  "selectedGigId",
+  "selectedEventId",
+  "selectedCreatorName",
+  "selectedBrandName",
+  "selectedMyGigId",
+  "selectedMyGigTab",
+  "posting",
+  "viewingNotifications",
+  "activeChatId",
+  "adminViewMode",
+  "exploreFilter",
+]
+
+// Changing one of these represents a real "page" change — pushes a new
+// history entry so the back button steps through app screens. Everything
+// else (filters, sub-tabs) just updates the current URL in place.
+const ROUTE_NAV_KEYS: (keyof RouteState)[] = [
+  "activeTab",
+  "selectedGigId",
+  "selectedEventId",
+  "selectedCreatorName",
+  "selectedBrandName",
+  "selectedMyGigId",
+  "posting",
+  "viewingNotifications",
+  "activeChatId",
+]
+
+function routeToHash(route: RouteState): string {
+  const params = new URLSearchParams()
+  ROUTE_QUERY_KEYS.forEach((key) => {
+    const value = route[key]
+    if (value === null || value === undefined || value === false) return
+    params.set(key, String(value))
+  })
+  const query = params.toString()
+  return "#/" + (route.activeTab || "home") + (query ? "?" + query : "")
+}
+
+function hashToRoute(): Partial<RouteState> | null {
+  const hash = window.location.hash
+  if (!hash || hash === "#" || hash === "#/") return null
+
+  const [pathPart, queryPart] = hash.slice(2).split("?")
+  const params = new URLSearchParams(queryPart || "")
+  const parsed: Partial<RouteState> = {}
+
+  if (pathPart) parsed.activeTab = pathPart
+  if (params.has("selectedGigId"))
+    parsed.selectedGigId = Number(params.get("selectedGigId"))
+  if (params.has("selectedEventId"))
+    parsed.selectedEventId = Number(params.get("selectedEventId"))
+  if (params.has("selectedCreatorName"))
+    parsed.selectedCreatorName = params.get("selectedCreatorName")
+  if (params.has("selectedBrandName"))
+    parsed.selectedBrandName = params.get("selectedBrandName")
+  if (params.has("selectedMyGigId"))
+    parsed.selectedMyGigId = Number(params.get("selectedMyGigId"))
+  if (params.has("selectedMyGigTab"))
+    parsed.selectedMyGigTab = params.get("selectedMyGigTab") as "applicants" | "edit"
+  if (params.has("posting")) parsed.posting = params.get("posting") === "true"
+  if (params.has("viewingNotifications"))
+    parsed.viewingNotifications = params.get("viewingNotifications") === "true"
+  if (params.has("activeChatId"))
+    parsed.activeChatId = Number(params.get("activeChatId"))
+  if (params.has("adminViewMode"))
+    parsed.adminViewMode = params.get("adminViewMode") as "dashboard" | "platform"
+  if (params.has("exploreFilter"))
+    parsed.exploreFilter = params.get("exploreFilter") as RouteState["exploreFilter"]
+
+  return parsed
+}
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
@@ -11760,6 +11855,12 @@ export default function App() {
 
   const getInitialRouteState = () => {
     try {
+      const fromHash = hashToRoute()
+
+      if (fromHash) return fromHash
+    } catch (e) {}
+
+    try {
       const saved = sessionStorage.getItem("kreator_route")
 
       if (saved) return JSON.parse(saved)
@@ -11769,6 +11870,14 @@ export default function App() {
   }
 
   const savedRoute = useRef(getInitialRouteState())
+
+  // True for one render right after a browser/Android back-forward change,
+  // so the sync effect doesn't push a duplicate history entry.
+  const isPopStateUpdate = useRef(false)
+
+  // Last-seen "which page am I on" signature, used to decide whether a
+  // route change should push a new history entry or just replace the URL.
+  const lastNavSignature = useRef<string | null>(null)
 
   const [activeTab, setActiveTab] = useState(
     savedRoute.current?.activeTab || "home",
@@ -12767,7 +12876,7 @@ export default function App() {
   // Route state synchronizer effect
 
   useEffect(() => {
-    const routeState = {
+    const routeState: RouteState = {
       activeTab,
 
       selectedGigId: selectedGigId,
@@ -12796,6 +12905,39 @@ export default function App() {
     try {
       sessionStorage.setItem("kreator_route", JSON.stringify(routeState))
     } catch (e) {}
+
+    const hash = routeToHash(routeState)
+    const navSignature = ROUTE_NAV_KEYS.map((key) => String(routeState[key])).join(
+      "|",
+    )
+
+    try {
+      if (isPopStateUpdate.current) {
+        // This change came from the back/forward button — the history
+        // entry already exists, just keep the URL text in sync.
+        isPopStateUpdate.current = false
+        lastNavSignature.current = navSignature
+
+        if (window.location.hash !== hash) {
+          window.history.replaceState(null, "", hash)
+        }
+      } else if (lastNavSignature.current === null) {
+        // First render — establish the base history entry without
+        // pushing (avoids an extra back-button stop on app load).
+        lastNavSignature.current = navSignature
+
+        window.history.replaceState(null, "", hash)
+      } else if (navSignature !== lastNavSignature.current) {
+        // A real page changed (tab, opened gig/chat/profile, etc.) —
+        // push so the back button can return to the previous screen.
+        lastNavSignature.current = navSignature
+
+        window.history.pushState(null, "", hash)
+      } else if (window.location.hash !== hash) {
+        // Only filters/sub-tabs changed — update the URL in place.
+        window.history.replaceState(null, "", hash)
+      }
+    } catch (e) {}
   }, [
     activeTab,
     selectedGigId,
@@ -12810,6 +12952,35 @@ export default function App() {
     adminViewMode,
     exploreFilter,
   ])
+
+  // Browser / Android back-forward navigation
+
+  useEffect(() => {
+    const onPopState = () => {
+      const parsed = hashToRoute()
+
+      if (!parsed) return
+
+      isPopStateUpdate.current = true
+
+      if (parsed.activeTab !== undefined) setActiveTab(parsed.activeTab)
+      setSelectedGigId(parsed.selectedGigId ?? null)
+      setSelectedEventId(parsed.selectedEventId ?? null)
+      setSelectedCreatorName(parsed.selectedCreatorName ?? null)
+      setSelectedBrandName(parsed.selectedBrandName ?? null)
+      setSelectedMyGigId(parsed.selectedMyGigId ?? null)
+      if (parsed.selectedMyGigTab) setSelectedMyGigTab(parsed.selectedMyGigTab)
+      setPosting(parsed.posting ?? false)
+      setViewingNotifications(parsed.viewingNotifications ?? false)
+      setActiveChatId(parsed.activeChatId ?? null)
+      if (parsed.adminViewMode) setAdminViewMode(parsed.adminViewMode)
+      if (parsed.exploreFilter) setExploreFilter(parsed.exploreFilter)
+    }
+
+    window.addEventListener("popstate", onPopState)
+
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
 
   const handleOpenEventsTab = () => {
     setExploreFilter("events")
