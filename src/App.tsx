@@ -1330,6 +1330,16 @@ function ApplyPage({
     matchedCreator?.followers ||
     gig.followers
 
+  const hasConnectedIg = matchedCreator
+    ? ((matchedCreator as any).isInstagramConnected === true ||
+       !!(matchedCreator as any)?.instagram?.handle ||
+       (matchedCreator.followers && matchedCreator.followers !== "0"))
+    : (gig.followers && gig.followers !== "0")
+
+  const followersDisplay = hasConnectedIg
+    ? `${followersCount} followers`
+    : "not connected"
+
   useEffect(() => {
     if (userProfile) {
       if (!instaHandle && (userProfile.instaHandle || userProfile.handle)) {
@@ -1633,7 +1643,7 @@ function ApplyPage({
                 </div>
                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                   <span className="flex items-center gap-1 text-[10px] font-bold text-[#e4405f] bg-rose-50 px-2 py-0.5 rounded-full">
-                    <InstagramIcon /> {followersCount} followers
+                    <InstagramIcon /> {followersDisplay}
                   </span>
                   <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-medium">
                     {gig.niche}
@@ -1704,14 +1714,11 @@ function ApplyPage({
                 Offer
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-100 text-center flex flex-col justify-center">
-              <div className="flex items-center justify-center gap-1 mb-0.5">
-                <CalendarIcon />
-                <span className="text-[9px] font-bold text-slate-700 tracking-tight">
-                  {formatDeadline(gig.deadline)}
-                </span>
+            <div className="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 text-center">
+              <div className="text-base font-black text-slate-900 mb-0.5">
+                {formatDeadline(gig.deadline)}
               </div>
-              <div className="text-[9px] text-slate-400 font-medium">
+              <div className="text-[10px] text-slate-400 font-medium">
                 Deadline
               </div>
             </div>
