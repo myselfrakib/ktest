@@ -790,179 +790,21 @@ const NOTIFICATIONS = [
 
 type AppNotification = typeof NOTIFICATIONS[0]
 
-const INITIAL_CHATS = [
-  {
-    id: 1,
+type ChatThread = {
+  id: number
+  name: string
+  avatar: string
+  handle: string
+  niche: string
+  online: boolean
+  verified: boolean
+  unreadCount: number
+  messages: Array<{ id: number; text: string; sender: string; time: string }>
+}
 
-    name: "Arjun Das",
+type ChatMessage = ChatThread["messages"][0]
 
-    avatar:
-      "https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=80&h=80&fit=crop&auto=format",
-
-    handle: "@arjun.lens",
-
-    niche: "Photography",
-
-    online: true,
-
-    verified: true,
-
-    unreadCount: 1,
-
-    messages: [
-      {
-        id: 1,
-        text: "Hey Priya, loved your ethnic styling reel!",
-        sender: "them",
-        time: "10:30 AM",
-      },
-
-      {
-        id: 2,
-        text: "Thanks Arjun! The locations you suggested were perfect.",
-        sender: "me",
-        time: "10:32 AM",
-      },
-
-      {
-        id: 3,
-        text: "Awesome. Let's collab on the North Kolkata street photography series soon. Are you free this weekend?",
-        sender: "them",
-        time: "2:15 PM",
-      },
-    ],
-  },
-
-  {
-    id: 2,
-
-    name: "Rang Bahar Textiles",
-
-    avatar:
-      "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
-
-    handle: "Brand Account",
-
-    niche: "Ethnic Fashion Brand",
-
-    online: false,
-
-    verified: true,
-
-    unreadCount: 0,
-
-    messages: [
-      {
-        id: 1,
-        text: "Hello Priya, we saw your portfolio and would love to collaborate on our upcoming Ethnic Fashion Launch.",
-        sender: "them",
-        time: "Yesterday",
-      },
-
-      {
-        id: 2,
-        text: "Hello! I would love to know more about the deliverables and timeline.",
-        sender: "me",
-        time: "Yesterday",
-      },
-
-      {
-        id: 3,
-        text: "We have sent you the official invite. Please review the budget details in your gigs portal.",
-        sender: "them",
-        time: "Yesterday",
-      },
-    ],
-  },
-
-  {
-    id: 3,
-
-    name: "Tanisha Roy",
-
-    avatar:
-      "https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=80&h=80&fit=crop&auto=format",
-
-    handle: "@tanisha.eats",
-
-    niche: "Food & Travel",
-
-    online: true,
-
-    verified: false,
-
-    unreadCount: 0,
-
-    messages: [
-      {
-        id: 1,
-        text: "Hey! Are you coming to the Goethe Institut meetup this Friday?",
-        sender: "them",
-        time: "2 days ago",
-      },
-
-      {
-        id: 2,
-        text: "Yes, definitely! RSVP'd yesterday.",
-        sender: "me",
-        time: "2 days ago",
-      },
-
-      {
-        id: 3,
-        text: "Great, see you there! Let's grab some coffee after.",
-        sender: "them",
-        time: "2 days ago",
-      },
-    ],
-  },
-
-  {
-    id: 4,
-
-    name: "Souvik Chatterjee",
-
-    avatar:
-      "https://images.unsplash.com/photo-1622782262029-1c8f5762be36?w=80&h=80&fit=crop&auto=format",
-
-    handle: "@souvik.motion",
-
-    niche: "Video & Editing",
-
-    online: false,
-
-    verified: true,
-
-    unreadCount: 0,
-
-    messages: [
-      {
-        id: 1,
-        text: "Hey, did you get the raw files from the music label video shoot?",
-        sender: "them",
-        time: "3 days ago",
-      },
-
-      {
-        id: 2,
-        text: "Yes, downloaded them. I will start the edits today.",
-        sender: "me",
-        time: "3 days ago",
-      },
-
-      {
-        id: 3,
-        text: "Perfect, let me know if you need any BTS footage.",
-        sender: "them",
-        time: "3 days ago",
-      },
-    ],
-  },
-]
-
-type ChatThread = typeof INITIAL_CHATS[0]
-
-type ChatMessage = typeof INITIAL_CHATS[0]["messages"][0]
+const INITIAL_CHATS: ChatThread[] = []
 
 // ── Real-time Chat Types ────────────────────────────────────────────────────
 
@@ -12518,17 +12360,9 @@ export default function App() {
     const unsubscribeChats = onSnapshot(
       collection(db, "chats"),
       (snapshot) => {
-        if (snapshot.empty) {
-          INITIAL_CHATS.forEach(async (c) => {
-            await setDoc(doc(db, "chats", String(c.id)), c)
-          })
-        } else {
-          const list = snapshot.docs.map((doc) => doc.data() as ChatThread)
-
-          list.sort((a, b) => b.id - a.id)
-
-          setChats(list)
-        }
+        const list = snapshot.docs.map((doc) => doc.data() as ChatThread)
+        list.sort((a, b) => b.id - a.id)
+        setChats(list)
       },
       (err) => console.warn("Chats snapshot error:", err),
     )
