@@ -13274,6 +13274,36 @@ export default function App() {
   }
 
   const renderMain = () => {
+    if (selectedCreator) {
+      return (
+        <PublicProfilePage
+          creator={selectedCreator}
+          onBack={() => setSelectedCreatorName(null)}
+          followedCreators={followedCreators}
+          toggleFollowCreator={toggleFollowCreator}
+          onMessageCreator={handleMessageCreator}
+        />
+      )
+    }
+
+    if (selectedBrand) {
+      return (
+        <PublicBrandProfilePage
+          brand={selectedBrand}
+          onBack={() => setSelectedBrandName(null)}
+          followedBrands={followedBrands}
+          toggleFollowBrand={toggleFollowBrand}
+          onMessageBrand={handleMessageBrand}
+          onApply={handleApply}
+          gigs={gigs}
+          userProfile={userProfile}
+          creators={creators}
+          brands={brands}
+          userAppliedGigIds={userAppliedGigIds}
+        />
+      )
+    }
+
     if (selectedMyGig) {
       return (
         <ViewMyGigPage
@@ -13473,35 +13503,6 @@ export default function App() {
       )
     }
 
-    if (selectedCreator) {
-      return (
-        <PublicProfilePage
-          creator={selectedCreator}
-          onBack={() => setSelectedCreatorName(null)}
-          followedCreators={followedCreators}
-          toggleFollowCreator={toggleFollowCreator}
-          onMessageCreator={handleMessageCreator}
-        />
-      )
-    }
-
-    if (selectedBrand) {
-      return (
-        <PublicBrandProfilePage
-          brand={selectedBrand}
-          onBack={() => setSelectedBrandName(null)}
-          followedBrands={followedBrands}
-          toggleFollowBrand={toggleFollowBrand}
-          onMessageBrand={handleMessageBrand}
-          onApply={handleApply}
-          gigs={gigs}
-          userProfile={userProfile}
-          creators={creators}
-          brands={brands}
-          userAppliedGigIds={userAppliedGigIds}
-        />
-      )
-    }
 
     if (selectedEvent) {
       return (
