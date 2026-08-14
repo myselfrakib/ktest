@@ -4637,71 +4637,13 @@ function MyApplicationsPage({
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-slate-50 min-h-screen">
       {/* Header */}
-      <div
-        className="sticky top-0 z-20 px-5 pt-12 pb-4"
-        style={{
-          background:
-            "linear-gradient(135deg, #3b5bdb 0%, #7048e8 60%, #f76707 100%)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white cursor-pointer active:scale-95 transition-all"
-          >
-            <ArrowLeftIcon />
-          </button>
-          <div>
-            <div className="text-[11px] text-white/70 font-semibold">
-              Your Activity
-            </div>
-            <h1 className="text-lg font-black text-white leading-tight">
-              My Applications
-            </h1>
-          </div>
-          <div className="ml-auto bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-            <span className="text-white text-[11px] font-bold">
-              {applications.length} Pitch{applications.length !== 1 ? "es" : ""}
-            </span>
-          </div>
-        </div>
-
-        {/* Stats row */}
-        {!loading && applications.length > 0 && (
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              {
-                label: "Pending",
-                count: applications.filter(
-                  (a: any) => !a.status || a.status === "pending",
-                ).length,
-                color: "text-amber-300",
-              },
-              {
-                label: "Accepted",
-                count: applications.filter((a: any) => a.status === "accepted")
-                  .length,
-                color: "text-emerald-300",
-              },
-              {
-                label: "Not Selected",
-                count: applications.filter((a: any) => a.status === "rejected")
-                  .length,
-                color: "text-red-300",
-              },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="bg-white/15 backdrop-blur-sm rounded-2xl py-2 px-2 text-center"
-              >
-                <div className={`text-xl font-black ${s.color}`}>{s.count}</div>
-                <div className="text-[9px] text-white/70 font-semibold">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="sticky top-0 z-20 px-5 pt-12 pb-4 bg-slate-50 flex items-center">
+        <button
+          onClick={onBack}
+          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-700 active:scale-95 transition cursor-pointer"
+        >
+          <ArrowLeftIcon />
+        </button>
       </div>
 
       {/* Content */}
