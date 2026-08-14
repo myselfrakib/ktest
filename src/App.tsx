@@ -46,7 +46,7 @@ const FCM_VAPID_KEY = "YOUR_FCM_VAPID_KEY" // Update this with your VAPID key fr
 
 const INTRO_BLUE = "#2b4ef7"
 
-const SLIDES = [
+const DEFAULT_SLIDES = [
   {
     id: 1,
     tag: "01 — Welcome",
@@ -55,6 +55,7 @@ const SLIDES = [
     sub: "Kolkata's first hyperlocal platform for creators, PR collabs, and brand deals — built by the city, for the city.",
     img: "https://images.unsplash.com/photo-1766676219472-bafcced3b3f7?w=900&h=1200&fit=crop&auto=format&q=80",
     alt: "Howrah Bridge at sunset",
+    hideText: false,
   },
   {
     id: 2,
@@ -64,6 +65,7 @@ const SLIDES = [
     sub: "From Park Street to New Town — every corner of Kolkata has a creator ready to collaborate with you.",
     img: "https://images.unsplash.com/photo-1737391591935-b10cec322512?w=900&h=1200&fit=crop&auto=format&q=80",
     alt: "Kolkata street community",
+    hideText: false,
   },
   {
     id: 3,
@@ -73,6 +75,7 @@ const SLIDES = [
     sub: "Photographers, stylists, writers, reels creators — find your people and make things happen together.",
     img: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=900&h=1200&fit=crop&auto=format&q=80",
     alt: "Creators collaborating",
+    hideText: false,
   },
   {
     id: 4,
@@ -82,9 +85,12 @@ const SLIDES = [
     sub: "Land real brand deals, paid gigs, and PR collabs. Build your name right here in Kolkata.",
     img: "https://images.unsplash.com/photo-1782187859788-c00888c7e277?w=900&h=1200&fit=crop&auto=format&q=80",
     alt: "Kolkata river at dawn",
+    hideText: false,
   },
 ]
 
+// Keep backward-compat alias used throughout the file
+const SLIDES = DEFAULT_SLIDES
 
 
 const GIGS = [
@@ -10841,46 +10847,52 @@ function SlideScreen({
           transform: mounted ? "translateY(0)" : "translateY(20px)",
         }}
       >
-        {/* headline */}
-        <h1
-          style={{
-            fontFamily: "'DM Serif Display', serif",
+        {/* headline + sub: hidden when admin sets hideText */}
+        {!(slide as any).hideText && (
+          <>
+            <h1
+              style={{
+                fontFamily: "'DM Serif Display', serif",
 
-            fontSize: 56,
+                fontSize: 56,
 
-            lineHeight: 1.0,
+                lineHeight: 1.0,
 
-            margin: "0 0 16px",
+                margin: "0 0 16px",
 
-            letterSpacing: "-0.02em",
+                letterSpacing: "-0.02em",
 
-            color: "#fff",
-          }}
-        >
-          <span style={{ display: "block" }}>{slide.headline}</span>
-          <span style={{ display: "block", color: "#7fa3ff" }}>
-            {slide.headlineAccent}
-          </span>
-        </h1>
+                color: "#fff",
+              }}
+            >
+              <span style={{ display: "block" }}>{slide.headline}</span>
+              <span style={{ display: "block", color: "#7fa3ff" }}>
+                {slide.headlineAccent}
+              </span>
+            </h1>
 
-        {/* sub */}
-        <p
-          style={{
-            fontFamily: "'Instrument Sans', sans-serif",
+            <p
+              style={{
+                fontFamily: "'Instrument Sans', sans-serif",
 
-            fontSize: 14,
+                fontSize: 14,
 
-            lineHeight: 1.65,
+                lineHeight: 1.65,
 
-            color: "rgba(255,255,255,0.6)",
+                color: "rgba(255,255,255,0.6)",
 
-            margin: "0 0 36px",
+                margin: "0 0 36px",
 
-            maxWidth: 300,
-          }}
-        >
-          {slide.sub}
-        </p>
+                maxWidth: 300,
+              }}
+            >
+              {slide.sub}
+            </p>
+          </>
+        )}
+        {(slide as any).hideText && (
+          <div style={{ margin: "0 0 36px" }} />
+        )}
 
         {/* nav row */}
         <div
@@ -11984,6 +11996,31 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<any>(null)
 
   const [introPage, setIntroPage] = useState(0)
+
+  // Dynamic landing slides (loaded from Firestore siteSettings/landingSlides)
+  const [dynamicSlides, setDynamicSlides] = useState(DEFAULT_SLIDES)
+
+  // Load landing slide overrides from Firestore on startup (no auth required)
+  useEffect(() => {
+    const unsubLanding = onSnapshot(
+      doc(db, "siteSettings", "landingSlides"),
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data()
+          if (data?.slides && Array.isArray(data.slides)) {
+            setDynamicSlides(
+              DEFAULT_SLIDES.map((def, i) => ({
+                ...def,
+                ...(data.slides[i] || {}),
+              }))
+            )
+          }
+        }
+      },
+      (err) => console.warn("Landing slides snapshot error:", err),
+    )
+    return () => unsubLanding()
+  }, [])
 
   // Instagram OAuth callback handler state
 
@@ -14181,7 +14218,7 @@ export default function App() {
               />
             ) : (
               <SlideScreen
-                slide={SLIDES[introPage]}
+                slide={dynamicSlides[introPage]}
                 onNext={() =>
                   setIntroPage((p) => Math.min(p + 1, SLIDES.length))
                 }

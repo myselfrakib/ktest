@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   collection,
   doc,
@@ -10,6 +10,7 @@ import {
   onSnapshot,
   query,
   where,
+  getDoc,
 } from "firebase/firestore"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
@@ -37,7 +38,7 @@ export function AdminDashboardPage({
   onLogout: () => void
 }) {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "events" | "gigs" | "admins" | "users" | "notifications"
+    "overview" | "events" | "gigs" | "admins" | "users" | "notifications" | "landing"
   >("overview")
 
   const [notifTitle, setNotifTitle] = useState(
@@ -87,6 +88,52 @@ export function AdminDashboardPage({
     id: string
     col: string
   } | null>(null)
+
+  // Landing Page Editor State
+  const DEFAULT_SLIDES = [
+    {
+      id: 1,
+      tag: "01 — Welcome",
+      headline: "Let's Collab,",
+      headlineAccent: "Kolkata!",
+      sub: "Kolkata's first hyperlocal platform for creators, PR collabs, and brand deals — built by the city, for the city.",
+      img: "https://images.unsplash.com/photo-1766676219472-bafcced3b3f7?w=900&h=1200&fit=crop&auto=format&q=80",
+      hideText: false,
+    },
+    {
+      id: 2,
+      tag: "02 — Community",
+      headline: "The City Is",
+      headlineAccent: "Your Team.",
+      sub: "From Park Street to New Town — every corner of Kolkata has a creator ready to collaborate with you.",
+      img: "https://images.unsplash.com/photo-1737391591935-b10cec322512?w=900&h=1200&fit=crop&auto=format&q=80",
+      hideText: false,
+    },
+    {
+      id: 3,
+      tag: "03 — Creators",
+      headline: "Find Your",
+      headlineAccent: "Crew.",
+      sub: "Photographers, stylists, writers, reels creators — find your people and make things happen together.",
+      img: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=900&h=1200&fit=crop&auto=format&q=80",
+      hideText: false,
+    },
+    {
+      id: 4,
+      tag: "04 — Growth",
+      headline: "Grow",
+      headlineAccent: "Together.",
+      sub: "Land real brand deals, paid gigs, and PR collabs. Build your name right here in Kolkata.",
+      img: "https://images.unsplash.com/photo-1782187859788-c00888c7e277?w=900&h=1200&fit=crop&auto=format&q=80",
+      hideText: false,
+    },
+  ]
+
+  const [landingSlides, setLandingSlides] = useState(DEFAULT_SLIDES)
+  const [landingLoading, setLandingLoading] = useState(false)
+  const [landingToast, setLandingToast] = useState<string | null>(null)
+  const [landingUploading, setLandingUploading] = useState<number | null>(null)
+  const landingFileRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const [eventTitle, setEventTitle] = useState("")
   const [eventSubtitle, setEventSubtitle] = useState("")
@@ -177,6 +224,77 @@ export function AdminDashboardPage({
     )
     return () => unsub()
   }, [])
+
+  // Load landing slides from Firestore
+  useEffect(() => {
+    const fetchLandingSlides = async () => {
+      try {
+        const snap = await getDoc(doc(db, "siteSettings", "landingSlides"))
+        if (snap.exists()) {
+          const data = snap.data()
+          if (data?.slides && Array.isArray(data.slides)) {
+            setLandingSlides(
+              DEFAULT_SLIDES.map((def, i) => ({
+                ...def,
+                ...(data.slides[i] || {}),
+              }))
+            )
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load landing slides:", err)
+      }
+    }
+    fetchLandingSlides()
+  }, [])
+
+  const handleLandingImageUpload = async (slideIndex: number, file: File) => {
+    setLandingUploading(slideIndex)
+    try {
+      const storageRef = ref(storage, `siteSettings/landing_slide_${slideIndex + 1}_${Date.now()}.jpg`)
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      setLandingSlides((prev) =>
+        prev.map((s, i) => (i === slideIndex ? { ...s, img: url } : s))
+      )
+    } catch (err: any) {
+      alert("Image upload failed: " + (err.message || err))
+    } finally {
+      setLandingUploading(null)
+    }
+  }
+
+  const handleToggleLandingText = (slideIndex: number) => {
+    setLandingSlides((prev) =>
+      prev.map((s, i) => (i === slideIndex ? { ...s, hideText: !s.hideText } : s))
+    )
+  }
+
+  const handleSaveLandingSlides = async () => {
+    setLandingLoading(true)
+    try {
+      await setDoc(doc(db, "siteSettings", "landingSlides"), {
+        slides: landingSlides.map((s) => ({ img: s.img, hideText: s.hideText })),
+        updatedAt: new Date().toISOString(),
+      })
+      setLandingToast("✅ Landing pages saved! Changes are now live for all users.")
+      setTimeout(() => setLandingToast(null), 5000)
+    } catch (err: any) {
+      alert("Save failed: " + (err.message || err))
+    } finally {
+      setLandingLoading(false)
+    }
+  }
+
+  const handleResetLandingSlide = (slideIndex: number) => {
+    setLandingSlides((prev) =>
+      prev.map((s, i) =>
+        i === slideIndex
+          ? { ...DEFAULT_SLIDES[i], img: DEFAULT_SLIDES[i].img, hideText: false }
+          : s
+      )
+    )
+  }
 
   const handleApproveAdmin = async (adminUid: string) => {
     try {
@@ -767,7 +885,8 @@ export function AdminDashboardPage({
                     ? `Admins (${pendingAdmins.length})`
                     : "Admins",
               },
-              { id: "notifications", label: "Push Notifications" },
+              { id: "notifications", label: "Push Notifs" },
+              { id: "landing", label: "🖼️ Landing" },
             ] as const
           ).map(({ id, label }) => (
             <button
@@ -1414,6 +1533,205 @@ export function AdminDashboardPage({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === "landing" && (
+          <div className="flex flex-col gap-6">
+            {/* Toast */}
+            {landingToast && (
+              <div className="bg-emerald-600 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between">
+                <span>{landingToast}</span>
+                <button
+                  onClick={() => setLandingToast(null)}
+                  className="text-white/80 hover:text-white font-bold ml-3 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Landing Pages</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">Customize background images & text for the 4 intro slides</p>
+              </div>
+              <button
+                onClick={handleSaveLandingSlides}
+                disabled={landingLoading}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-black text-white shadow-lg transition cursor-pointer flex items-center gap-2 ${
+                  landingLoading
+                    ? "bg-slate-400 cursor-not-allowed"
+                    : "bg-[#3b5bdb] hover:bg-blue-700 shadow-blue-200"
+                }`}
+              >
+                {landingLoading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  "💾 Save All Changes"
+                )}
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-5">
+              {landingSlides.map((slide, i) => (
+                <div
+                  key={slide.id}
+                  className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden"
+                >
+                  {/* Slide preview */}
+                  <div className="relative w-full h-44 bg-slate-900 overflow-hidden">
+                    <img
+                      src={slide.img}
+                      alt={slide.tag}
+                      className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
+                    />
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 40%, rgba(10,14,30,0.85) 100%)" }} />
+                    {/* Upload overlay button */}
+                    <label className="absolute inset-0 flex items-center justify-center cursor-pointer group">
+                      <input
+                        ref={(el) => { landingFileRefs.current[i] = el }}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (file) await handleLandingImageUpload(i, file)
+                          e.target.value = ""
+                        }}
+                      />
+                      {landingUploading === i ? (
+                        <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-5 py-3 flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                          <span className="text-white text-xs font-bold">Uploading…</span>
+                        </div>
+                      ) : (
+                        <div className="opacity-0 group-hover:opacity-100 transition bg-black/60 backdrop-blur-sm rounded-2xl px-5 py-3 flex items-center gap-2">
+                          <span className="text-white text-lg">📷</span>
+                          <span className="text-white text-xs font-bold">Change Background Image</span>
+                        </div>
+                      )}
+                    </label>
+                    {/* Slide tag */}
+                    <div className="absolute top-3 left-4 text-[10px] font-bold tracking-widest uppercase text-white/70">
+                      {slide.tag}
+                    </div>
+                    {/* Text preview overlay */}
+                    {!slide.hideText && (
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <div className="text-white font-black text-lg leading-tight drop-shadow-lg">
+                          {slide.headline} <span className="text-[#7fa3ff]">{slide.headlineAccent}</span>
+                        </div>
+                        <div className="text-white/60 text-[10px] mt-0.5 line-clamp-1">{slide.sub}</div>
+                      </div>
+                    )}
+                    {slide.hideText && (
+                      <div className="absolute bottom-3 left-4">
+                        <span className="bg-slate-800/80 text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-600">
+                          Text Hidden
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Controls */}
+                  <div className="p-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-slate-800">Slide {i + 1}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]">{slide.img.startsWith("https://images.unsplash") ? "Default Unsplash image" : "Custom uploaded image ✓"}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleResetLandingSlide(i)}
+                          className="text-[10px] font-bold text-slate-500 hover:text-slate-800 border border-slate-200 px-2.5 py-1.5 rounded-xl transition cursor-pointer hover:bg-slate-50"
+                        >
+                          Reset
+                        </button>
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]
+                              if (file) await handleLandingImageUpload(i, file)
+                              e.target.value = ""
+                            }}
+                          />
+                          <span className="text-[10px] font-bold text-[#3b5bdb] border border-[#3b5bdb]/30 bg-[#3b5bdb]/5 px-2.5 py-1.5 rounded-xl transition hover:bg-[#3b5bdb]/10 cursor-pointer block">
+                            📂 Upload
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Text toggle */}
+                    <div className="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
+                      <div>
+                        <div className="text-xs font-bold text-slate-700">Overlay Text</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">
+                          {slide.hideText
+                            ? "Hidden — clean background only"
+                            : `"${slide.headline} ${slide.headlineAccent}"`}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleToggleLandingText(i)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                          !slide.hideText ? "bg-[#3b5bdb]" : "bg-slate-300"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
+                            !slide.hideText ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Image URL input */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Or paste image URL</label>
+                      <input
+                        type="text"
+                        value={slide.img}
+                        onChange={(e) =>
+                          setLandingSlides((prev) =>
+                            prev.map((s, idx) => idx === i ? { ...s, img: e.target.value } : s)
+                          )
+                        }
+                        placeholder="https://..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[11px] text-slate-700 outline-none focus:border-[#3b5bdb] font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Save CTA at bottom */}
+            <button
+              onClick={handleSaveLandingSlides}
+              disabled={landingLoading}
+              className={`w-full py-4 rounded-2xl font-black text-sm text-white shadow-lg transition cursor-pointer flex items-center justify-center gap-2 ${
+                landingLoading
+                  ? "bg-slate-400 cursor-not-allowed"
+                  : "bg-[#3b5bdb] hover:bg-blue-700 shadow-blue-200"
+              }`}
+            >
+              {landingLoading ? (
+                <>
+                  <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  Saving Changes…
+                </>
+              ) : (
+                "💾 Save Landing Page Changes"
+              )}
+            </button>
           </div>
         )}
       </div>
