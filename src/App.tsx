@@ -4537,6 +4537,130 @@ function ChevronRightIcon() {
   )
 }
 
+// ── My Connections Page ──────────────────────────────────────────────────────
+
+function MyConnectionsPage({
+  onBack,
+  connections,
+  receivedRequests,
+  creators,
+  brands,
+  handleAcceptConnectionRequest,
+  onViewProfile
+}: {
+  onBack: () => void
+  connections: Set<number>
+  receivedRequests: Set<number>
+  creators: Creator[]
+  brands: Brand[]
+  handleAcceptConnectionRequest: (id: number) => void
+  onViewProfile: (name: string) => void
+}) {
+  const [activeTab, setActiveTab] = useState<"connections" | "requests">("connections")
+
+  // Combine creators and brands for easy lookup
+  const allUsers = [...creators, ...brands]
+  
+  const connectedUsers = allUsers.filter(u => connections.has(u.id))
+  const requestUsers = allUsers.filter(u => receivedRequests.has(u.id))
+
+  return (
+    <div className="fixed inset-0 bg-[#f8f9fa] z-50 flex flex-col animate-slideUp">
+      <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition"
+          >
+            <ChevronLeftIcon />
+          </button>
+          <h2 className="text-base font-black text-slate-900 font-display">
+            My Connections
+          </h2>
+        </div>
+      </div>
+      
+      <div className="flex bg-white px-4 border-b border-slate-100">
+        <button
+          onClick={() => setActiveTab("connections")}
+          className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition ${
+            activeTab === "connections" ? "border-[#3b5bdb] text-[#3b5bdb]" : "border-transparent text-slate-400"
+          }`}
+        >
+          Connections ({connectedUsers.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition ${
+            activeTab === "requests" ? "border-[#3b5bdb] text-[#3b5bdb]" : "border-transparent text-slate-400"
+          }`}
+        >
+          Requests ({requestUsers.length})
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
+        {activeTab === "connections" && (
+          connectedUsers.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-20 text-center">
+              <h3 className="text-sm font-bold text-slate-700 mb-1">No connections yet</h3>
+              <p className="text-xs text-slate-400 max-w-[200px]">Connect with other creators and brands to build your network.</p>
+             </div>
+          ) : (
+            connectedUsers.map(u => (
+              <div key={u.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                <img 
+                  src={"avatar" in u ? (u as Creator).avatar : (u as Brand).logo} 
+                  alt={u.name} 
+                  className="w-12 h-12 rounded-full object-cover cursor-pointer"
+                  onClick={() => onViewProfile(u.name)}
+                />
+                <div className="flex-1 cursor-pointer" onClick={() => onViewProfile(u.name)}>
+                  <h4 className="text-sm font-bold text-slate-900">{u.name}</h4>
+                  <p className="text-xs text-slate-500 line-clamp-1">{("handle" in u ? (u as Creator).handle : (u as Brand).industry)}</p>
+                </div>
+                <button className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-xl transition cursor-pointer">
+                  Message
+                </button>
+              </div>
+            ))
+          )
+        )}
+
+        {activeTab === "requests" && (
+          requestUsers.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-20 text-center">
+              <h3 className="text-sm font-bold text-slate-700 mb-1">No pending requests</h3>
+              <p className="text-xs text-slate-400 max-w-[200px]">When someone wants to connect, it will appear here.</p>
+             </div>
+          ) : (
+            requestUsers.map(u => (
+              <div key={u.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
+                <img 
+                  src={"avatar" in u ? (u as Creator).avatar : (u as Brand).logo} 
+                  alt={u.name} 
+                  className="w-12 h-12 rounded-full object-cover cursor-pointer"
+                  onClick={() => onViewProfile(u.name)}
+                />
+                <div className="flex-1 cursor-pointer" onClick={() => onViewProfile(u.name)}>
+                  <h4 className="text-sm font-bold text-slate-900">{u.name}</h4>
+                  <p className="text-xs text-slate-500 line-clamp-1">{("handle" in u ? (u as Creator).handle : (u as Brand).industry)}</p>
+                </div>
+                <button 
+                  onClick={() => handleAcceptConnectionRequest(u.id)}
+                  className="px-3 py-1.5 bg-[#3b5bdb] text-white text-[10px] font-bold rounded-xl shadow-sm hover:bg-[#2b4ef7] transition cursor-pointer"
+                >
+                  Accept
+                </button>
+              </div>
+            ))
+          )
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── My Applications Page ────────────────────────────────────────────────────
 
 function MyApplicationsPage({
@@ -4816,6 +4940,7 @@ function ProfilePage({
   onViewGig,
 
   onViewMyApplications,
+  onViewMyConnections,
 }: {
   onPostGig: () => void
 
@@ -4832,6 +4957,8 @@ function ProfilePage({
   onViewGig?: (gig: Gig, initialTab?: "applicants" | "edit") => void
 
   onViewMyApplications?: () => void
+
+  onViewMyConnections?: () => void
 }) {
   const [activeSection, setActiveSection] =
     useState<"portfolio" | "gigs" | "saved" | "reviews" | "about">("portfolio")
@@ -5556,6 +5683,20 @@ function ProfilePage({
                     
                   </span>{" "}
                   My Applications
+                </button>
+              )}
+              {onViewMyConnections && (
+                <button
+                  onClick={() => {
+                    setShowMenu(false)
+                    onViewMyConnections()
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent border-t border-slate-100"
+                >
+                  <span className="text-[#3b5bdb] text-base leading-none">
+                    
+                  </span>{" "}
+                  My Connections
                 </button>
               )}
             </div>
@@ -7248,9 +7389,12 @@ function ExplorePage({
 
   onApply,
 
-  followedBrands,
-
-  toggleFollowBrand,
+  connections,
+  sentRequests,
+  receivedRequests,
+  handleSendConnectionRequest,
+  handleAcceptConnectionRequest,
+  handleRemoveConnection,
 
   rsvpEvents,
 
@@ -7296,9 +7440,12 @@ function ExplorePage({
 
   onApply: (gig: Gig) => void
 
-  followedBrands: Set<number>
-
-  toggleFollowBrand: (id: number) => void
+  connections: Set<number>
+  sentRequests: Set<number>
+  receivedRequests: Set<number>
+  handleSendConnectionRequest: (id: number) => void
+  handleAcceptConnectionRequest: (id: number) => void
+  handleRemoveConnection: (id: number) => void
 
   rsvpEvents: Set<number>
 
@@ -7505,7 +7652,8 @@ function ExplorePage({
             </h3>
             <div className="flex flex-col gap-3 px-5">
               {filteredBrands.map((brand) => {
-                const isFollowing = followedBrands.has(brand.id)
+                const isConnected = connections.has(brand.id)
+                const isRequestSent = sentRequests.has(brand.id)
 
                 return (
                   <div
@@ -7526,15 +7674,22 @@ function ExplorePage({
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            toggleFollowBrand(brand.id)
+                            if (isConnected) {
+                              handleRemoveConnection(brand.id)
+                            } else if (!isRequestSent) {
+                              handleSendConnectionRequest(brand.id)
+                            }
                           }}
+                          disabled={!isConnected && isRequestSent}
                           className={`text-[9px] font-bold px-2 py-0.5 rounded-lg transition cursor-pointer ${
-                            isFollowing
-                              ? "bg-slate-100 text-slate-500"
-                              : "bg-[#3b5bdb] text-white shadow-sm"
+                            isConnected
+                              ? "bg-emerald-100 text-emerald-700"
+                              : isRequestSent
+                                ? "bg-slate-100 text-slate-500 cursor-not-allowed"
+                                : "bg-[#3b5bdb] text-white shadow-sm"
                           }`}
                         >
-                          {isFollowing ? "Following" : "Follow"}
+                          {isConnected ? "Connected" : isRequestSent ? "Pending" : "Connect"}
                         </button>
                       </div>
                       <div className="text-[9px] text-slate-400 font-bold uppercase">
@@ -7850,7 +8005,8 @@ function ExplorePage({
             </div>
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
               {brands.map((brand) => {
-                const isFollowing = followedBrands.has(brand.id)
+                const isConnected = connections.has(brand.id)
+                const isRequestSent = sentRequests.has(brand.id)
 
                 return (
                   <div
@@ -7893,15 +8049,22 @@ function ExplorePage({
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
-                              toggleFollowBrand(brand.id)
+                              if (isConnected) {
+                                handleRemoveConnection(brand.id)
+                              } else if (!isRequestSent) {
+                                handleSendConnectionRequest(brand.id)
+                              }
                             }}
+                            disabled={!isConnected && isRequestSent}
                             className={`text-[9px] font-bold px-2 py-0.5 rounded-lg transition-all flex-shrink-0 cursor-pointer ${
-                              isFollowing
-                                ? "bg-slate-100 text-slate-500"
-                                : "bg-[#3b5bdb] text-white shadow-sm shadow-blue-100"
+                              isConnected
+                                ? "bg-emerald-100 text-emerald-700"
+                                : isRequestSent
+                                  ? "bg-slate-100 text-slate-500 cursor-not-allowed"
+                                  : "bg-[#3b5bdb] text-white shadow-sm shadow-blue-100"
                             }`}
                           >
-                            {isFollowing ? "Following" : "Follow"}
+                            {isConnected ? "Connected" : isRequestSent ? "Pending" : "Connect"}
                           </button>
                         </div>
                         <div className="text-[9px] text-slate-400 font-bold uppercase leading-none">
@@ -8201,7 +8364,8 @@ function ExplorePage({
       {!isSearching && activeFilter === "brands" && (
         <div className="flex flex-col gap-3 px-5">
           {filteredBrands.map((brand) => {
-            const isFollowing = followedBrands.has(brand.id)
+            const isConnected = connections.has(brand.id)
+            const isRequestSent = sentRequests.has(brand.id)
 
             return (
               <div
@@ -8243,15 +8407,22 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        toggleFollowBrand(brand.id)
+                        if (isConnected) {
+                          handleRemoveConnection(brand.id)
+                        } else if (!isRequestSent) {
+                          handleSendConnectionRequest(brand.id)
+                        }
                       }}
+                      disabled={!isConnected && isRequestSent}
                       className={`text-[10px] font-bold px-3 py-1 rounded-xl transition cursor-pointer ${
-                        isFollowing
-                          ? "bg-slate-100 text-slate-500"
-                          : "bg-[#3b5bdb] text-white shadow-sm shadow-blue-100"
+                        isConnected
+                          ? "bg-emerald-100 text-emerald-700"
+                          : isRequestSent
+                            ? "bg-slate-100 text-slate-500 cursor-not-allowed"
+                            : "bg-[#3b5bdb] text-white shadow-sm shadow-blue-100"
                       }`}
                     >
-                      {isFollowing ? "Following" : "Follow"}
+                      {isConnected ? "Connected" : isRequestSent ? "Pending" : "Connect"}
                     </button>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
@@ -9597,23 +9768,23 @@ function ChatPage({
 
 function PublicProfilePage({
   creator,
-
   onBack,
-
-  followedCreators,
-
-  toggleFollowCreator,
-
+  connections,
+  sentRequests,
+  receivedRequests,
+  handleSendConnectionRequest,
+  handleAcceptConnectionRequest,
+  handleRemoveConnection,
   onMessageCreator,
 }: {
   creator: Creator
-
   onBack: () => void
-
-  followedCreators: Set<number>
-
-  toggleFollowCreator: (id: number) => void
-
+  connections: Set<number>
+  sentRequests: Set<number>
+  receivedRequests: Set<number>
+  handleSendConnectionRequest: (id: number) => void
+  handleAcceptConnectionRequest: (id: number) => void
+  handleRemoveConnection: (id: number) => void
   onMessageCreator: (creator: Creator) => void
 }) {
   const [activeTab, setActiveTab] = useState<"portfolio" | "reviews">(
@@ -9625,7 +9796,9 @@ function PublicProfilePage({
   const [activePhotoViewerIndex, setActivePhotoViewerIndex] =
     useState<number | null>(null)
 
-  const isFollowing = followedCreators.has(creator.id)
+  const isConnected = connections.has(creator.id)
+  const isRequestSent = sentRequests.has(creator.id)
+  const isRequestReceived = receivedRequests.has(creator.id)
 
   const handleShare = () => {
     setCopied(true)
@@ -9724,16 +9897,33 @@ function PublicProfilePage({
         </div>
 
         <div className="flex gap-3 mb-4 w-full">
-          <button
-            onClick={() => toggleFollowCreator(creator.id)}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
-              isFollowing
-                ? "bg-slate-100 text-slate-500 border border-slate-200"
-                : "bg-[#3b5bdb] text-white shadow-blue-100"
-            }`}
-          >
-            {isFollowing ? "✓ Following" : "Follow"}
-          </button>
+          {isConnected ? (
+            <button
+              onClick={() => handleRemoveConnection(creator.id)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm bg-emerald-100 text-emerald-700 border border-emerald-200"
+            >
+              ✓ Connected
+            </button>
+          ) : isRequestReceived ? (
+            <button
+              onClick={() => handleAcceptConnectionRequest(creator.id)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm bg-[#3b5bdb] text-white shadow-blue-100"
+            >
+              Accept Request
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSendConnectionRequest(creator.id)}
+              disabled={isRequestSent}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+                isRequestSent
+                  ? "bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed"
+                  : "bg-[#3b5bdb] text-white shadow-blue-100"
+              }`}
+            >
+              {isRequestSent ? "Pending" : "Connect"}
+            </button>
+          )}
           <button
             onClick={() => onMessageCreator(creator)}
             className="flex-1 py-2.5 border border-slate-200 bg-white rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition"
@@ -9742,10 +9932,16 @@ function PublicProfilePage({
           </button>
         </div>
 
+        {isConnected && (
+          <div className="text-xs text-[#3b5bdb] font-bold mb-3 flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full">
+            <UsersIcon /> 5 Mutual Connections
+          </div>
+        )}
+
         <div className="grid grid-cols-4 gap-2 pt-2 w-full">
           {[
             {
-              label: "Followers",
+              label: "Connections",
               value:
                 (creator as any).instagram?.followersFormatted ||
                 creator.followers,
@@ -9980,10 +10176,12 @@ function PublicBrandProfilePage({
 
   onBack,
 
-  followedBrands,
-
-  toggleFollowBrand,
-
+  connections,
+  sentRequests,
+  receivedRequests,
+  handleSendConnectionRequest,
+  handleAcceptConnectionRequest,
+  handleRemoveConnection,
   onMessageBrand,
 
   onApply,
@@ -10002,10 +10200,12 @@ function PublicBrandProfilePage({
 
   onBack: () => void
 
-  followedBrands: Set<number>
-
-  toggleFollowBrand: (id: number) => void
-
+  connections: Set<number>
+  sentRequests: Set<number>
+  receivedRequests: Set<number>
+  handleSendConnectionRequest: (id: number) => void
+  handleAcceptConnectionRequest: (id: number) => void
+  handleRemoveConnection: (id: number) => void
   onMessageBrand: (brand: Brand) => void
 
   onApply: (gig: Gig) => void
@@ -10024,7 +10224,9 @@ function PublicBrandProfilePage({
 
   const [copied, setCopied] = useState(false)
 
-  const isFollowing = followedBrands.has(brand.id)
+  const isConnected = connections.has(brand.id)
+  const isRequestSent = sentRequests.has(brand.id)
+  const isRequestReceived = receivedRequests.has(brand.id)
 
   const handleShare = () => {
     setCopied(true)
@@ -10106,16 +10308,33 @@ function PublicBrandProfilePage({
         </div>
 
         <div className="flex gap-3 mb-4 w-full">
-          <button
-            onClick={() => toggleFollowBrand(brand.id)}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
-              isFollowing
-                ? "bg-slate-100 text-slate-500 border border-slate-200"
-                : "bg-[#3b5bdb] text-white shadow-blue-100"
-            }`}
-          >
-            {isFollowing ? "✓ Following" : "Follow Brand"}
-          </button>
+          {isConnected ? (
+            <button
+              onClick={() => handleRemoveConnection(brand.id)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-pointer"
+            >
+              ✓ Connected
+            </button>
+          ) : isRequestReceived ? (
+            <button
+              onClick={() => handleAcceptConnectionRequest(brand.id)}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm bg-[#3b5bdb] text-white shadow-blue-100 cursor-pointer"
+            >
+              Accept Request
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSendConnectionRequest(brand.id)}
+              disabled={isRequestSent}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                isRequestSent
+                  ? "bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed"
+                  : "bg-[#3b5bdb] text-white shadow-blue-100"
+              }`}
+            >
+              {isRequestSent ? "Pending" : "Connect"}
+            </button>
+          )}
           <button
             onClick={() => onMessageBrand(brand)}
             className="flex-1 py-2.5 border border-slate-200 bg-white rounded-xl text-xs font-bold text-slate-600 shadow-sm flex items-center justify-center gap-1.5 active:scale-95 transition cursor-pointer"
@@ -10124,9 +10343,15 @@ function PublicBrandProfilePage({
           </button>
         </div>
 
+        {isConnected && (
+          <div className="text-xs text-[#3b5bdb] font-bold mb-3 flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full">
+            <UsersIcon /> 5 Mutual Connections
+          </div>
+        )}
+
         <div className="grid grid-cols-4 gap-2 pt-2 w-full">
           {[
-            { label: "Followers", value: "45K+", color: "text-indigo-500" },
+            { label: "Connections", value: "45K+", color: "text-indigo-500" },
 
             {
               label: "Active Gigs",
@@ -11883,6 +12108,7 @@ export default function App() {
   )
 
   const [viewingMyApplications, setViewingMyApplications] = useState(false)
+  const [viewingMyConnections, setViewingMyConnections] = useState(false)
 
   const [unreadNotifications, setUnreadNotifications] = useState<Set<number>>(
     new Set([1, 2]),
@@ -11901,8 +12127,10 @@ export default function App() {
 
   const [activeMessages, setActiveMessages] = useState<LiveMessage[]>([])
 
-  const [followedCreators, setFollowedCreators] = useState<Set<number>>(
-    new Set(),
+  const [connections, setConnections] = useState<Set<number>>(new Set())
+  const [sentRequests, setSentRequests] = useState<Set<number>>(new Set())
+  const [receivedRequests, setReceivedRequests] = useState<Set<number>>(
+    new Set([2, 5]) // Pre-populate with 2 mock connection requests (e.g. Sreya, Rohan)
   )
 
   const [exploreFilter, setExploreFilter] =
@@ -12933,15 +13161,7 @@ export default function App() {
     })
   }
 
-  const toggleFollowBrand = (id: number) => {
-    setFollowedBrands((prev) => {
-      const next = new Set(prev)
 
-      next.has(id) ? next.delete(id) : next.add(id)
-
-      return next
-    })
-  }
 
   const toggleRsvpEvent = async (id: number) => {
     const isCurrentlyRsvp = rsvpEvents.has(id)
@@ -12977,12 +13197,31 @@ export default function App() {
     }
   }
 
-  const toggleFollowCreator = (id: number) => {
-    setFollowedCreators((prev) => {
+  const handleSendConnectionRequest = (id: number) => {
+    setSentRequests((prev) => {
       const next = new Set(prev)
-
       next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
+  const handleAcceptConnectionRequest = (id: number) => {
+    setReceivedRequests((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+    setConnections((prev) => {
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+  }
+
+  const handleRemoveConnection = (id: number) => {
+    setConnections((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
       return next
     })
   }
@@ -13261,6 +13500,7 @@ export default function App() {
     !gigPosted &&
     !viewingNotifications &&
     !viewingMyApplications &&
+    !viewingMyConnections &&
     activeChatId === null &&
     activeConvoId === null &&
     selectedCreator === null &&
@@ -13441,8 +13681,12 @@ export default function App() {
         <PublicProfilePage
           creator={selectedCreator}
           onBack={() => setSelectedCreatorName(null)}
-          followedCreators={followedCreators}
-          toggleFollowCreator={toggleFollowCreator}
+          connections={connections}
+          sentRequests={sentRequests}
+          receivedRequests={receivedRequests}
+          handleSendConnectionRequest={handleSendConnectionRequest}
+          handleAcceptConnectionRequest={handleAcceptConnectionRequest}
+          handleRemoveConnection={handleRemoveConnection}
           onMessageCreator={handleMessageCreator}
         />
       )
@@ -13453,8 +13697,12 @@ export default function App() {
         <PublicBrandProfilePage
           brand={selectedBrand}
           onBack={() => setSelectedBrandName(null)}
-          followedBrands={followedBrands}
-          toggleFollowBrand={toggleFollowBrand}
+          connections={connections}
+          sentRequests={sentRequests}
+          receivedRequests={receivedRequests}
+          handleSendConnectionRequest={handleSendConnectionRequest}
+          handleAcceptConnectionRequest={handleAcceptConnectionRequest}
+          handleRemoveConnection={handleRemoveConnection}
           onMessageBrand={handleMessageBrand}
           onApply={handleApply}
           gigs={gigs}
@@ -13653,6 +13901,20 @@ export default function App() {
       )
     }
 
+    if (viewingMyConnections) {
+      return (
+        <MyConnectionsPage
+          onBack={() => setViewingMyConnections(false)}
+          connections={connections}
+          receivedRequests={receivedRequests}
+          creators={CREATORS}
+          brands={BRANDS}
+          handleAcceptConnectionRequest={handleAcceptConnectionRequest}
+          onViewProfile={handleOpenCreatorProfile}
+        />
+      )
+    }
+
     if (viewingNotifications) {
       return (
         <NotificationsPage
@@ -13694,6 +13956,7 @@ export default function App() {
             setSelectedMyGigTab(tab || "applicants")
           }}
           onViewMyApplications={() => setViewingMyApplications(true)}
+          onViewMyConnections={() => setViewingMyConnections(true)}
         />
       )
     }
@@ -13727,8 +13990,12 @@ export default function App() {
           savedGigs={savedGigs}
           toggleSave={toggleSave}
           onApply={handleApply}
-          followedBrands={followedBrands}
-          toggleFollowBrand={toggleFollowBrand}
+          connections={connections}
+          sentRequests={sentRequests}
+          receivedRequests={receivedRequests}
+          handleSendConnectionRequest={handleSendConnectionRequest}
+          handleAcceptConnectionRequest={handleAcceptConnectionRequest}
+          handleRemoveConnection={handleRemoveConnection}
           rsvpEvents={rsvpEvents}
           toggleRsvpEvent={toggleRsvpEvent}
           onBellClick={() => setViewingNotifications(true)}
@@ -13927,6 +14194,7 @@ export default function App() {
                             // Reset sub-pages/views when switching bottom tabs
                             setViewingNotifications(false)
                             setViewingMyApplications(false)
+                            setViewingMyConnections(false)
                             setSelectedGigId(null)
                             setSelectedMyGigId(null)
                             setSelectedCreatorName(null)
