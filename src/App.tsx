@@ -4572,7 +4572,7 @@ function MyConnectionsPage({
             onClick={onBack}
             className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition"
           >
-            <ChevronLeftIcon />
+            <ArrowLeftIcon />
           </button>
           <h2 className="text-base font-black text-slate-900 font-display">
             My Connections
@@ -11924,6 +11924,7 @@ function hashToRoute(): Partial<RouteState> | null {
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
 
   const [currentUser, setCurrentUser] = useState<any>(null)
 
@@ -12243,6 +12244,7 @@ export default function App() {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setIsLoggedIn(!!user)
       setCurrentUser(user)
+      setAuthLoading(false)
 
       unsubs.forEach((un) => un())
       unsubs = []
@@ -14101,7 +14103,14 @@ export default function App() {
           </div>
         )}
 
-        {isLoggedIn ? (
+        {authLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center bg-white p-6 text-center">
+            <div className="w-10 h-10 rounded-full border-4 border-slate-100 border-t-[#3b5bdb] animate-spin mb-4" />
+            <div className="text-sm font-bold text-slate-700 animate-pulse mb-1">
+              Loading...
+            </div>
+          </div>
+        ) : isLoggedIn ? (
           userRole === "admin" ? (
             <AdminDashboardPage
               gigs={gigs}
