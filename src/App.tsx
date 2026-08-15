@@ -13917,13 +13917,13 @@ export default function App() {
                       {[
                         { id: "home", label: "Home", icon: "⊞" },
 
-                        { id: "explore", label: "Explore", icon: "" },
+                        { id: "explore", label: "Explore", icon: "🧭" },
 
                         { id: "post", label: "", icon: "＋", special: true },
 
-                        { id: "chat", label: "Chat", icon: "" },
+                        { id: "chat", label: "Chat", icon: "💬" },
 
-                        { id: "profile", label: "Profile", icon: "" },
+                        { id: "profile", label: "Profile", icon: "👤" },
                       ].map((tab) => (
                         <button
                           key={tab.id}
