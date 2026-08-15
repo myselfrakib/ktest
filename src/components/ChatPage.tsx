@@ -442,7 +442,7 @@ export function ChatPage({
         {filteredChats.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
             <div className="w-16 h-16 rounded-3xl bg-[#3b5bdb]/10 flex items-center justify-center text-3xl mb-4">
-              💬
+              
             </div>
             <h3 className="text-sm font-black text-slate-800 mb-1">No messages yet</h3>
             <p className="text-xs text-slate-400 leading-relaxed max-w-[220px]">

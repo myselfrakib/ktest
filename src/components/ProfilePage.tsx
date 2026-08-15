@@ -123,7 +123,7 @@ export function PublicProfilePage({
             onClick={() => onMessageCreator(creator)}
             className="flex-1 py-3 rounded-2xl text-xs font-bold bg-[#f76707] text-white shadow-sm shadow-orange-200 transition cursor-pointer"
           >
-            💬 Message
+             Message
           </button>
         </div>
       </div>
@@ -193,7 +193,7 @@ export function PublicBrandProfilePage({
             onClick={() => onMessageBrand(brand)}
             className="flex-1 py-3 rounded-2xl text-xs font-bold bg-[#f76707] text-white shadow-sm shadow-orange-200 transition cursor-pointer"
           >
-            💬 Message
+             Message
           </button>
         </div>
 

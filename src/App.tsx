@@ -409,7 +409,7 @@ const CREATORS = [
 
     verified: true,
 
-    bio: "Creating real, aesthetic content from the heart of Kolkata 🌸 Open to brand collabs & events.",
+    bio: "Creating real, aesthetic content from the heart of Kolkata  Open to brand collabs & events.",
 
     recentPost:
       "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=200&h=200&fit=crop&auto=format",
@@ -433,7 +433,7 @@ const CREATORS = [
 
     verified: true,
 
-    bio: "Visual storyteller capturing the soul of Kolkata. Street, portraits, & cinematic stills 📸",
+    bio: "Visual storyteller capturing the soul of Kolkata. Street, portraits, & cinematic stills ",
 
     recentPost:
       "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=200&h=200&fit=crop&auto=format",
@@ -457,7 +457,7 @@ const CREATORS = [
 
     verified: false,
 
-    bio: "Exploring Kolkata’s culinary secrets one plate at a time. From street food to fine dining 🍽️",
+    bio: "Exploring Kolkata’s culinary secrets one plate at a time. From street food to fine dining ",
 
     recentPost:
       "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&h=200&fit=crop&auto=format",
@@ -481,7 +481,7 @@ const CREATORS = [
 
     verified: true,
 
-    bio: "Director & Editor. Bringing stories to life with dynamic edits and high-fidelity visuals 🎥",
+    bio: "Director & Editor. Bringing stories to life with dynamic edits and high-fidelity visuals ",
 
     recentPost:
       "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=200&h=200&fit=crop&auto=format",
@@ -505,7 +505,7 @@ const CREATORS = [
 
     verified: true,
 
-    bio: "Yoga practitioner & holistic wellness advocate. Helping you find balance in the chaos 🧘‍♀️",
+    bio: "Yoga practitioner & holistic wellness advocate. Helping you find balance in the chaos ‍",
 
     recentPost:
       "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=200&h=200&fit=crop&auto=format",
@@ -529,7 +529,7 @@ const CREATORS = [
 
     verified: false,
 
-    bio: "Independent singer-songwriter from Kolkata. Sharing acoustic sessions and original melodies 🎸",
+    bio: "Independent singer-songwriter from Kolkata. Sharing acoustic sessions and original melodies ",
 
     recentPost:
       "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=200&h=200&fit=crop&auto=format",
@@ -1545,7 +1545,7 @@ function ApplyPage({
           <CheckCircleIcon />
         </div>
         <h2 className="font-display text-2xl font-black text-slate-900 mb-2">
-          Application Sent! 🎉
+          Application Sent! 
         </h2>
         <p className="text-slate-500 text-sm mb-2 leading-relaxed">
           Your pitch has been sent to{" "}
@@ -1790,7 +1790,7 @@ function ApplyPage({
           <div className="mx-5 mb-8">
             {(gig as any).applicantSelected ? (
               <div className="w-full bg-emerald-50 border-2 border-emerald-300 rounded-2xl py-4 px-5 flex flex-col items-center gap-2 text-center">
-                <span className="text-2xl">✅</span>
+                <span className="text-2xl"></span>
                 <div className="text-sm font-black text-emerald-700">
                   Creator Selected
                 </div>
@@ -1800,7 +1800,7 @@ function ApplyPage({
               </div>
             ) : hasAlreadyApplied ? (
               <div className="w-full bg-emerald-50 border-2 border-emerald-200 rounded-2xl py-4 px-5 flex flex-col items-center gap-2 text-center">
-                <span className="text-2xl">✅</span>
+                <span className="text-2xl"></span>
                 <div className="text-sm font-black text-emerald-800">
                   Already Applied
                 </div>
@@ -1814,7 +1814,7 @@ function ApplyPage({
                 onClick={() => setStep("form")}
                 className="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-base"
               >
-                Apply for this Gig ↗
+                Apply for this Gig 
               </button>
             )}
           </div>
@@ -1944,7 +1944,7 @@ function ApplyPage({
 
             {hasAlreadyApplied && (
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
-                <span className="text-xl">✅</span>
+                <span className="text-xl"></span>
                 <div>
                   <div className="text-xs font-bold text-emerald-900">
                     Application Already Submitted
@@ -1959,7 +1959,7 @@ function ApplyPage({
 
             {/* Terms notice */}
             <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex gap-2.5">
-              <span className="text-amber-500 mt-0.5 flex-shrink-0">⚠️</span>
+              <span className="text-amber-500 mt-0.5 flex-shrink-0"></span>
               <p className="text-xs text-amber-700 leading-relaxed font-medium">
                 By applying you agree to the terms of Kreator Kolkata. All
                 payments and agreements are directly between you and the
@@ -1999,7 +1999,7 @@ function ApplyPage({
                   Sending…
                 </>
               ) : (
-                "Send Application 🚀"
+                "Send Application "
               )}
             </button>
           </div>
@@ -2245,7 +2245,7 @@ function ViewMyGigPage({
       {/* Accept Toast */}
       {acceptToast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-          <span>✅</span> {acceptToast} accepted! Gig is now closed.
+          <span></span> {acceptToast} accepted! Gig is now closed.
         </div>
       )}
 
@@ -2374,7 +2374,7 @@ function ViewMyGigPage({
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <span>👥</span> Applicants ({applications.length})
+            <span></span> Applicants ({applications.length})
           </button>
           <button
             onClick={() => setActiveTab("edit")}
@@ -2384,7 +2384,7 @@ function ViewMyGigPage({
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <span>✏️</span> Edit Gig Details
+            <span></span> Edit Gig Details
           </button>
         </div>
       </div>
@@ -2468,7 +2468,7 @@ function ViewMyGigPage({
                   <div className="flex gap-2 flex-wrap">
                     {app.availability && (
                       <span className="text-[9px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                        🗓 {app.availability}
+                         {app.availability}
                       </span>
                     )}
                     {app.portfolio && (
@@ -2479,7 +2479,7 @@ function ViewMyGigPage({
                         onClick={(e) => e.stopPropagation()}
                         className="text-[9px] font-bold bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full"
                       >
-                        🔗 Portfolio
+                         Portfolio
                       </a>
                     )}
                   </div>
@@ -2504,7 +2504,7 @@ function ViewMyGigPage({
                         }
                         className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm cursor-pointer active:scale-95 transition flex items-center gap-1"
                       >
-                        💬 Chat
+                         Chat
                       </button>
 
                       {!isAccepted && !isRejected && (
@@ -2530,14 +2530,14 @@ function ViewMyGigPage({
                               />
                             </svg>
                           ) : (
-                            "✅ Accept"
+                            " Accept"
                           )}
                         </button>
                       )}
 
                       {isAccepted && (
                         <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1">
-                          ✅ Accepted
+                           Accepted
                         </span>
                       )}
                     </div>
@@ -2547,7 +2547,7 @@ function ViewMyGigPage({
             })
           ) : (
             <div className="bg-white rounded-3xl p-8 text-center border border-slate-100 shadow-sm flex flex-col items-center gap-3">
-              <span className="text-4xl">📩</span>
+              <span className="text-4xl"></span>
               <div>
                 <h3 className="text-sm font-bold text-slate-800 mb-1">
                   No Applications Received Yet
@@ -2687,7 +2687,7 @@ function ViewMyGigPage({
                     Saving Changes…
                   </>
                 ) : (
-                  "Save Changes to Database 💾"
+                  "Save Changes to Database "
                 )}
               </button>
             </div>
@@ -2997,7 +2997,7 @@ function HomePage({
       <div className="mb-6">
         <div className="flex items-center justify-between px-5 mb-3">
           <h2 className="text-base font-bold text-slate-900">
-            Upcoming Events 🎉
+            Upcoming Events 
           </h2>
           <button
             onClick={onEventClick}
@@ -3022,7 +3022,7 @@ function HomePage({
               />
               {(event as any).isFeatured && (
                 <span className="absolute top-2 right-2 text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-md">
-                  ⭐ FEATURED
+                   FEATURED
                 </span>
               )}
             </div>
@@ -3034,7 +3034,7 @@ function HomePage({
       <div className="mb-6">
         <div className="flex items-center justify-between px-5 mb-2.5">
           <h2 className="text-base font-bold text-slate-900">
-            Featured Network 🌟
+            Featured Network 
           </h2>
           <span className="text-[11px] font-semibold text-slate-400">
             Creators & Brands
@@ -3166,7 +3166,7 @@ function HomePage({
                           : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                     >
-                      {f === "Paid" ? "💰 Paid" : f === "Barter" ? "🔄 Barter" : f === "Collab" ? "🤝 Collab" : "✨ All Gigs"}
+                      {f === "Paid" ? " Paid" : f === "Barter" ? " Barter" : f === "Collab" ? " Collab" : " All Gigs"}
                     </button>
                   ))}
                 </div>
@@ -3204,7 +3204,7 @@ function HomePage({
                           : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                     >
-                      {loc === "All" ? "📍 All" : loc}
+                      {loc === "All" ? " All" : loc}
                     </button>
                   ))}
                 </div>
@@ -3281,10 +3281,10 @@ function HomePage({
               {isFeat && (
                 <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center justify-between">
                   <span className="text-white text-[11px] font-bold tracking-wide">
-                    ⚡ Featured Gig
+                     Featured Gig
                   </span>
                   <span className="text-[9px] font-black text-amber-300 bg-blue-900/40 px-2 py-0.5 rounded-full">
-                    ⭐ FEATURED
+                     FEATURED
                   </span>
                 </div>
               )}
@@ -3392,7 +3392,7 @@ function HomePage({
                     </div>
                     {(gig as any).applicantSelected && !poster.isOwner ? (
                       <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
-                        ✅ Selected
+                         Selected
                       </span>
                     ) : userAppliedGigIds?.has(gig.id) && !poster.isOwner ? (
                       <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
@@ -3406,7 +3406,7 @@ function HomePage({
                         }}
                         className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
                       >
-                        {poster.isOwner ? "View Applications" : "Apply ↗"}
+                        {poster.isOwner ? "View Applications" : "Apply "}
                       </button>
                     )}
                   </div>
@@ -3803,11 +3803,11 @@ function PostGigPage({
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { val: "Paid", emoji: "💰", desc: "You pay" },
+                      { val: "Paid", emoji: "", desc: "You pay" },
 
-                      { val: "Barter", emoji: "🔄", desc: "Exchange" },
+                      { val: "Barter", emoji: "", desc: "Exchange" },
 
-                      { val: "Collab", emoji: "🤝", desc: "Free collab" },
+                      { val: "Collab", emoji: "", desc: "Free collab" },
                     ].map(({ val, emoji, desc }) => (
                       <button
                         key={val}
@@ -4310,7 +4310,7 @@ function PostGigPage({
             </div>
 
             <div className="bg-[#e8edff] border border-[#c5d3ff] rounded-2xl px-4 py-3 flex gap-2.5">
-              <span className="mt-0.5 flex-shrink-0">ℹ️</span>
+              <span className="mt-0.5 flex-shrink-0"></span>
               <p className="text-xs text-[#3b5bdb] leading-relaxed font-medium">
                 Your gig will be reviewed and go live within a few minutes. You
                 can edit or remove it anytime from your profile.
@@ -4355,7 +4355,7 @@ function PostGigPage({
                 Publishing…
               </>
             ) : (
-              "Post this Gig 🚀"
+              "Post this Gig "
             )}
           </button>
         )}
@@ -4398,7 +4398,7 @@ function GigPostedSuccess({
           </svg>
         </div>
         <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-[#f76707] flex items-center justify-center text-white text-base shadow-lg">
-          🎉
+          
         </div>
       </div>
       <h2 className="font-display text-2xl font-black text-slate-900 mb-2">
@@ -4417,7 +4417,7 @@ function GigPostedSuccess({
         className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm border border-slate-100 hover:border-[#3b5bdb]/40 hover:bg-slate-50/80 flex items-center gap-3 active:scale-[0.99] transition cursor-pointer text-left"
       >
         <div className="w-10 h-10 rounded-xl bg-[#e8edff] flex items-center justify-center text-[#3b5bdb] text-lg">
-          💼
+          
         </div>
         <div className="flex-1 text-left">
           <div className="text-xs font-bold text-slate-500 mb-0.5">My Gigs</div>
@@ -4433,7 +4433,7 @@ function GigPostedSuccess({
         className="w-full bg-white rounded-2xl p-4 mb-8 shadow-sm border border-slate-100 hover:border-rose-300 hover:bg-rose-50/40 flex items-center gap-3 active:scale-[0.99] transition cursor-pointer text-left"
       >
         <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-lg">
-          📣
+          
         </div>
         <div className="flex-1 text-left">
           <div className="text-xs font-bold text-slate-500 mb-0.5">Share</div>
@@ -4590,7 +4590,7 @@ function MyApplicationsPage({
     switch (status) {
       case "accepted":
         return {
-          label: "🎉 Accepted",
+          label: " Accepted",
           bg: "bg-emerald-50",
           border: "border-emerald-200",
           text: "text-emerald-700",
@@ -4599,7 +4599,7 @@ function MyApplicationsPage({
         }
       case "rejected":
         return {
-          label: "❌ Not Selected",
+          label: " Not Selected",
           bg: "bg-red-50",
           border: "border-red-200",
           text: "text-red-600",
@@ -4608,7 +4608,7 @@ function MyApplicationsPage({
         }
       default:
         return {
-          label: "⏳ Pending Review",
+          label: " Pending Review",
           bg: "bg-amber-50",
           border: "border-amber-200",
           text: "text-amber-700",
@@ -4658,7 +4658,7 @@ function MyApplicationsPage({
         ) : applications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
             <div className="w-20 h-20 rounded-3xl bg-[#e8edff] flex items-center justify-center text-4xl shadow-sm">
-              📝
+              
             </div>
             <div>
               <h3 className="font-black text-slate-800 text-base mb-1">
@@ -4673,7 +4673,7 @@ function MyApplicationsPage({
               onClick={onBack}
               className="bg-[#3b5bdb] text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow-md shadow-blue-200"
             >
-              Browse Gigs ↗
+              Browse Gigs 
             </button>
           </div>
         ) : (
@@ -4771,7 +4771,7 @@ function MyApplicationsPage({
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
                       {app.instaHandle && (
                         <span className="text-[10px] font-semibold text-[#e4405f] bg-pink-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                          <span className="text-[9px]">📸</span>{" "}
+                          <span className="text-[9px]"></span>{" "}
                           {app.instaHandle.startsWith("@")
                             ? app.instaHandle
                             : `@${app.instaHandle}`}
@@ -4785,7 +4785,7 @@ function MyApplicationsPage({
                       )}
                       {app.availability && (
                         <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
-                          🗓 {app.availability}
+                           {app.availability}
                         </span>
                       )}
                     </div>
@@ -5132,7 +5132,7 @@ function ProfilePage({
 
   const bio =
     userProfile?.bio ||
-    "Creating real, aesthetic content from the heart of Kolkata 🌸 Open to brand collabs, co-shoots & community events."
+    "Creating real, aesthetic content from the heart of Kolkata  Open to brand collabs, co-shoots & community events."
 
   const stats =
     userRole === "brand"
@@ -5141,7 +5141,7 @@ function ProfilePage({
 
           { label: "Applicants", value: "24" },
 
-          { label: "Avg Rating", value: "4.8 ★" },
+          { label: "Avg Rating", value: "4.8 " },
 
           { label: "Category", value: "Brand" },
         ]
@@ -5152,7 +5152,7 @@ function ProfilePage({
 
           { label: "Avg. ER", value: "4.8%" },
 
-          { label: "Rating", value: "4.9 ★" },
+          { label: "Rating", value: "4.9 " },
         ]
 
   const tabs =
@@ -5214,7 +5214,7 @@ function ProfilePage({
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
-                    <span className="text-white text-base">📷</span>
+                    <span className="text-white text-base"></span>
                     <span className="text-white text-[9px] font-bold">
                       Change
                     </span>
@@ -5431,7 +5431,7 @@ function ProfilePage({
         <div className="fixed inset-0 z-55 bg-black/60 backdrop-blur-sm flex items-center justify-center p-5 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 text-lg">⚠️</span>
+              <span className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 text-lg"></span>
               <div className="text-left">
                 <h3 className="text-sm font-black text-slate-900">Delete Gig Campaign</h3>
                 <p className="text-[11px] text-slate-400 font-semibold">Are you sure you want to delete this campaign?</p>
@@ -5478,7 +5478,7 @@ function ProfilePage({
       {/* Delete success toast */}
       {deleteSuccessToast && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-55 bg-slate-900 text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4">
-          <span>🗑️</span> Campaign deleted successfully!
+          <span></span> Campaign deleted successfully!
         </div>
       )}
       {/* Top Action Row */}
@@ -5553,7 +5553,7 @@ function ProfilePage({
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent border-t border-slate-100"
                 >
                   <span className="text-[#3b5bdb] text-base leading-none">
-                    📋
+                    
                   </span>{" "}
                   My Applications
                 </button>
@@ -5678,7 +5678,7 @@ function ProfilePage({
           ))}
         {igError && (
           <div className="w-full bg-red-50 border border-red-100 rounded-2xl px-3 py-2 mb-4 text-xs text-red-600 font-medium">
-            ⚠️ {igError}
+             {igError}
           </div>
         )}
 
@@ -5917,7 +5917,7 @@ function ProfilePage({
                       onClick={() => onViewGig && onViewGig(g, "applicants")}
                       className="text-xs font-bold text-white bg-[#3b5bdb] hover:bg-[#2b4ef7] px-3.5 py-1.5 rounded-xl shadow-sm shadow-blue-200 transition cursor-pointer active:scale-95 flex items-center gap-1"
                     >
-                      View ({g.applicants || 0}) ↗
+                      View ({g.applicants || 0}) 
                     </button>
                   </div>
                 </div>
@@ -6009,7 +6009,7 @@ function ProfilePage({
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-14 text-center">
-              <div className="text-3xl mb-3">⭐</div>
+              <div className="text-3xl mb-3"></div>
               <div className="text-sm font-bold text-slate-700 mb-1">No reviews yet</div>
               <div className="text-xs text-slate-400">Reviews from brands and collaborators will appear here.</div>
             </div>
@@ -6056,23 +6056,23 @@ function ProfilePage({
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100">
           {[
-            { icon: "🔔", label: "Notifications", sub: "Manage alerts" },
+            { icon: "", label: "Notifications", sub: "Manage alerts" },
 
             {
-              icon: "🔒",
+              icon: "",
               label: "Privacy & Safety",
               sub: "Who can contact you",
             },
 
-            { icon: "💳", label: "Payment Settings", sub: "UPI, bank account" },
+            { icon: "", label: "Payment Settings", sub: "UPI, bank account" },
 
             {
-              icon: "🌐",
+              icon: "",
               label: "Connected Accounts",
               sub: "Instagram, YouTube",
             },
 
-            { icon: "🚪", label: "Log Out", sub: "", danger: true },
+            { icon: "", label: "Log Out", sub: "", danger: true },
           ].map((item, i) => (
             <button
               key={i}
@@ -6122,7 +6122,7 @@ function ProfilePage({
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[340px] bg-slate-900 text-white rounded-3xl p-5 shadow-2xl z-50 border border-slate-800 flex flex-col gap-4 transition-all duration-300">
             <div className="flex flex-col items-center text-center gap-3">
               <span className="text-3xl bg-slate-800 w-14 h-14 rounded-full flex items-center justify-center">
-                🚪
+                
               </span>
               <div className="flex flex-col gap-1">
                 <h4 className="text-base font-bold text-slate-100">
@@ -6221,7 +6221,7 @@ function ProfilePage({
                   }
                   className="bg-blue-50/70 hover:bg-blue-50 border-2 border-dashed border-[#3b5bdb]/30 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 cursor-pointer transition"
                 >
-                  <span className="text-xl">📁</span>
+                  <span className="text-xl"></span>
                   <span className="text-xs font-bold text-[#3b5bdb]">
                     {portfolioFile
                       ? portfolioFile.name
@@ -6674,7 +6674,7 @@ function ProfileSetupPage({
                     className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
-                    <span className="text-white text-lg">📷</span>
+                    <span className="text-white text-lg"></span>
                     <span className="text-white text-[9px] font-bold">
                       Change
                     </span>
@@ -6955,7 +6955,7 @@ function ViewEventPage({
         description: `Event Registration: ${event.title}`,
         image: "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=120&h=120&fit=crop&auto=format",
         handler: function (response: any) {
-          alert(`🎉 Payment Successful!\nPayment ID: ${response.razorpay_payment_id}\n\nYou are now registered for ${event.title}.`)
+          alert(` Payment Successful!\nPayment ID: ${response.razorpay_payment_id}\n\nYou are now registered for ${event.title}.`)
           toggleRsvpEvent(event.id)
         },
         prefill: {
@@ -7036,7 +7036,7 @@ function ViewEventPage({
             </span>
             {isFeat && (
               <span className="bg-amber-50 text-amber-600 text-[9px] font-black px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
-                ⭐ FEATURED EVENT
+                 FEATURED EVENT
               </span>
             )}
           </div>
@@ -7201,7 +7201,7 @@ function ViewEventPage({
             ? "✓ Registered"
             : isPaidEvent
               ? `Register Now · ₹${eventPriceVal}`
-              : "Register Now 🎉"}
+              : "Register Now "}
         </button>
       </div>
 
@@ -7211,7 +7211,7 @@ function ViewEventPage({
           <div className="w-full max-w-[390px] bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 pointer-events-auto animate-[slideUp_0.25s_ease-out]">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-2xl bg-[#3b5bdb]/10 flex items-center justify-center text-[#3b5bdb] text-xl flex-shrink-0">
-                🎟️
+                
               </div>
               <div>
                 <div className="text-sm font-bold text-slate-900">
@@ -7417,7 +7417,7 @@ function ExplorePage({
     if (!hasAnyResults) {
       return (
         <div className="flex flex-col items-center justify-center py-16 px-5 text-center">
-          <span className="text-4xl mb-3">🔍</span>
+          <span className="text-4xl mb-3"></span>
           <h3 className="text-sm font-bold text-slate-900 mb-1">
             No matches found
           </h3>
@@ -7739,15 +7739,15 @@ function ExplorePage({
       <div className="px-5 mb-5">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {[
-            { id: "all", label: "✨ All" },
+            { id: "all", label: " All" },
 
-            { id: "creators", label: "👤 Creators" },
+            { id: "creators", label: " Creators" },
 
-            { id: "brands", label: "🏢 Brands" },
+            { id: "brands", label: " Brands" },
 
-            { id: "gigs", label: "💼 Gigs" },
+            { id: "gigs", label: " Gigs" },
 
-            { id: "events", label: "📅 Events" },
+            { id: "events", label: " Events" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -7773,7 +7773,7 @@ function ExplorePage({
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
               <h2 className="text-base font-bold text-slate-900">
-                Featured Creators 🌟
+                Featured Creators 
               </h2>
               <button
                 onClick={() => setActiveFilter("creators")}
@@ -7849,7 +7849,7 @@ function ExplorePage({
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
               <h2 className="text-base font-bold text-slate-900">
-                Top Brands 🏢
+                Top Brands 
               </h2>
               <button
                 onClick={() => setActiveFilter("brands")}
@@ -7932,7 +7932,7 @@ function ExplorePage({
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
               <h2 className="text-base font-bold text-slate-900">
-                Trending Gigs 💼
+                Trending Gigs 
               </h2>
               <button
                 onClick={() => setActiveFilter("gigs")}
@@ -8050,7 +8050,7 @@ function ExplorePage({
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
               <h2 className="text-base font-bold text-slate-900">
-                Featured Events 📅
+                Featured Events 
               </h2>
               <button
                 onClick={() => setActiveFilter("events")}
@@ -8087,7 +8087,7 @@ function ExplorePage({
                           </span>
                           {isFeat && (
                             <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                              ⭐ FEATURED
+                               FEATURED
                             </span>
                           )}
                         </div>
@@ -8279,7 +8279,7 @@ function ExplorePage({
                   </p>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                      💼 {brand.campaignsCount} active campaigns
+                       {brand.campaignsCount} active campaigns
                     </span>
                   </div>
                 </div>
@@ -8310,7 +8310,7 @@ function ExplorePage({
                 {i === 0 && (
                   <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center gap-2">
                     <span className="text-white text-[11px] font-bold tracking-wide">
-                      ⚡ Featured Gig
+                       Featured Gig
                     </span>
                   </div>
                 )}
@@ -8423,7 +8423,7 @@ function ExplorePage({
                         }}
                         className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
                       >
-                        {poster.isOwner ? "View Applications" : "Apply ↗"}
+                        {poster.isOwner ? "View Applications" : "Apply "}
                       </button>
                     </div>
                   </div>
@@ -8461,7 +8461,7 @@ function ExplorePage({
                       </span>
                       {(event as any).isFeatured && (
                         <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                          ⭐ FEATURED
+                           FEATURED
                         </span>
                       )}
                     </div>
@@ -8937,7 +8937,7 @@ function ChatPage({
         text.includes("saturday") ||
         text.includes("sunday")
       ) {
-        return "Saturday afternoon works perfectly for me! Let's meet near Kumartuli around 3 PM? 📸"
+        return "Saturday afternoon works perfectly for me! Let's meet near Kumartuli around 3 PM? "
       }
       if (
         text.includes("hi") ||
@@ -8946,13 +8946,13 @@ function ChatPage({
       ) {
         return "Hey Priya! Glad we connected. I was just looking at some street shoots we could do. Are you free this weekend?"
       }
-      return "That sounds like a plan! Let's catch up and lock in the shoot details. 🚀"
+      return "That sounds like a plan! Let's catch up and lock in the shoot details. "
     }
     if (name.includes("Bahar"))
-      return "Perfect! Our project manager will send over the agreement draft. Let us know if you have any questions about the deliverables. 💼"
+      return "Perfect! Our project manager will send over the agreement draft. Let us know if you have any questions about the deliverables. "
     if (name.includes("Tanisha"))
-      return "Yay! Can't wait. Let's try that new cafe on Park Street, I heard their brews are amazing! ☕"
-    return "Thanks for the message! Let's coordinate and get this moving. 👍"
+      return "Yay! Can't wait. Let's try that new cafe on Park Street, I heard their brews are amazing! "
+    return "Thanks for the message! Let's coordinate and get this moving. "
   }
 
   const handleSendMessage = async () => {
@@ -9119,7 +9119,7 @@ function ChatPage({
       }))
       if (action === "accept") {
         setGigPanelToast(
-          `✅ Accepted ${app.applicantName || chatName} for "${app.gigTitle || "Gig"}"!`,
+          ` Accepted ${app.applicantName || chatName} for "${app.gigTitle || "Gig"}"!`,
         )
         setTimeout(() => setGigPanelToast(null), 4000)
 
@@ -9353,7 +9353,7 @@ function ChatPage({
                   </div>
                 ) : gigPanelApps.length === 0 ? (
                   <div className="flex flex-col items-center py-10 gap-3 text-center">
-                    <span className="text-4xl">📭</span>
+                    <span className="text-4xl"></span>
                     <div className="text-sm font-bold text-slate-800">
                       No Applications Found
                     </div>
@@ -9379,7 +9379,7 @@ function ChatPage({
                       >
                         <div className="flex items-start gap-3">
                           <div className="w-9 h-9 rounded-xl bg-[#e8edff] flex items-center justify-center flex-shrink-0">
-                            <span className="text-base">📋</span>
+                            <span className="text-base"></span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-black text-slate-900 leading-tight mb-0.5 truncate">
@@ -9400,8 +9400,8 @@ function ChatPage({
                               }`}
                             >
                               {statusText === "accepted"
-                                ? "✅ Accepted"
-                                : "❌ Rejected"}
+                                ? " Accepted"
+                                : " Rejected"}
                             </span>
                           )}
                         </div>
@@ -9436,7 +9436,7 @@ function ChatPage({
                                   />
                                 </svg>
                               ) : (
-                                "✅ Accept"
+                                " Accept"
                               )}
                             </button>
                             <button
@@ -9463,7 +9463,7 @@ function ChatPage({
                                   />
                                 </svg>
                               ) : (
-                                "❌ Reject"
+                                " Reject"
                               )}
                             </button>
                           </div>
@@ -9589,7 +9589,7 @@ function ChatPage({
 
         {filteredChats.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-4xl mb-3">💬</span>
+            <span className="text-4xl mb-3"></span>
             <h3 className="text-sm font-bold text-slate-900 mb-1">
               No chats found
             </h3>
@@ -9770,7 +9770,7 @@ function PublicProfilePage({
 
             { label: "Collabs", value: "14+", color: "text-emerald-500" },
 
-            { label: "Rating", value: "5.0 ★", color: "text-amber-500" },
+            { label: "Rating", value: "5.0 ", color: "text-amber-500" },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -9831,7 +9831,7 @@ function PublicProfilePage({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-14 text-center px-5">
-              <div className="text-3xl mb-3">📷</div>
+              <div className="text-3xl mb-3"></div>
               <div className="text-sm font-bold text-slate-700 mb-1">No portfolio items</div>
               <div className="text-xs text-slate-400">This creator hasn't uploaded any portfolio images yet.</div>
             </div>
@@ -9858,7 +9858,7 @@ function PublicProfilePage({
                 <div className="flex gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <span key={star} className="text-amber-400 text-xs">
-                      ★
+                      
                     </span>
                   ))}
                 </div>
@@ -9869,7 +9869,7 @@ function PublicProfilePage({
             ))
           ) : (
             <div className="flex flex-col items-center justify-center py-14 text-center">
-              <div className="text-3xl mb-3">⭐</div>
+              <div className="text-3xl mb-3"></div>
               <div className="text-sm font-bold text-slate-700 mb-1">No reviews yet</div>
               <div className="text-xs text-slate-400">Reviews from brands and collaborators will appear here.</div>
             </div>
@@ -10150,7 +10150,7 @@ function PublicBrandProfilePage({
               color: "text-rose-500",
             },
 
-            { label: "Rating", value: "4.8 ★", color: "text-amber-500" },
+            { label: "Rating", value: "4.8 ", color: "text-amber-500" },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -13795,7 +13795,7 @@ export default function App() {
         {isIgConnecting && (
           <div className="absolute inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center">
             <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl shadow-xl mb-4 animate-bounce">
-              📸
+              
             </div>
             <div className="w-8 h-8 rounded-full border-3 border-slate-200 border-t-[#e4405f] animate-spin mb-4" />
             <h3 className="text-base font-display font-black text-slate-900 mb-1">
@@ -13830,7 +13830,7 @@ export default function App() {
         {igConnectError && (
           <div className="fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-rose-600 text-white rounded-2xl p-4 shadow-xl z-50 flex items-center justify-between gap-3 animate-slideDown">
             <div className="flex items-center gap-2">
-              <span className="text-lg">⚠️</span>
+              <span className="text-lg"></span>
               <span className="text-xs font-bold text-left">
                 {igConnectError}
               </span>
@@ -13872,7 +13872,7 @@ export default function App() {
                 onClick={handleLogout}
                 className="text-xs font-bold text-slate-500 hover:text-slate-800 underline transition cursor-pointer"
               >
-                Stuck loading? Sign Out 🚪
+                Stuck loading? Sign Out 
               </button>
             </div>
           ) : userProfile.setupComplete === false ? (
@@ -13897,7 +13897,7 @@ export default function App() {
                     onClick={() => setAdminViewMode("dashboard")}
                     className="bg-[#3b5bdb] hover:bg-[#2b4ef7] text-white text-[10px] font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm cursor-pointer active:scale-95"
                   >
-                    <span>⚡</span> Dashboard →
+                    <span></span> Dashboard →
                   </button>
                 </div>
               )}
@@ -13917,13 +13917,13 @@ export default function App() {
                       {[
                         { id: "home", label: "Home", icon: "⊞" },
 
-                        { id: "explore", label: "Explore", icon: "🧭" },
+                        { id: "explore", label: "Explore", icon: "" },
 
                         { id: "post", label: "", icon: "＋", special: true },
 
-                        { id: "chat", label: "Chat", icon: "💬" },
+                        { id: "chat", label: "Chat", icon: "" },
 
-                        { id: "profile", label: "Profile", icon: "👤" },
+                        { id: "profile", label: "Profile", icon: "" },
                       ].map((tab) => (
                         <button
                           key={tab.id}

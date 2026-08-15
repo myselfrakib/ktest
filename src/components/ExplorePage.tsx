@@ -197,10 +197,10 @@ export function ExplorePage({
       <div className="px-5 py-2 flex gap-2 overflow-x-auto scrollbar-hide mb-2">
         {[
           { id: "all", label: "All" },
-          { id: "creators", label: "🎨 Creators" },
-          { id: "brands", label: "🏢 Brands" },
-          { id: "gigs", label: "💼 Gigs" },
-          { id: "events", label: "🎉 Events" },
+          { id: "creators", label: " Creators" },
+          { id: "brands", label: " Brands" },
+          { id: "gigs", label: " Gigs" },
+          { id: "events", label: " Events" },
         ].map((tab) => (
           <button
             key={tab.id}
