@@ -5889,17 +5889,7 @@ function ProfilePage({
                     {(g as any).status || "Active"}
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                      <UsersIcon />
-                      <span>{g.applicants || 0} applied</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-slate-400 font-medium">
-                      <CalendarIcon />
-                      <span>{(g as any).daysLeft || 5}d left</span>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-end pt-2 border-t border-slate-100">
                   <div className="flex gap-2">
                     <button
                       onClick={() => setDeletingGig(g)}
