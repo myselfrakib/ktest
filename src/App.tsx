@@ -8917,32 +8917,6 @@ function ChatPage({
         lastMessageTime: lastMsgTime,
       }
     }),
-    ...chats
-      .filter((c) => {
-        const hasRealConvo = conversations.some((convo) => {
-          const oUid =
-            convo.participants.find((uid) => uid !== currentUser?.uid) || ""
-          return (
-            convo.participantNames[oUid]?.toLowerCase() === c.name.toLowerCase()
-          )
-        })
-        return !hasRealConvo
-      })
-      .map((c) => {
-        const lastMsg = c.messages[c.messages.length - 1]
-        return {
-          id: c.id,
-          isReal: false,
-          name: c.name,
-          avatar: c.avatar,
-          handle: c.handle,
-          online: c.online,
-          verified: c.verified,
-          unreadCount: c.unreadCount,
-          lastMessageText: lastMsg ? lastMsg.text : "No messages yet",
-          lastMessageTime: lastMsg ? lastMsg.time : "",
-        }
-      }),
   ]
 
   const filteredChats = displayThreads.filter(
