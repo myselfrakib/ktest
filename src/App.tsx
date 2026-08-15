@@ -5481,30 +5481,13 @@ function ProfilePage({
           <span>🗑️</span> Campaign deleted successfully!
         </div>
       )}
-      {/* Hero banner */}
-      <div className="relative">
-        <div
-          className="h-36 w-full"
-          style={{
-            background:
-              "linear-gradient(135deg, #3b5bdb 0%, #7048e8 60%, #f76707 100%)",
-          }}
-        >
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at center, white 1px, transparent 1.5px)",
-              backgroundSize: "20px 20px",
-            }}
-          />
-        </div>
-
+      {/* Top Action Row */}
+      <div className="relative w-full px-5 pt-6 pb-2 flex justify-end">
         {/* Hamburger Menu on top-right */}
-        <div className="absolute top-4 right-4 z-20" ref={menuRef}>
+        <div className="relative z-20" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="w-9 h-9 rounded-full bg-black/25 backdrop-blur-md flex items-center justify-center border border-white/20 text-white cursor-pointer hover:bg-black/35 transition-all duration-150 active:scale-95 shadow-md"
+            className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-600 hover:bg-slate-50 transition active:scale-95 cursor-pointer"
             aria-label="Menu"
           >
             <svg
@@ -5585,34 +5568,34 @@ function ProfilePage({
             Link copied!
           </div>
         )}
+      </div>
 
-        {/* Centered Avatar */}
-        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-          <div className="relative">
-            <img
-              src={avatar}
-              alt={name}
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
-            />
-            {userProfile?.verified && (
-              <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white">
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path
-                    d="M2 5l2 2 4-4"
-                    stroke="white"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            )}
-          </div>
+      {/* Centered Avatar */}
+      <div className="flex flex-col items-center pt-2">
+        <div className="relative">
+          <img
+            src={avatar}
+            alt={name}
+            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+          />
+          {userProfile?.verified && (
+            <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path
+                  d="M2 5l2 2 4-4"
+                  stroke="white"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          )}
         </div>
       </div>
 
       {/* Name & bio */}
-      <div className="px-5 pt-16 pb-4 flex flex-col items-center text-center">
+      <div className="px-5 pt-4 pb-4 flex flex-col items-center text-center">
         <div className="flex items-center justify-center gap-2 mb-0.5">
           <h2 className="font-display text-2xl font-black text-slate-900">
             {name}
@@ -9702,68 +9685,56 @@ function PublicProfilePage({
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-[#f8fafc] flex flex-col min-h-screen">
-      {/* Hero */}
-      <div className="relative">
-        <div className="h-32 w-full bg-gradient-to-r from-[#3b5bdb] via-[#7048e8] to-[#f76707]">
-          <div
-            className="absolute inset-0 opacity-15"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at center, white 1px, transparent 1.5px)",
-              backgroundSize: "16px 16px",
-            }}
+      {/* Top Action Row */}
+      <div className="relative px-5 pt-12 pb-2 flex items-center justify-between w-full">
+        <button
+          onClick={onBack}
+          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-600 active:scale-95 transition cursor-pointer"
+        >
+          <ArrowLeftIcon />
+        </button>
+        <button
+          onClick={handleShare}
+          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-600 active:scale-95 transition relative cursor-pointer"
+        >
+          <ShareIcon />
+          {copied && (
+            <span className="absolute -bottom-8 right-0 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap shadow-md">
+              Link copied!
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Centered Avatar */}
+      <div className="flex flex-col items-center pt-2">
+        <div
+          className="relative cursor-pointer group active:scale-95 transition duration-150"
+          onClick={() => setShowAvatarViewer(true)}
+        >
+          <img
+            src={creator.avatar}
+            alt={creator.name}
+            className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-90"
           />
-        </div>
-
-        <div className="absolute top-10 left-0 right-0 flex items-center justify-between px-5">
-          <button
-            onClick={onBack}
-            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition"
-          >
-            <ArrowLeftIcon />
-          </button>
-          <button
-            onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition relative"
-          >
-            <ShareIcon />
-            {copied && (
-              <span className="absolute -bottom-8 right-0 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap shadow-md">
-                Link copied!
-              </span>
-            )}
-          </button>
-        </div>
-
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-          <div
-            className="relative cursor-pointer group active:scale-95 transition duration-150"
-            onClick={() => setShowAvatarViewer(true)}
-          >
-            <img
-              src={creator.avatar}
-              alt={creator.name}
-              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md shadow-slate-200 group-hover:opacity-90"
-            />
-            {creator.verified && (
-              <span className="absolute bottom-0.5 right-0.5 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                  <path
-                    d="M2 5l2 2 4-4"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                </svg>
-              </span>
-            )}
-          </div>
+          {creator.verified && (
+            <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                <path
+                  d="M2 5l2 2 4-4"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="px-5 pt-16 pb-4 bg-white border-b border-slate-100 shadow-sm flex flex-col items-center text-center">
+      <div className="px-5 pt-4 pb-4 bg-white border-b border-slate-100 shadow-sm flex flex-col items-center text-center">
         <div className="flex flex-col items-center mb-2">
           <h2 className="font-display text-xl font-black text-slate-900 leading-tight mb-1">
             {creator.name}
@@ -10099,65 +10070,53 @@ function PublicBrandProfilePage({
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-[#f8fafc] flex flex-col min-h-screen">
-      {/* Hero */}
-      <div className="relative">
-        <div className="h-32 w-full bg-gradient-to-r from-[#3b5bdb] via-[#7048e8] to-[#f76707]">
-          <div
-            className="absolute inset-0 opacity-15"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at center, white 1px, transparent 1.5px)",
-              backgroundSize: "16px 16px",
-            }}
+      {/* Top Action Row */}
+      <div className="relative px-5 pt-12 pb-2 flex items-center justify-between w-full">
+        <button
+          onClick={onBack}
+          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-600 active:scale-95 transition cursor-pointer"
+        >
+          <ArrowLeftIcon />
+        </button>
+        <button
+          onClick={handleShare}
+          className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 text-slate-600 active:scale-95 transition relative cursor-pointer"
+        >
+          <ShareIcon />
+          {copied && (
+            <span className="absolute -bottom-8 right-0 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap shadow-md">
+              Link copied!
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Centered Avatar */}
+      <div className="flex flex-col items-center pt-2">
+        <div className="relative">
+          <img
+            src={brand.logo}
+            alt={brand.name}
+            className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg"
           />
-        </div>
-
-        <div className="absolute top-10 left-0 right-0 flex items-center justify-between px-5">
-          <button
-            onClick={onBack}
-            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition cursor-pointer"
-          >
-            <ArrowLeftIcon />
-          </button>
-          <button
-            onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center border border-white/20 text-white active:scale-95 transition relative cursor-pointer"
-          >
-            <ShareIcon />
-            {copied && (
-              <span className="absolute -bottom-8 right-0 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded whitespace-nowrap shadow-md">
-                Link copied!
-              </span>
-            )}
-          </button>
-        </div>
-
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
-          <div className="relative">
-            <img
-              src={brand.logo}
-              alt={brand.name}
-              className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-md shadow-slate-200"
-            />
-            {brand.verified && (
-              <span className="absolute bottom-0.5 right-0.5 w-5 h-5 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                  <path
-                    d="M2 5l2 2 4-4"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                </svg>
-              </span>
-            )}
-          </div>
+          {brand.verified && (
+            <span className="absolute bottom-1 right-1 w-6 h-6 bg-[#3b5bdb] rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                <path
+                  d="M2 5l2 2 4-4"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="px-5 pt-16 pb-4 bg-white border-b border-slate-100 shadow-sm flex flex-col items-center text-center">
+      <div className="px-5 pt-4 pb-4 bg-white border-b border-slate-100 shadow-sm flex flex-col items-center text-center">
         <div className="flex flex-col items-center mb-2">
           <h2 className="font-display text-xl font-black text-slate-900 leading-tight mb-1">
             {brand.name}
