@@ -6989,9 +6989,9 @@ function ViewEventPage({
   const entryFee = (event as any).entryFee || (isPaidEvent ? `₹${eventPriceVal}` : "Free RSVP")
 
   return (
-    <div className="flex-1 overflow-y-auto scrollbar-hide pb-32 bg-[#f8fafc]">
+    <div className="flex-1 overflow-y-auto scrollbar-hide bg-[#f8fafc] relative">
       {/* Top Bar / Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full hover:bg-slate-200 transition cursor-pointer"
@@ -7014,82 +7014,85 @@ function ViewEventPage({
         </button>
       </div>
 
-      {/* Hero Banner */}
-      <div className="relative h-[220px] w-full overflow-hidden bg-slate-900">
+      {/* Parallax Image Background */}
+      <div className="absolute top-0 left-0 right-0 h-[300px] overflow-hidden z-0 bg-slate-900">
         <img
-          src={event.image}
+          src={(event as any).detailImage || event.image}
           alt={event.title}
-          className="w-full h-full object-cover opacity-60"
+          className="w-full h-full object-cover opacity-90"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-
-        {/* Badges */}
-        <div className="absolute top-4 left-5 right-5 flex items-center justify-between z-10">
-          <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/30">
-            {event.tag}
-          </span>
-          {isFeat && (
-            <span className="bg-amber-500 text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
-              ⭐ FEATURED EVENT
-            </span>
-          )}
-        </div>
-
-        {/* Date Stamp Overlay */}
-        <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between z-10">
-          <div>
-            <span className="text-amber-400 text-xs font-bold uppercase tracking-wider block mb-0.5">
-              📅 Upcoming Event
-            </span>
-            <h1 className="text-white font-display font-black text-xl leading-tight drop-shadow-md">
-              {event.title}
-            </h1>
-            <p className="text-slate-200 text-xs mt-0.5 font-medium">
-              {event.subtitle}
-            </p>
-          </div>
-          <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl px-3.5 py-1.5 text-center min-w-[56px] shadow-lg">
-            <span className="text-white font-display font-black text-xl leading-none block">
-              {event.day}
-            </span>
-            <span className="text-white/90 text-[10px] font-bold uppercase tracking-wider block">
-              {event.month}
-            </span>
-          </div>
-        </div>
       </div>
 
-      <div className="px-5 pt-5 flex flex-col gap-5">
-        {/* Date, Time & Venue Card */}
-        <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-[#3b5bdb] flex-shrink-0">
-              <CalendarIcon />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-slate-900">
-                {event.date}
-              </div>
-              <div className="text-[11px] text-slate-500 font-medium">
-                {event.time} IST
-              </div>
-            </div>
+      {/* Spacer to push content down so the image is visible */}
+      <div className="h-[220px]" />
+
+      {/* Main Content Container (Slides over the image) */}
+      <div className="bg-[#f8fafc] rounded-t-3xl shadow-[0_-8px_20px_rgba(0,0,0,0.08)] relative z-20 min-h-screen pb-32 pt-2">
+        <div className="px-5 pt-6 pb-2">
+          {/* Badges */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="bg-[#3b5bdb]/10 text-[#3b5bdb] text-[10px] font-bold px-3 py-1 rounded-full border border-[#3b5bdb]/20">
+              {event.tag}
+            </span>
+            {isFeat && (
+              <span className="bg-amber-50 text-amber-600 text-[9px] font-black px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
+                ⭐ FEATURED EVENT
+              </span>
+            )}
           </div>
-          <div className="h-[1px] bg-slate-100 w-full" />
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-[#f76707] flex-shrink-0">
-              <MapPinIcon />
-            </div>
+
+          {/* Title & Info */}
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="text-xs font-bold text-slate-900">
-                {event.venue}
-              </div>
-              <div className="text-[11px] text-slate-500 font-medium">
-                {event.location}
-              </div>
+              <h1 className="text-slate-900 font-display font-black text-2xl leading-tight">
+                {event.title}
+              </h1>
+              <p className="text-slate-500 text-sm mt-1 font-medium leading-relaxed">
+                {event.subtitle}
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-2xl px-3.5 py-2 text-center min-w-[60px] shadow-sm flex-shrink-0">
+              <span className="text-slate-900 font-display font-black text-xl leading-none block">
+                {event.day}
+              </span>
+              <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mt-0.5">
+                {event.month}
+              </span>
             </div>
           </div>
         </div>
+
+        <div className="px-5 pt-3 flex flex-col gap-5">
+          {/* Date, Time & Venue Card */}
+          <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-black flex-shrink-0">
+                <CalendarIcon />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900">
+                  {event.date}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  {event.time} IST
+                </div>
+              </div>
+            </div>
+            <div className="h-[1px] bg-slate-100 w-full" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-black flex-shrink-0">
+                <MapPinIcon />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900">
+                  {event.venue}
+                </div>
+                <div className="text-[11px] text-slate-500 font-medium">
+                  {event.location}
+                </div>
+              </div>
+            </div>
+          </div>
 
         {/* RSVP & Attendee Counter */}
         <div className="bg-gradient-to-r from-[#3b5bdb]/10 to-[#3b5bdb]/5 rounded-3xl p-4 border border-[#3b5bdb]/20 flex items-center justify-between">
@@ -7174,6 +7177,7 @@ function ViewEventPage({
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Sticky Bottom Bar CTA */}

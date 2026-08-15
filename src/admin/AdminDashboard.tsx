@@ -163,6 +163,16 @@ export function AdminDashboardPage({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [originalImage, setOriginalImage] = useState<string | null>(null)
 
+  // Detail Image Cropper States
+  const [eventDetailImage, setEventDetailImage] = useState("")
+  const [eventDetailFile, setEventDetailFile] = useState<File | null>(null)
+  const [detailZoom, setDetailZoom] = useState(1.0)
+  const [detailPanX, setDetailPanX] = useState(0)
+  const [detailPanY, setDetailPanY] = useState(0)
+  const [isDetailDragging, setIsDetailDragging] = useState(false)
+  const [detailDragStart, setDetailDragStart] = useState({ x: 0, y: 0 })
+  const [originalDetailImage, setOriginalDetailImage] = useState<string | null>(null)
+
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
     setDragStart({ x: e.clientX - panX, y: e.clientY - panY })
@@ -201,6 +211,56 @@ export function AdminDashboardPage({
         ctx.save()
         ctx.translate(400 + panX * scaleX, 200 + panY * scaleY)
         ctx.scale(zoom, zoom)
+        ctx.drawImage(img, -img.width / 2, -img.height / 2)
+        ctx.restore()
+
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error("Canvas toBlob failed"))
+        }, "image/jpeg", 0.85)
+      }
+      img.onerror = (err) => reject(err)
+    })
+  }
+
+  const handleDetailMouseDown = (e: React.MouseEvent) => {
+    setIsDetailDragging(true)
+    setDetailDragStart({ x: e.clientX - detailPanX, y: e.clientY - detailPanY })
+  }
+
+  const handleDetailMouseMove = (e: React.MouseEvent) => {
+    if (!isDetailDragging) return
+    setDetailPanX(e.clientX - detailDragStart.x)
+    setDetailPanY(e.clientY - detailDragStart.y)
+  }
+
+  const handleDetailMouseUp = () => {
+    setIsDetailDragging(false)
+  }
+
+  const getCroppedDetailImageBlob = (): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const container = document.querySelector(".event-detail-crop-container")
+      const rect = container?.getBoundingClientRect()
+      const previewW = rect?.width || 400
+      const previewH = rect?.height || 300
+      const scaleX = 800 / previewW
+      const scaleY = 600 / previewH
+
+      const img = new Image()
+      img.src = originalDetailImage!
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        canvas.width = 800
+        canvas.height = 600
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return reject(new Error("No canvas context"))
+
+        ctx.fillStyle = "#0f1d38"
+        ctx.fillRect(0, 0, 800, 600)
+        ctx.save()
+        ctx.translate(400 + detailPanX * scaleX, 300 + detailPanY * scaleY)
+        ctx.scale(detailZoom, detailZoom)
         ctx.drawImage(img, -img.width / 2, -img.height / 2)
         ctx.restore()
 
@@ -395,6 +455,21 @@ export function AdminDashboardPage({
     }
   }
 
+  const handleDetailFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const f = e.target.files[0]
+      setEventDetailFile(f)
+      const reader = new FileReader()
+      reader.onload = () => {
+        setOriginalDetailImage(reader.result as string)
+        setDetailZoom(1.0)
+        setDetailPanX(0)
+        setDetailPanY(0)
+      }
+      reader.readAsDataURL(f)
+    }
+  }
+
   const resetEventForm = () => {
     setEventTitle("")
     setEventSubtitle("")
@@ -407,6 +482,9 @@ export function AdminDashboardPage({
     setEventFile(null)
     setEventPreviewUrl(null)
     setOriginalImage(null)
+    setEventDetailImage("")
+    setEventDetailFile(null)
+    setOriginalDetailImage(null)
     setEventDescription("")
     setEventOrganizer("Kreator Kolkata Community")
     setEventEntryFee("Free RSVP")
@@ -416,6 +494,9 @@ export function AdminDashboardPage({
     setZoom(1.0)
     setPanX(0)
     setPanY(0)
+    setDetailZoom(1.0)
+    setDetailPanX(0)
+    setDetailPanY(0)
   }
 
   const handleCreateEventSubmit = async (e: React.FormEvent) => {
@@ -453,6 +534,30 @@ export function AdminDashboardPage({
       if (!finalImageUrl) {
         finalImageUrl =
           "https://images.unsplash.com/photo-1648440108249-30567222448a?w=400&h=200&fit=crop&auto=format"
+      }
+
+      let finalDetailImageUrl = eventDetailImage.trim()
+
+      if (originalDetailImage) {
+        try {
+          const blob = await getCroppedDetailImageBlob()
+          const storageRef = ref(
+            storage,
+            `events/${Date.now()}_cropped_detail.jpg`,
+          )
+          await uploadBytes(storageRef, blob)
+          finalDetailImageUrl = await getDownloadURL(storageRef)
+        } catch (cropErr) {
+          console.warn("Detail cropper upload error, fallback to raw file:", cropErr)
+          if (eventDetailFile) {
+            const storageRef = ref(
+              storage,
+              `events/${Date.now()}_${eventDetailFile.name}`,
+            )
+            await uploadBytes(storageRef, eventDetailFile)
+            finalDetailImageUrl = await getDownloadURL(storageRef)
+          }
+        }
       }
 
       const parsedDate = new Date(eventDate)
@@ -497,6 +602,7 @@ export function AdminDashboardPage({
         tag: eventTag.trim() || "Event",
         color: "#3b5bdb",
         image: finalImageUrl,
+        detailImage: finalDetailImageUrl || finalImageUrl,
         description:
           eventDescription.trim() ||
           "Join Kolkata's premier creator networking meetup!",
@@ -1864,7 +1970,7 @@ export function AdminDashboardPage({
             )}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Banner Image
+                Thumbnail Image (Home Page)
               </label>
               <input
                 type="file"
@@ -1877,7 +1983,7 @@ export function AdminDashboardPage({
             {originalImage && (
               <div className="flex flex-col gap-2">
                 <span className="text-xs font-bold text-slate-700">
-                  Crop Banner Image
+                  Crop Thumbnail Image
                 </span>
                 <div
                   className="event-crop-container relative w-full h-48 bg-slate-900 rounded-2xl overflow-hidden cursor-move border border-slate-300"
@@ -1907,6 +2013,57 @@ export function AdminDashboardPage({
                     step="0.05"
                     value={zoom}
                     onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1 mt-2">
+                Detail Image (View Event Page)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleDetailFileChange}
+                className="w-full text-xs text-slate-600"
+              />
+            </div>
+
+            {originalDetailImage && (
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-bold text-slate-700">
+                  Crop Detail Image
+                </span>
+                <div
+                  className="event-detail-crop-container relative w-full h-48 bg-slate-900 rounded-2xl overflow-hidden cursor-move border border-slate-300"
+                  onMouseDown={handleDetailMouseDown}
+                  onMouseMove={handleDetailMouseMove}
+                  onMouseUp={handleDetailMouseUp}
+                  onMouseLeave={handleDetailMouseUp}
+                >
+                  <img
+                    src={originalDetailImage}
+                    alt=""
+                    draggable={false}
+                    className="absolute max-w-none select-none"
+                    style={{
+                      transform: `translate(calc(-50% + ${detailPanX}px), calc(-50% + ${detailPanY}px)) scale(${detailZoom})`,
+                      top: "50%",
+                      left: "50%",
+                    }}
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-500 font-bold">Zoom:</span>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="3.0"
+                    step="0.05"
+                    value={detailZoom}
+                    onChange={(e) => setDetailZoom(parseFloat(e.target.value))}
                     className="flex-1"
                   />
                 </div>

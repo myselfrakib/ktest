@@ -317,6 +317,13 @@ export function ExplorePage({
                     onClick={() => onApply(gig)}
                     className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm cursor-pointer hover:border-slate-200 transition"
                   >
+                    <div className="h-32 bg-slate-100 overflow-hidden relative">
+                      <img
+                        src={(gig as any).detailImage || gig.avatar}
+                        alt={gig.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+                    </div>
                     <div className="flex items-center gap-3 mb-2">
                       <img
                         src={gig.avatar}

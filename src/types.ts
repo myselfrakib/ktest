@@ -77,6 +77,7 @@ export interface Event {
   isFeatured?: boolean
   isPaid?: boolean
   price?: number | string
+  detailImage?: string
 }
 
 export interface ChatMessage {
