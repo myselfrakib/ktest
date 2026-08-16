@@ -1,25 +1,12 @@
 import ImageWithSkeleton from "./components/ImageWithSkeleton"
 import { AdminDashboardPage } from "./admin/AdminDashboard"
-
 import { AdminPendingPage } from "./admin/AdminPending"
-
-import { ExplorePage } from "./components/ExplorePage"
-
-import { ChatPage } from "./components/ChatPage"
-
-import {
-  PublicProfilePage,
-  PublicBrandProfilePage,
-} from "./components/ProfilePage"
 
 import type {
   Gig,
   Creator,
   Brand,
   Event,
-  Conversation,
-  LiveMessage,
-  ChatThread,
 } from "./types"
 
 import {
@@ -706,13 +693,7 @@ const formatBudget = (budget: string | undefined, type?: string) => {
   return b
 }
 
-type Gig = typeof GIGS[0]
 
-type Creator = typeof CREATORS[0]
-
-type Brand = typeof BRANDS[0]
-
-type Event = typeof EVENTS[0]
 
 const NOTIFICATIONS = [
   {
@@ -740,7 +721,7 @@ const NOTIFICATIONS = [
   {
     id: 2,
 
-    type: "collab" === "event" ? "collab" : "event", // just preserving formatting/structure
+    type: "event",
 
     title: "RSVP Confirmed",
 
@@ -865,7 +846,7 @@ type ChatThread = {
 
   unreadCount: number
 
-  messages: Array<{ id: number text: string sender: string time: string }>
+  messages: Array<{ id: number; text: string; sender: string; time: string }>
 }
 
 type ChatMessage = ChatThread["messages"][0]
@@ -1418,13 +1399,11 @@ function ApplyPage({
   const matchedBrand =
     brands.find(
       (b) =>
-        b.name?.toLowerCase() === gig.creatorName?.toLowerCase() ||
-        b.brand?.toLowerCase() === gig.creatorName?.toLowerCase(),
+        b.name?.toLowerCase() === gig.creatorName?.toLowerCase(),
     ) ||
     BRANDS.find(
       (b) =>
-        b.name?.toLowerCase() === gig.creatorName?.toLowerCase() ||
-        b.brand?.toLowerCase() === gig.creatorName?.toLowerCase(),
+        b.name?.toLowerCase() === gig.creatorName?.toLowerCase(),
     )
 
   const followersCount =
@@ -2918,7 +2897,7 @@ function resolveGigPosterDetails(
 
   const niche = isOwner
     ? userProfile.niche || gig.niche || "Creator"
-    : matchedCreator?.niche || gig.niche || matchedBrand?.niche || "Creator"
+    : matchedCreator?.niche || gig.niche || (matchedBrand as any)?.niche || "Creator"
 
   return { avatar, name, handle, verified, followers, niche, isOwner }
 }
@@ -4698,7 +4677,7 @@ const MY_POSTED_GIGS: Gig[] = []
 
 const SAVED_GIGS_DATA: Gig[] = []
 
-const PORTFOLIO_ITEMS: Array<{ id: number img: string likes: string }> = []
+const PORTFOLIO_ITEMS: Array<{ id: number; img: string; likes: string }> = []
 
 const REVIEWS: Array<{
   name: string
@@ -12713,7 +12692,7 @@ type RouteState = {
   exploreFilter: "all" | "creators" | "brands" | "gigs" | "events"
 }
 
-const ROUTE_QUERY_KEYS: keyof RouteState[] = [
+const ROUTE_QUERY_KEYS: (keyof RouteState)[] = [
   "selectedGigId",
 
   "selectedEventId",
@@ -12743,7 +12722,7 @@ const ROUTE_QUERY_KEYS: keyof RouteState[] = [
 
 // else (filters, sub-tabs) just updates the current URL in place.
 
-const ROUTE_NAV_KEYS: keyof RouteState[] = [
+const ROUTE_NAV_KEYS: (keyof RouteState)[] = [
   "activeTab",
 
   "selectedGigId",
@@ -13201,7 +13180,7 @@ export default function App() {
   // Auth State changed hook
 
   useEffect(() => {
-    let unsubs: () => void[] = []
+    let unsubs: Array<() => void> = []
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setIsLoggedIn(!!user)
@@ -15116,7 +15095,7 @@ export default function App() {
             const latestGig = gigs[0] || GIGS[0]
 
             if (latestGig) {
-              handleShareGigCard(latestGig)
+              handleShareGig(latestGig)
             } else {
               const shareUrl = `${window.location.origin}`
 
@@ -15433,7 +15412,7 @@ export default function App() {
             />
           ) : (
             <>
-              {userRole === "admin" && adminViewMode === "platform" && (
+              {(userRole as any) === "admin" && adminViewMode === "platform" && (
                 <div className="bg-[#0a1628] text-white px-4 py-2.5 flex items-center justify-between sticky top-0 z-40 border-b border-slate-800 shadow-md">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />

@@ -18,6 +18,7 @@ export interface Gig {
   brand: string | null
   brandLogo: string | null
   userId?: string
+  posterUid?: string
   applicantSelected?: boolean
   selectedApplicantName?: string
   selectedApplicantAvatar?: string | null
@@ -40,6 +41,7 @@ export interface Creator {
   instagram?: any
   isInstagramConnected?: boolean
   uid?: string
+  lastSeen?: string
 }
 
 export interface Brand {
@@ -54,6 +56,7 @@ export interface Brand {
   instagram?: any
   isInstagramConnected?: boolean
   uid?: string
+  lastSeen?: string
 }
 
 export interface Event {

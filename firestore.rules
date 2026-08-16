@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if the user is an admin
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Admins Collection
+    match /admins/{userId} {
+      // Admins can read/write everything
+      allow read, write: if isAdmin();
+      
+      // Users can read their own pending admin document
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can create their own document ONLY if isAdmin is false
+      allow create: if request.auth != null && request.auth.uid == userId && request.resource.data.isAdmin == false;
+      
+      // Users can update their own document, but cannot change isAdmin to true
+      allow update: if request.auth != null && request.auth.uid == userId && request.resource.data.isAdmin == false;
+    }
+    
+    // Site Settings Collection (e.g. landing page slides)
+    match /siteSettings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Notifications Collection
+    match /notifications/{document=**} {
+      // Anyone can read their own notifications
+      allow read: if request.auth != null && (resource.data.recipientUid == request.auth.uid || resource.data.recipientUid == 'all');
+      // Anyone can create notifications (since the app currently triggers them client-side)
+      // Admins can do anything
+      allow write: if request.auth != null;
+    }
+    
+    // For other collections (gigs, events, users, creators, brands, etc.)
+    match /{document=**} {
+      // Allow read/write for authenticated users to preserve existing functionality
+      // (A production app would restrict these based on ownership)
+      allow read, write: if request.auth != null;
+    }
+  }
+}

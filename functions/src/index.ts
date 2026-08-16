@@ -11,7 +11,7 @@ const db = admin.firestore()
 // For local dev, use .runtimeconfig.json
 
 const INSTAGRAM_APP_ID = "1361228946204623"
-const INSTAGRAM_APP_SECRET = "a8cd8976f9493e19360c2db1b20e28f1"
+const INSTAGRAM_APP_SECRET = process.env.INSTAGRAM_APP_SECRET || "a8cd8976f9493e19360c2db1b20e28f1"
 const APP_URL = "https://ktest-nine.vercel.app"
 // The redirect URI registered in Meta App Dashboard must match EXACTLY:
 const REDIRECT_URI = `${APP_URL}/auth/instagram/callback`
