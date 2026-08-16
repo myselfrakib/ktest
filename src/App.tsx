@@ -3097,7 +3097,7 @@ function HomePage({
               onClick={() => setActiveFilter(f)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                 activeFilter === f
-                  ? "bg-[#3b5bdb] text-white shadow-md shadow-blue-200"
+                  ? "bg-black text-white shadow-md shadow-black/20"
                   : "bg-white text-slate-500 border border-slate-200"
               }`}
             >
@@ -3112,8 +3112,8 @@ function HomePage({
               onClick={() => setActiveNiche(n)}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
                 activeNiche === n
-                  ? "bg-[#f76707] text-white"
-                  : "bg-[#e8edff] text-[#3b5bdb]"
+                  ? "bg-black text-white"
+                  : "bg-[#e8edff] text-slate-600"
               }`}
             >
               {n}
@@ -3400,7 +3400,7 @@ function HomePage({
                           e.stopPropagation()
                           onApply(gig)
                         }}
-                        className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
+                        className="bg-black text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-black/20 whitespace-nowrap"
                       >
                         {poster.isOwner ? "View Applications" : "Apply "}
                       </button>
@@ -7748,7 +7748,7 @@ function ExplorePage({
                           e.stopPropagation()
                           onApply(gig)
                         }}
-                        className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3"
+                        className="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3 shadow-sm"
                       >
                         {poster.isOwner ? "View Applications" : "Apply"}
                       </button>
@@ -8183,7 +8183,7 @@ function ExplorePage({
                             e.stopPropagation()
                             onApply(gig)
                           }}
-                          className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm"
+                          className="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm"
                         >
                           {poster.isOwner ? "View Applications" : "Apply"}
                         </button>
@@ -8578,7 +8578,7 @@ function ExplorePage({
                           e.stopPropagation()
                           onApply(gig)
                         }}
-                        className="bg-[#3b5bdb] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 whitespace-nowrap"
+                        className="bg-black text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-black/20 whitespace-nowrap"
                       >
                         {poster.isOwner ? "View Applications" : "Apply "}
                       </button>
@@ -10455,7 +10455,7 @@ function PublicBrandProfilePage({
                         e.stopPropagation()
                         onApply(gig)
                       }}
-                      className="bg-[#3b5bdb] text-white text-[10px] font-bold px-3 py-1 rounded-xl shadow-sm cursor-pointer"
+                      className="w-full py-3 bg-black text-white font-bold rounded-xl shadow-lg shadow-black/20"
                     >
                       {poster.isOwner ? "View Applications" : "Apply Now"}
                     </button>
@@ -14230,7 +14230,7 @@ export default function App() {
                           }`}
                         >
                           {tab.special ? (
-                            <span className="w-14 h-14 rounded-full bg-[#3b5bdb] flex items-center justify-center text-2xl text-white shadow-lg shadow-blue-300">
+                            <span className="w-14 h-14 rounded-full bg-black flex items-center justify-center text-2xl text-white shadow-lg shadow-black/30">
                               {tab.icon}
                             </span>
                           ) : (
