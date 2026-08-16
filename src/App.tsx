@@ -2306,15 +2306,15 @@ function ViewMyGigPage({
           </div>
 
           <div>
-            <h2 className="text-base font-extrabold text-slate-900 leading-snug mb-2">
+            <h2 className="text-base font-extrabold text-slate-900 leading-snug mb-2 flex items-center gap-2 flex-wrap">
               {gig.title}
-            </h2>
-            <div className="flex items-center gap-2 flex-wrap">
               <span
                 className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || "bg-slate-100"}`}
               >
                 {gig.type}
               </span>
+            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-slate-800 bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-100">
                 {formatBudget(gig.budget, gig.type)}
               </span>
@@ -3337,17 +3337,14 @@ function HomePage({
                     <ShareIcon />
                   </button>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">
+                <h3 className="text-sm font-bold text-slate-900 mb-3 leading-snug flex items-center gap-2 flex-wrap">
                   {gig.title}
-                </h3>
-                <div className="flex items-center gap-1.5 mb-3 flex-wrap">
                   <span
                     className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}
                   >
                     {gig.type}
                   </span>
-
-                </div>
+                </h3>
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[11px] text-slate-400 font-medium mb-0.5">
@@ -8498,17 +8495,14 @@ function ExplorePage({
                       <ShareIcon />
                     </button>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900 mb-2 leading-snug">
+                  <h3 className="text-sm font-bold text-slate-900 mb-3 leading-snug flex items-center gap-2 flex-wrap">
                     {gig.title}
-                  </h3>
-                  <div className="flex items-center gap-1.5 mb-3 flex-wrap">
                     <span
                       className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${TYPE_COLORS[gig.type]}`}
                     >
                       {gig.type}
                     </span>
-
-                  </div>
+                  </h3>
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-[11px] text-slate-400 font-medium mb-0.5">
@@ -10377,15 +10371,15 @@ function PublicBrandProfilePage({
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-900 leading-snug mb-1">
+                    <h4 className="text-xs font-bold text-slate-900 leading-snug mb-1 flex items-center gap-1.5 flex-wrap">
                       {gig.title}
-                    </h4>
-                    <div className="flex items-center gap-2">
                       <span
                         className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${TYPE_COLORS[gig.type] || "bg-slate-100"}`}
                       >
                         {gig.type}
                       </span>
+                    </h4>
+                    <div className="flex items-center gap-2">
                       <span className="text-[10px] text-slate-400 font-medium">
                         {formatBudget(gig.budget, gig.type)}
                       </span>
