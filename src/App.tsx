@@ -2924,14 +2924,10 @@ function HomePage({
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
       {/* Header */}
       <div className="px-5 pt-12 pb-4">
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-0.5">
-              <MapPinIcon />
-              <span>Kolkata, West Bengal</span>
-            </div>
-            <h1 className="font-display text-[22px] font-black text-slate-900 leading-tight tracking-tight">
-              Kreator <span className="text-[#3b5bdb]">Kolkata</span>
+        <div className="relative flex items-center justify-end mb-1 h-10">
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2">
+            <h1 className="font-['Gendy'] text-[26px] font-black text-black leading-tight tracking-tight text-center">
+              Kreator Kolkata
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -13202,7 +13198,18 @@ export default function App() {
   const handleSendConnectionRequest = (id: number) => {
     setSentRequests((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+        // Trigger visual notification
+        setLiveToast({
+          title: "Connection Request Sent",
+          message: "They will be notified of your request.",
+          senderName: "System",
+        })
+        setTimeout(() => setLiveToast(null), 4000)
+      }
       return next
     })
   }
@@ -13218,6 +13225,14 @@ export default function App() {
       next.add(id)
       return next
     })
+    
+    // Trigger visual notification
+    setLiveToast({
+      title: "Connection Accepted",
+      message: "You are now connected!",
+      senderName: "System",
+    })
+    setTimeout(() => setLiveToast(null), 4000)
   }
 
   const handleRemoveConnection = (id: number) => {
