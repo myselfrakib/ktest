@@ -2924,9 +2924,9 @@ function HomePage({
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28">
       {/* Header */}
       <div className="px-5 pt-12 pb-4">
-        <div className="relative flex items-center justify-end mb-1 h-10">
-          <div className="absolute left-1/2 -translate-x-1/2 -top-2">
-            <h1 className="font-['Gendy'] text-[26px] font-black text-black leading-tight tracking-tight text-center">
+        <div className="flex items-center justify-between mb-1 h-10">
+          <div className="relative -top-2">
+            <h1 className="font-['Gendy'] text-[26px] font-black text-black leading-tight tracking-tight">
               Kreator Kolkata
             </h1>
           </div>
