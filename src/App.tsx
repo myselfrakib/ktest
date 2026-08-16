@@ -2916,7 +2916,11 @@ function resolveGigPosterDetails(
     ? userProfile.followers || gig.followers
     : gig.followers || matchedCreator?.followers || "50K"
 
-  return { avatar, name, handle, verified, followers, isOwner }
+  const niche = isOwner
+    ? userProfile.niche || gig.niche || "Creator"
+    : matchedCreator?.niche || gig.niche || matchedBrand?.niche || "Creator"
+
+  return { avatar, name, handle, verified, followers, niche, isOwner }
 }
 
 // ── Home Page ──────────────────────────────────────────────────────────────
@@ -3105,7 +3109,7 @@ function HomePage({
       {/* Header */}
       <div className="px-5 pt-12 pb-4 bg-slate-900 shadow-sm rounded-b-2xl mb-4">
         <div className="flex items-center justify-between mb-1 h-10">
-          <div className="relative -top-2">
+          <div className="relative top-0.5">
             <h1 className="font-['Gendy'] text-[26px] font-black text-white leading-tight tracking-tight">
               Kreator Kolkata
             </h1>
@@ -3597,11 +3601,11 @@ function HomePage({
                       </div>
                     </div>
                     {(gig as any).applicantSelected && !poster.isOwner ? (
-                      <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-4 py-2 rounded-xl flex items-center gap-1 whitespace-nowrap shadow-sm">
                         Selected
                       </span>
                     ) : userAppliedGigIds?.has(gig.id) && !poster.isOwner ? (
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl flex items-center gap-1 whitespace-nowrap shadow-sm">
                         ✓ Applied
                       </span>
                     ) : (
