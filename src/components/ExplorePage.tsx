@@ -1,9 +1,19 @@
 import React, { useState } from "react"
+import ImageWithSkeleton from "./ImageWithSkeleton"
 import type { Gig, Creator, Brand, Event } from "../types"
 
 function BellIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -12,7 +22,16 @@ function BellIcon() {
 
 function SearchIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -21,7 +40,16 @@ function SearchIcon() {
 
 function MapPinIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
@@ -30,7 +58,16 @@ function MapPinIcon() {
 
 function InstagramIcon() {
   return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
@@ -40,7 +77,16 @@ function InstagramIcon() {
 
 function CalendarIcon() {
   return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
       <line x1="16" y1="2" x2="16" y2="6" />
       <line x1="8" y1="2" x2="8" y2="6" />
@@ -64,7 +110,9 @@ interface ExplorePageProps {
   searchQuery: string
   setSearchQuery: (query: string) => void
   activeFilter: "all" | "creators" | "brands" | "gigs" | "events"
-  setActiveFilter: (filter: "all" | "creators" | "brands" | "gigs" | "events") => void
+  setActiveFilter: (
+    filter: "all" | "creators" | "brands" | "gigs" | "events",
+  ) => void
   gigs?: Gig[]
   creators?: Creator[]
   brands?: Brand[]
@@ -167,7 +215,7 @@ export function ExplorePage({
               </span>
             )}
           </button>
-          <img
+          <ImageWithSkeleton
             src={userAvatar}
             alt="Profile"
             onClick={onProfileClick}
@@ -232,7 +280,7 @@ export function ExplorePage({
                     onClick={() => onCreatorClick(creator.name)}
                     className="bg-white rounded-3xl p-3.5 border border-slate-100 shadow-sm cursor-pointer hover:border-blue-200 transition flex flex-col items-center text-center"
                   >
-                    <img
+                    <ImageWithSkeleton
                       src={creator.avatar}
                       alt={creator.name}
                       className="w-14 h-14 rounded-full object-cover border-2 border-[#e8edff] mb-2"
@@ -272,7 +320,7 @@ export function ExplorePage({
                       onClick={() => onBrandClick(brand)}
                       className="bg-white rounded-3xl p-3.5 border border-slate-100 shadow-sm cursor-pointer hover:border-blue-200 transition flex flex-col items-center text-center"
                     >
-                      <img
+                      <ImageWithSkeleton
                         src={brand.logo}
                         alt={brand.name}
                         className="w-14 h-14 rounded-2xl object-cover border border-slate-100 mb-2 shadow-xs"
@@ -318,14 +366,14 @@ export function ExplorePage({
                     className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm cursor-pointer hover:border-slate-200 transition"
                   >
                     <div className="h-32 bg-slate-100 overflow-hidden relative">
-                      <img
+                      <ImageWithSkeleton
                         src={(gig as any).detailImage || gig.avatar}
                         alt={gig.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
                     </div>
                     <div className="flex items-center gap-3 mb-2">
-                      <img
+                      <ImageWithSkeleton
                         src={gig.avatar}
                         alt={gig.creatorName}
                         className="w-10 h-10 rounded-full object-cover border border-slate-100"

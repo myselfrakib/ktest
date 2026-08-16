@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import ImageWithSkeleton from "./ImageWithSkeleton"
 import {
   collection,
   doc,
@@ -20,7 +21,16 @@ import type {
 
 function ArrowLeftIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <line x1="19" y1="12" x2="5" y2="12" />
       <polyline points="12 19 5 12 12 5" />
     </svg>
@@ -29,7 +39,16 @@ function ArrowLeftIcon() {
 
 function SearchIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
@@ -38,7 +57,16 @@ function SearchIcon() {
 
 function PhoneIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   )
@@ -46,7 +74,16 @@ function PhoneIcon() {
 
 function VideoIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <polygon points="23 7 16 12 23 17 23 7" />
       <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
     </svg>
@@ -55,7 +92,16 @@ function VideoIcon() {
 
 function MapPinIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
@@ -105,9 +151,10 @@ export function ChatPage({
   const [showGigPanel, setShowGigPanel] = useState(false)
   const [gigPanelApps, setGigPanelApps] = useState<any[]>([])
   const [gigPanelLoading, setGigPanelLoading] = useState(false)
-  const [gigPanelAction, setGigPanelAction] = useState<
-    Record<number, "accepting" | "rejecting" | "accepted" | "rejected">
-  >({})
+  const [gigPanelAction, setGigPanelAction] =
+    useState<Record<number, "accepting" | "rejecting" | "accepted" | "rejected">>(
+      {},
+    )
   const [gigPanelToast, setGigPanelToast] = useState<string | null>(null)
 
   const safeConversations = conversations || []
@@ -257,7 +304,7 @@ export function ChatPage({
               <ArrowLeftIcon />
             </button>
             <div className="relative flex-shrink-0">
-              <img
+              <ImageWithSkeleton
                 src={chatAvatar}
                 alt={chatName}
                 className="w-10 h-10 rounded-full object-cover border border-slate-100"
@@ -383,7 +430,16 @@ export function ChatPage({
           </h1>
         </div>
         <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition border border-slate-100 cursor-pointer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
@@ -419,7 +475,7 @@ export function ChatPage({
             }}
             className="p-3.5 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer transition active:scale-[0.99]"
           >
-            <img
+            <ImageWithSkeleton
               src={thread.avatar}
               alt={thread.name}
               className="w-12 h-12 rounded-full object-cover border border-slate-100 shadow-sm"
@@ -441,12 +497,13 @@ export function ChatPage({
         ))}
         {filteredChats.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-            <div className="w-16 h-16 rounded-3xl bg-[#3b5bdb]/10 flex items-center justify-center text-3xl mb-4">
-              
-            </div>
-            <h3 className="text-sm font-black text-slate-800 mb-1">No messages yet</h3>
+            <div className="w-16 h-16 rounded-3xl bg-[#3b5bdb]/10 flex items-center justify-center text-3xl mb-4"></div>
+            <h3 className="text-sm font-black text-slate-800 mb-1">
+              No messages yet
+            </h3>
             <p className="text-xs text-slate-400 leading-relaxed max-w-[220px]">
-              Start a conversation by visiting a creator or brand profile and tapping <strong>Message</strong>.
+              Start a conversation by visiting a creator or brand profile and
+              tapping <strong>Message</strong>.
             </p>
           </div>
         )}

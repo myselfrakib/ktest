@@ -1,9 +1,20 @@
+import ImageWithSkeleton from "./ImageWithSkeleton"
 import { useState } from "react"
+
 import type { Creator, Brand, Gig } from "../types"
 
 function ArrowLeftIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <line x1="19" y1="12" x2="5" y2="12" />
       <polyline points="12 19 5 12 12 5" />
     </svg>
@@ -12,7 +23,16 @@ function ArrowLeftIcon() {
 
 function ShareIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="18" cy="5" r="3" />
       <circle cx="6" cy="12" r="3" />
       <circle cx="18" cy="19" r="3" />
@@ -24,7 +44,16 @@ function ShareIcon() {
 
 function InstagramIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
@@ -34,23 +63,36 @@ function InstagramIcon() {
 
 export function PublicProfilePage({
   creator,
+
   onBack,
+
   followedCreators,
+
   toggleFollowCreator,
+
   onMessageCreator,
 }: {
   creator: Creator
+
   onBack: () => void
+
   followedCreators: Set<number>
+
   toggleFollowCreator: (id: number) => void
+
   onMessageCreator: (creator: Creator) => void
 }) {
-  const [activeTab, setActiveTab] = useState<"portfolio" | "reviews">("portfolio")
+  const [activeTab, setActiveTab] = useState<"portfolio" | "reviews">(
+    "portfolio",
+  )
+
   const [copied, setCopied] = useState(false)
+
   const isFollowing = followedCreators.has(creator.id)
 
   const handleShare = () => {
     setCopied(true)
+
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -79,7 +121,7 @@ export function PublicProfilePage({
       </div>
 
       <div className="p-5 flex flex-col items-center text-center">
-        <img
+        <ImageWithSkeleton
           src={creator.avatar}
           alt={creator.name}
           className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md mb-3"
@@ -94,14 +136,18 @@ export function PublicProfilePage({
 
         <div className="flex items-center gap-6 my-4 bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm">
           <div>
-            <div className="text-base font-black text-slate-900">{followersCount}</div>
+            <div className="text-base font-black text-slate-900">
+              {followersCount}
+            </div>
             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
               Followers
             </div>
           </div>
           <div className="w-px h-6 bg-slate-100" />
           <div>
-            <div className="text-base font-black text-slate-900">{creator.engagement}</div>
+            <div className="text-base font-black text-slate-900">
+              {creator.engagement}
+            </div>
             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
               Engagement
             </div>
@@ -123,7 +169,7 @@ export function PublicProfilePage({
             onClick={() => onMessageCreator(creator)}
             className="flex-1 py-3 rounded-2xl text-xs font-bold bg-[#f76707] text-white shadow-sm shadow-orange-200 transition cursor-pointer"
           >
-             Message
+            Message
           </button>
         </div>
       </div>
@@ -133,27 +179,46 @@ export function PublicProfilePage({
 
 export function PublicBrandProfilePage({
   brand,
+
   onBack,
+
   followedBrands,
+
   toggleFollowBrand,
+
   onMessageBrand,
+
   onApply,
+
   gigs = [],
 }: {
   brand: Brand
+
   onBack: () => void
+
   followedBrands: Set<number>
+
   toggleFollowBrand: (id: number) => void
+
   onMessageBrand: (brand: Brand) => void
+
   onApply: (gig: Gig) => void
+
   gigs?: Gig[]
+
   userProfile?: any
+
   creators?: Creator[]
+
   brands?: Brand[]
+
   userAppliedGigIds?: Set<number>
 }) {
   const isFollowing = followedBrands.has(brand.id)
-  const brandGigs = gigs.filter((g) => g.brand === brand.name || g.creatorName === brand.name)
+
+  const brandGigs = gigs.filter(
+    (g) => g.brand === brand.name || g.creatorName === brand.name,
+  )
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide pb-28 bg-slate-50 flex flex-col min-h-screen">
@@ -169,14 +234,18 @@ export function PublicBrandProfilePage({
       </div>
 
       <div className="p-5 flex flex-col items-center text-center">
-        <img
+        <ImageWithSkeleton
           src={brand.logo}
           alt={brand.name}
           className="w-20 h-20 rounded-2xl object-cover border-2 border-white shadow-md mb-3"
         />
         <h2 className="text-lg font-black text-slate-900">{brand.name}</h2>
-        <div className="text-xs font-bold text-slate-400 mb-2">{brand.industry}</div>
-        <p className="text-xs text-slate-600 max-w-xs leading-relaxed mb-4">{brand.bio}</p>
+        <div className="text-xs font-bold text-slate-400 mb-2">
+          {brand.industry}
+        </div>
+        <p className="text-xs text-slate-600 max-w-xs leading-relaxed mb-4">
+          {brand.bio}
+        </p>
 
         <div className="flex gap-3 w-full max-w-xs mb-6">
           <button
@@ -193,7 +262,7 @@ export function PublicBrandProfilePage({
             onClick={() => onMessageBrand(brand)}
             className="flex-1 py-3 rounded-2xl text-xs font-bold bg-[#f76707] text-white shadow-sm shadow-orange-200 transition cursor-pointer"
           >
-             Message
+            Message
           </button>
         </div>
 
@@ -209,8 +278,12 @@ export function PublicBrandProfilePage({
                   onClick={() => onApply(gig)}
                   className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm cursor-pointer hover:border-slate-200 transition"
                 >
-                  <div className="text-xs font-bold text-slate-900 mb-1">{gig.title}</div>
-                  <div className="text-[10px] text-[#3b5bdb] font-bold">{gig.budget}</div>
+                  <div className="text-xs font-bold text-slate-900 mb-1">
+                    {gig.title}
+                  </div>
+                  <div className="text-[10px] text-[#3b5bdb] font-bold">
+                    {gig.budget}
+                  </div>
                 </div>
               ))}
             </div>

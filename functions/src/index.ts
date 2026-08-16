@@ -366,91 +366,111 @@ export const instagramDeleteData = functions.https.onRequest(
   },
 )
 
-export const onNotificationCreated = onDocumentCreated("notifications/{notificationId}", async (event) => {
-  const snap = event.data
-  if (!snap) return
-  const notification = snap.data()
-  if (!notification) return
+export const onNotificationCreated = onDocumentCreated(
+  "notifications/{notificationId}",
+  async (event) => {
+    const snap = event.data
+    if (!snap) return
+    const notification = snap.data()
+    if (!notification) return
 
-  const recipientUid = notification.recipientUid
-  if (!recipientUid) {
-    console.log("No recipientUid found on notification:", snap.id)
-    return
-  }
-
-  try {
-    let tokens: string[] = []
-
-    if (recipientUid === "all") {
-      const allTokensSnap = await admin.firestore().collection("fcmTokens").get()
-      allTokensSnap.forEach((docSnap) => {
-        const tList: string[] = docSnap.data()?.tokens || []
-        tokens.push(...tList)
-      })
-      // Deduplicate tokens
-      tokens = Array.from(new Set(tokens))
-    } else {
-      const tokenDoc = await admin.firestore().collection("fcmTokens").doc(recipientUid).get()
-      if (tokenDoc.exists) {
-        tokens = tokenDoc.data()?.tokens || []
-      }
-    }
-
-    if (tokens.length === 0) {
-      console.log(`No FCM tokens found for target: ${recipientUid}`)
+    const recipientUid = notification.recipientUid
+    if (!recipientUid) {
+      console.log("No recipientUid found on notification:", snap.id)
       return
     }
 
-    const messageTitle = notification.title || "Kreator Kolkata"
-    const messageBody = notification.message || ""
-    const messageImage = notification.senderAvatar || notification.avatar || ""
-    const clickLink = notification.link || notification.actionUrl || notification.click_action || "/messages"
+    try {
+      let tokens: string[] = []
 
-    const payload = {
-      notification: {
-        title: messageTitle,
-        body: messageBody,
-        ...(messageImage ? { image: messageImage } : {}),
-      },
-      data: {
-        notificationId: snap.id,
-        type: notification.type || "custom",
-        click_action: clickLink,
-        link: clickLink,
-      },
-    }
-
-    const response = await admin.messaging().sendEachForMulticast({
-      tokens: tokens,
-      notification: payload.notification,
-      data: payload.data,
-    })
-
-    console.log(
-      `Successfully sent ${response.successCount} push notifications to target [${recipientUid}]. Failed: ${response.failureCount}`
-    )
-
-    const invalidTokens: string[] = []
-    response.responses.forEach((resp, idx) => {
-      if (!resp.success && resp.error) {
-        const code = resp.error.code
-        if (
-          code === "messaging/invalid-registration-token" ||
-          code === "messaging/registration-token-not-registered"
-        ) {
-          invalidTokens.push(tokens[idx])
+      if (recipientUid === "all") {
+        const allTokensSnap = await admin
+          .firestore()
+          .collection("fcmTokens")
+          .get()
+        allTokensSnap.forEach((docSnap) => {
+          const tList: string[] = docSnap.data()?.tokens || []
+          tokens.push(...tList)
+        })
+        // Deduplicate tokens
+        tokens = Array.from(new Set(tokens))
+      } else {
+        const tokenDoc = await admin
+          .firestore()
+          .collection("fcmTokens")
+          .doc(recipientUid)
+          .get()
+        if (tokenDoc.exists) {
+          tokens = tokenDoc.data()?.tokens || []
         }
       }
-    })
 
-    if (invalidTokens.length > 0 && recipientUid !== "all") {
-      console.log(`Cleaning up ${invalidTokens.length} expired/invalid FCM tokens for user ${recipientUid}`)
-      await admin.firestore().collection("fcmTokens").doc(recipientUid).update({
-        tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+      if (tokens.length === 0) {
+        console.log(`No FCM tokens found for target: ${recipientUid}`)
+        return
+      }
+
+      const messageTitle = notification.title || "Kreator Kolkata"
+      const messageBody = notification.message || ""
+      const messageImage =
+        notification.senderAvatar || notification.avatar || ""
+      const clickLink =
+        notification.link ||
+        notification.actionUrl ||
+        notification.click_action ||
+        "/messages"
+
+      const payload = {
+        notification: {
+          title: messageTitle,
+          body: messageBody,
+          ...(messageImage ? { image: messageImage } : {}),
+        },
+        data: {
+          notificationId: snap.id,
+          type: notification.type || "custom",
+          click_action: clickLink,
+          link: clickLink,
+        },
+      }
+
+      const response = await admin.messaging().sendEachForMulticast({
+        tokens: tokens,
+        notification: payload.notification,
+        data: payload.data,
       })
-    }
-  } catch (error) {
-    console.error("Error sending FCM notification:", error)
-  }
-})
 
+      console.log(
+        `Successfully sent ${response.successCount} push notifications to target [${recipientUid}]. Failed: ${response.failureCount}`,
+      )
+
+      const invalidTokens: string[] = []
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success && resp.error) {
+          const code = resp.error.code
+          if (
+            code === "messaging/invalid-registration-token" ||
+            code === "messaging/registration-token-not-registered"
+          ) {
+            invalidTokens.push(tokens[idx])
+          }
+        }
+      })
+
+      if (invalidTokens.length > 0 && recipientUid !== "all") {
+        console.log(
+          `Cleaning up ${invalidTokens.length} expired/invalid FCM tokens for user ${recipientUid}`,
+        )
+        await admin
+          .firestore()
+          .collection("fcmTokens")
+          .doc(recipientUid)
+          .update({
+            tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+          })
+      }
+    } catch (error) {
+      console.error("Error sending FCM notification:", error)
+    }
+  },
+)

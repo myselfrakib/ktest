@@ -1,9 +1,27 @@
+import ImageWithSkeleton from "./components/ImageWithSkeleton"
 import { AdminDashboardPage } from "./admin/AdminDashboard"
+
 import { AdminPendingPage } from "./admin/AdminPending"
+
 import { ExplorePage } from "./components/ExplorePage"
+
 import { ChatPage } from "./components/ChatPage"
-import { PublicProfilePage, PublicBrandProfilePage } from "./components/ProfilePage"
-import type { Gig, Creator, Brand, Event, Conversation, LiveMessage, ChatThread } from "./types"
+
+import {
+  PublicProfilePage,
+  PublicBrandProfilePage,
+} from "./components/ProfilePage"
+
+import type {
+  Gig,
+  Creator,
+  Brand,
+  Event,
+  Conversation,
+  LiveMessage,
+  ChatThread,
+} from "./types"
+
 import {
   useState,
   useRef,
@@ -40,6 +58,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
 import { auth, db, storage, messaging } from "./firebase"
+
 import { getToken } from "firebase/messaging"
 
 const FCM_VAPID_KEY = "YOUR_FCM_VAPID_KEY" // Update this with your VAPID key from Firebase Console
@@ -49,49 +68,80 @@ const INTRO_BLUE = "#2b4ef7"
 const DEFAULT_SLIDES = [
   {
     id: 1,
+
     tag: "01 — Welcome",
+
     headline: "Let's Collab,",
+
     headlineAccent: "Kolkata!",
+
     sub: "Kolkata's first hyperlocal platform for creators, PR collabs, and brand deals — built by the city, for the city.",
+
     img: "https://images.unsplash.com/photo-1766676219472-bafcced3b3f7?w=900&h=1200&fit=crop&auto=format&q=80",
+
     alt: "Howrah Bridge at sunset",
+
     hideText: false,
   },
+
   {
     id: 2,
+
     tag: "02 — Community",
+
     headline: "The City Is",
+
     headlineAccent: "Your Team.",
+
     sub: "From Park Street to New Town — every corner of Kolkata has a creator ready to collaborate with you.",
+
     img: "https://images.unsplash.com/photo-1737391591935-b10cec322512?w=900&h=1200&fit=crop&auto=format&q=80",
+
     alt: "Kolkata street community",
+
     hideText: false,
   },
+
   {
     id: 3,
+
     tag: "03 — Creators",
+
     headline: "Find Your",
+
     headlineAccent: "Crew.",
+
     sub: "Photographers, stylists, writers, reels creators — find your people and make things happen together.",
+
     img: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=900&h=1200&fit=crop&auto=format&q=80",
+
     alt: "Creators collaborating",
+
     hideText: false,
   },
+
   {
     id: 4,
+
     tag: "04 — Growth",
+
     headline: "Grow",
+
     headlineAccent: "Together.",
+
     sub: "Land real brand deals, paid gigs, and PR collabs. Build your name right here in Kolkata.",
+
     img: "https://images.unsplash.com/photo-1782187859788-c00888c7e277?w=900&h=1200&fit=crop&auto=format&q=80",
+
     alt: "Kolkata river at dawn",
+
     hideText: false,
   },
 ]
 
 // Keep backward-compat alias used throughout the file
-const SLIDES = DEFAULT_SLIDES
 
+const SLIDES = DEFAULT_SLIDES
 
 const GIGS = [
   {
@@ -168,7 +218,9 @@ const GIGS = [
 
     deliverables: [
       "20+ edited shots",
+
       "Gallery exhibition credit",
+
       "Online publication",
     ],
 
@@ -252,7 +304,9 @@ const GIGS = [
 
     deliverables: [
       "2-day shoot commitment",
+
       "Raw footage handover",
+
       "1 BTS Reel",
     ],
 
@@ -296,7 +350,9 @@ const GIGS = [
 
     deliverables: [
       "4 Reels/month",
+
       "8 Stories/month",
+
       "1 dedicated feed post/month",
     ],
 
@@ -384,7 +440,9 @@ const EVENTS = [
 
     speakers: [
       "Rang Bahar Marketing Lead",
+
       "The Calcutta Table Founder",
+
       "Tanisha Roy",
     ],
   },
@@ -792,14 +850,22 @@ type AppNotification = typeof NOTIFICATIONS[0]
 
 type ChatThread = {
   id: number
+
   name: string
+
   avatar: string
+
   handle: string
+
   niche: string
+
   online: boolean
+
   verified: boolean
+
   unreadCount: number
-  messages: Array<{ id: number; text: string; sender: string; time: string }>
+
+  messages: Array<{ id: number text: string sender: string time: string }>
 }
 
 type ChatMessage = ChatThread["messages"][0]
@@ -810,23 +876,37 @@ const INITIAL_CHATS: ChatThread[] = []
 
 type Conversation = {
   id: string
+
   participants: string[]
+
   participantNames: Record<string, string>
+
   participantAvatars: Record<string, string>
+
   participantHandles: Record<string, string>
+
   lastMessage: string
+
   lastMessageTime: string
+
   lastSenderId: string
+
   unreadCounts: Record<string, number>
+
   createdAt: string
 }
 
 type LiveMessage = {
   id: string
+
   text: string
+
   senderId: string
+
   senderName: string
+
   senderAvatar: string
+
   timestamp: string
 }
 
@@ -1192,36 +1272,58 @@ function formatDeadline(dateStr: string): string {
   // 3. Fallback manual regex parser for formats like "Aug 20, 2026" or "4th august 2026"
 
   const cleanStr = dateStr
+
     .toLowerCase()
+
     .replace(/st|nd|rd|th/g, "")
+
     .trim()
 
   const monthsMap: Record<string, string> = {
     jan: "01",
+
     feb: "02",
+
     mar: "03",
+
     apr: "04",
+
     may: "05",
+
     jun: "06",
 
     jul: "07",
+
     aug: "08",
+
     sep: "09",
+
     oct: "10",
+
     nov: "11",
+
     dec: "12",
 
     january: "01",
+
     february: "02",
+
     march: "03",
+
     april: "04",
+
     june: "06",
 
     july: "07",
+
     august: "08",
+
     september: "09",
+
     october: "10",
+
     november: "11",
+
     december: "12",
   }
 
@@ -1331,10 +1433,10 @@ function ApplyPage({
     gig.followers
 
   const hasConnectedIg = matchedCreator
-    ? ((matchedCreator as any).isInstagramConnected === true ||
-       !!(matchedCreator as any)?.instagram?.handle ||
-       (matchedCreator.followers && matchedCreator.followers !== "0"))
-    : (gig.followers && gig.followers !== "0")
+    ? (matchedCreator as any).isInstagramConnected === true ||
+      !!(matchedCreator as any)?.instagram?.handle ||
+      (matchedCreator.followers && matchedCreator.followers !== "0")
+    : gig.followers && gig.followers !== "0"
 
   const followersDisplay = hasConnectedIg
     ? `${followersCount} followers`
@@ -1369,16 +1471,20 @@ function ApplyPage({
 
     const q = query(
       collection(db, "applications"),
+
       where("gigId", "==", gig.id),
+
       where("applicantUid", "==", currentUser.uid),
     )
 
     getDocs(q)
+
       .then((snap) => {
         if (!snap.empty) {
           setHasAlreadyApplied(true)
         }
       })
+
       .catch((err) => console.warn("Check application error:", err))
   }, [currentUser?.uid, gig?.id])
 
@@ -1387,6 +1493,7 @@ function ApplyPage({
       alert(
         "You have already submitted an application for this gig! Track your pitch in your Profile.",
       )
+
       return
     }
 
@@ -1394,6 +1501,7 @@ function ApplyPage({
 
     if (Object.keys(e).length) {
       setErrors(e)
+
       return
     }
 
@@ -1455,11 +1563,13 @@ function ApplyPage({
       } catch (err) {
         console.warn(
           "[APPLY] Could not update applicants count in Firestore:",
+
           err,
         )
       }
 
       // 3. Send Notification to poster in Firestore
+
       try {
         const posterUid =
           (gig as any).posterUid ||
@@ -1502,21 +1612,33 @@ function ApplyPage({
         })
 
         // Also send confirmation notification to the applicant
+
         if (currentUser?.uid) {
           await addDoc(collection(db, "notifications"), {
             recipientUid: currentUser.uid,
+
             recipientName: userProfile?.name || "Applicant",
+
             senderName: gig.creatorName,
+
             senderAvatar:
               gig.avatar ||
               "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&h=160&fit=crop&auto=format",
+
             type: "application",
+
             category: "activity",
+
             actionText: "View Status",
+
             title: `Application Submitted!`,
+
             message: `You successfully applied to "${gig.title}". We'll notify you when ${gig.creatorName} reviews your pitch!`,
+
             read: false,
+
             createdAt: new Date().toISOString(),
+
             avatar:
               gig.avatar ||
               "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&h=160&fit=crop&auto=format",
@@ -1545,7 +1667,7 @@ function ApplyPage({
           <CheckCircleIcon />
         </div>
         <h2 className="font-display text-2xl font-black text-slate-900 mb-2">
-          Application Sent! 
+          Application Sent!
         </h2>
         <p className="text-slate-500 text-sm mb-2 leading-relaxed">
           Your pitch has been sent to{" "}
@@ -1562,7 +1684,7 @@ function ApplyPage({
             {gig.title}
           </div>
           <div className="flex items-center gap-1 text-xs text-slate-500">
-            <img
+            <ImageWithSkeleton
               src={gig.avatar}
               alt=""
               className="w-5 h-5 rounded-full object-cover"
@@ -1609,7 +1731,7 @@ function ApplyPage({
                 onClick={() => onCreatorClick(gig.creatorName)}
                 className="relative cursor-pointer hover:opacity-90 active:scale-95 transition-opacity duration-150 flex-shrink-0"
               >
-                <img
+                <ImageWithSkeleton
                   src={gig.avatar}
                   alt={gig.creatorName}
                   className="w-14 h-14 rounded-full object-cover border-2 border-[#e8edff]"
@@ -1753,7 +1875,7 @@ function ApplyPage({
               {/* Show uploaded logo if available, else letter avatar */}
               {(gig as any).brandLogo &&
               !(gig as any).brandLogo.includes("unsplash") ? (
-                <img
+                <ImageWithSkeleton
                   src={(gig as any).brandLogo}
                   alt={gig.brand}
                   className="w-10 h-10 rounded-xl object-cover border border-[#c5d3ff] flex-shrink-0"
@@ -1773,8 +1895,6 @@ function ApplyPage({
               </div>
             </div>
           )}
-
-
 
           {/* CTA */}
           <div className="mx-5 mb-8">
@@ -1804,7 +1924,7 @@ function ApplyPage({
                 onClick={() => setStep("form")}
                 className="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-4 rounded-2xl transition cursor-pointer active:scale-95 text-base"
               >
-                Apply for this Gig 
+                Apply for this Gig
               </button>
             )}
           </div>
@@ -1824,6 +1944,7 @@ function ApplyPage({
                 value={pitch}
                 onChange={(e) => {
                   setPitch(e.target.value)
+
                   setErrors((p) => ({ ...p, pitch: "" }))
                 }}
                 placeholder="Tell them why you're the perfect fit. Be specific, be yourself."
@@ -1856,6 +1977,7 @@ function ApplyPage({
                   value={instaHandle}
                   onChange={(e) => {
                     setInstaHandle(e.target.value)
+
                     setErrors((p) => ({ ...p, instaHandle: "" }))
                   }}
                   placeholder="@yourhandle"
@@ -1913,8 +2035,11 @@ function ApplyPage({
               <div className="grid grid-cols-2 gap-2">
                 {[
                   "Immediately",
+
                   "Within a week",
+
                   "Flexible",
+
                   "Need to discuss",
                 ].map((a) => (
                   <button
@@ -2063,11 +2188,13 @@ function ViewMyGigPage({
 
     const qApps = query(
       collection(db, "applications"),
+
       where("gigId", "==", gig.id),
     )
 
     const unsubscribe = onSnapshot(
       qApps,
+
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 
@@ -2075,6 +2202,7 @@ function ViewMyGigPage({
 
         setLoadingApps(false)
       },
+
       (err) => {
         console.warn("Apps snapshot error:", err)
 
@@ -2116,6 +2244,7 @@ function ViewMyGigPage({
       } else {
         await setDoc(
           doc(db, "gigs", String(gig.id)),
+
           {
             ...gig,
 
@@ -2133,6 +2262,7 @@ function ViewMyGigPage({
 
             status: gigStatus,
           },
+
           { merge: true },
         )
       }
@@ -2154,27 +2284,41 @@ function ViewMyGigPage({
       )
     )
       return
+
     setAcceptingId(app.id)
+
     try {
       const qGigs = query(collection(db, "gigs"), where("id", "==", gig.id))
+
       const snap = await getDocs(qGigs)
+
       if (!snap.empty) {
         await updateDoc(snap.docs[0].ref, {
           applicantSelected: true,
+
           selectedApplicantUid: app.applicantUid || null,
+
           selectedApplicantName: app.applicantName || "Creator",
+
           selectedApplicantAvatar: app.applicantAvatar || null,
+
           selectedApplicantHandle: app.instaHandle || app.applicantHandle || "",
+
           status: "Closed",
         })
       }
+
       // Update the application doc status too
+
       try {
         const qApp = query(
           collection(db, "applications"),
+
           where("gigId", "==", gig.id),
         )
+
         const appSnap = await getDocs(qApp)
+
         appSnap.docs.forEach(async (d) => {
           await updateDoc(d.ref, {
             status: d.id === app.id ? "accepted" : "rejected",
@@ -2182,28 +2326,42 @@ function ViewMyGigPage({
         })
 
         // Send Push Notification for Application Accepted
+
         if (app.applicantUid) {
           await addDoc(collection(db, "notifications"), {
             recipientUid: app.applicantUid,
+
             recipientName: app.applicantName || "Creator",
+
             senderName: gig.creatorName || "Gig Owner",
+
             senderAvatar:
               gig.avatar ||
               "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
+
             title: "Application Accepted!",
+
             message: `Congratulations! Your application for "${gig.title}" was accepted by ${gig.creatorName}!`,
+
             type: "application",
+
             category: "activity",
+
             actionText: "Open Chat",
+
             read: false,
+
             createdAt: new Date().toISOString(),
+
             avatar:
               gig.avatar ||
               "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
           })
         }
       } catch (_) {}
+
       setAcceptToast(app.applicantName || "Creator")
+
       setTimeout(() => setAcceptToast(null), 4000)
     } catch (err: any) {
       alert(err.message || "Failed to accept applicant")
@@ -2281,7 +2439,7 @@ function ViewMyGigPage({
       <div className="px-5 pt-5 pb-3">
         <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <img
+            <ImageWithSkeleton
               src={
                 gig.avatar ||
                 gig.brandLogo ||
@@ -2392,7 +2550,9 @@ function ViewMyGigPage({
           ) : applications.length > 0 ? (
             applications.map((app) => {
               const isAccepted = app.status === "accepted"
+
               const isRejected = app.status === "rejected"
+
               return (
                 <div
                   key={app.id}
@@ -2413,7 +2573,7 @@ function ViewMyGigPage({
                       }
                     >
                       <div className="relative">
-                        <img
+                        <ImageWithSkeleton
                           src={
                             app.applicantAvatar ||
                             "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
@@ -2458,7 +2618,7 @@ function ViewMyGigPage({
                   <div className="flex gap-2 flex-wrap">
                     {app.availability && (
                       <span className="text-[9px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                         {app.availability}
+                        {app.availability}
                       </span>
                     )}
                     {app.portfolio && (
@@ -2469,7 +2629,7 @@ function ViewMyGigPage({
                         onClick={(e) => e.stopPropagation()}
                         className="text-[9px] font-bold bg-violet-50 text-violet-600 px-2 py-0.5 rounded-full"
                       >
-                         Portfolio
+                        Portfolio
                       </a>
                     )}
                   </div>
@@ -2488,13 +2648,14 @@ function ViewMyGigPage({
                           onOpenChat &&
                           onOpenChat(
                             app.applicantName || "Creator",
+
                             app.applicantAvatar ||
                               "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
                           )
                         }
                         className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-1.5 rounded-xl shadow-sm cursor-pointer active:scale-95 transition flex items-center gap-1"
                       >
-                         Chat
+                        Chat
                       </button>
 
                       {!isAccepted && !isRejected && (
@@ -2527,7 +2688,7 @@ function ViewMyGigPage({
 
                       {isAccepted && (
                         <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1">
-                           Accepted
+                          Accepted
                         </span>
                       )}
                     </div>
@@ -2692,8 +2853,11 @@ function ViewMyGigPage({
 
 function resolveGigPosterDetails(
   gig: Gig,
+
   userProfile?: any,
+
   creators: Creator[] = [],
+
   brands: Brand[] = [],
 ) {
   const isOwner = !!(
@@ -2837,7 +3001,9 @@ function HomePage({
   const [localSearch, setLocalSearch] = useState("")
 
   const [showFilterPanel, setShowFilterPanel] = useState(false)
+
   const [filterLocation, setFilterLocation] = useState("All")
+
   const [filterBudget, setFilterBudget] = useState("All")
 
   const userAvatar =
@@ -2853,12 +3019,19 @@ function HomePage({
 
   const isGigExpired = (deadline: string): boolean => {
     if (!deadline) return false
+
     const parsed = new Date(deadline)
+
     if (isNaN(parsed.getTime())) return false
+
     // Gig expires at 00:00 of the day after deadline
+
     const expiry = new Date(parsed)
+
     expiry.setDate(expiry.getDate() + 1)
+
     expiry.setHours(0, 0, 0, 0)
+
     return new Date() >= expiry
   }
 
@@ -2869,13 +3042,13 @@ function HomePage({
     (filterBudget !== "All" ? 1 : 0)
 
   const filteredGigs = gigs
+
     .filter((g) => {
       // Remove expired gigs
+
       if (isGigExpired((g as any).deadline || "")) return false
 
-      const matchType =
-        activeFilter === "All Gigs" ||
-        g.type === activeFilter
+      const matchType = activeFilter === "All Gigs" || g.type === activeFilter
 
       const matchNiche =
         activeNiche === "All" ||
@@ -2884,20 +3057,37 @@ function HomePage({
 
       const matchLocation =
         filterLocation === "All" ||
-        ((g as any).location || "").toLowerCase().includes(filterLocation.toLowerCase())
+        ((g as any).location || "")
+          .toLowerCase()
+          .includes(filterLocation.toLowerCase())
 
       const matchBudget = (() => {
         if (filterBudget === "All") return true
+
         const budget = (g.budget || "").toLowerCase()
-        if (filterBudget === "Free / Barter") return g.type === "Barter" || g.type === "Collab"
-        if (filterBudget === "Under ₹10k") return budget.includes("₹") && !budget.includes("20,000") && !budget.includes("35,000") && !budget.includes("15,000")
-        if (filterBudget === "₹10k – ₹30k") return budget.includes("15,000") || budget.includes("20,000")
+
+        if (filterBudget === "Free / Barter")
+          return g.type === "Barter" || g.type === "Collab"
+
+        if (filterBudget === "Under ₹10k")
+          return (
+            budget.includes("₹") &&
+            !budget.includes("20,000") &&
+            !budget.includes("35,000") &&
+            !budget.includes("15,000")
+          )
+
+        if (filterBudget === "₹10k – ₹30k")
+          return budget.includes("15,000") || budget.includes("20,000")
+
         if (filterBudget === "₹30k+") return budget.includes("35,000")
+
         return true
       })()
 
       return matchType && matchNiche && matchLocation && matchBudget
     })
+
     .sort((a, b) => {
       const aFeat = (a as any).isFeatured ? 1 : 0
 
@@ -2932,7 +3122,7 @@ function HomePage({
                 </span>
               )}
             </button>
-            <img
+            <ImageWithSkeleton
               src={userAvatar}
               alt="Profile"
               onClick={onProfileClick}
@@ -2983,7 +3173,7 @@ function HomePage({
       <div className="mb-6">
         <div className="flex items-center justify-between px-5 mb-3">
           <h2 className="text-base font-bold text-slate-900">
-            Upcoming Events 
+            Upcoming Events
           </h2>
           <button
             onClick={onEventClick}
@@ -3001,14 +3191,14 @@ function HomePage({
               }
               className="min-w-[280px] w-[280px] h-[110px] rounded-3xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer flex-shrink-0 bg-white transition-transform active:scale-[0.98] relative"
             >
-              <img
+              <ImageWithSkeleton
                 src={event.image}
                 alt={event.title}
                 className="w-full h-full object-cover"
               />
               {(event as any).isFeatured && (
                 <span className="absolute top-2 right-2 text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-md">
-                   FEATURED
+                  FEATURED
                 </span>
               )}
             </div>
@@ -3020,7 +3210,7 @@ function HomePage({
       <div className="mb-6">
         <div className="flex items-center justify-between px-5 mb-2.5">
           <h2 className="text-base font-bold text-slate-900">
-            Featured Network 
+            Featured Network
           </h2>
           <span className="text-[11px] font-semibold text-slate-400">
             Creators & Brands
@@ -3033,7 +3223,7 @@ function HomePage({
               onClick={() => onCreatorClick(creator.name)}
               className="flex items-center gap-2 bg-white rounded-full pl-1.5 pr-3.5 py-1.5 border border-slate-100 shadow-sm flex-shrink-0 cursor-pointer transition active:scale-95 hover:border-slate-200"
             >
-              <img
+              <ImageWithSkeleton
                 src={creator.avatar}
                 alt={creator.name}
                 className="w-7 h-7 rounded-full object-cover border border-[#e8edff]"
@@ -3054,7 +3244,7 @@ function HomePage({
               onClick={() => onBrandClick && onBrandClick(brand)}
               className="flex items-center gap-2 bg-[#f0f4ff] rounded-full pl-1.5 pr-3.5 py-1.5 border border-blue-100 shadow-sm flex-shrink-0 cursor-pointer transition active:scale-95 hover:border-blue-200"
             >
-              <img
+              <ImageWithSkeleton
                 src={brand.logo}
                 alt={brand.name}
                 className="w-7 h-7 rounded-full object-cover border border-white"
@@ -3127,11 +3317,20 @@ function HomePage({
             {/* Header */}
             <div className="px-5 pt-3 pb-4 flex items-center justify-between border-b border-slate-100">
               <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Refine Search</div>
-                <div className="text-base font-black text-slate-900">Filter Gigs</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                  Refine Search
+                </div>
+                <div className="text-base font-black text-slate-900">
+                  Filter Gigs
+                </div>
               </div>
               <button
-                onClick={() => { setActiveFilter("All Gigs"); setActiveNiche("All"); setFilterLocation("All"); setFilterBudget("All") }}
+                onClick={() => {
+                  setActiveFilter("All Gigs")
+                  setActiveNiche("All")
+                  setFilterLocation("All")
+                  setFilterBudget("All")
+                }}
                 className="text-[11px] font-bold text-[#f76707] bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100 cursor-pointer"
               >
                 Clear All
@@ -3140,7 +3339,9 @@ function HomePage({
             <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-6 scrollbar-hide">
               {/* Type Filter */}
               <div>
-                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Gig Type</div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">
+                  Gig Type
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {["All Gigs", "Paid", "Barter", "Collab"].map((f) => (
                     <button
@@ -3152,16 +3353,31 @@ function HomePage({
                           : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                     >
-                      {f === "Paid" ? " Paid" : f === "Barter" ? " Barter" : f === "Collab" ? " Collab" : " All Gigs"}
+                      {f === "Paid"
+                        ? " Paid"
+                        : f === "Barter"
+                          ? " Barter"
+                          : f === "Collab"
+                            ? " Collab"
+                            : " All Gigs"}
                     </button>
                   ))}
                 </div>
               </div>
               {/* Niche Filter */}
               <div>
-                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Category / Niche</div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">
+                  Category / Niche
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {["All", "Fashion", "Food", "Photography", "Video", "Wellness"].map((n) => (
+                  {[
+                    "All",
+                    "Fashion",
+                    "Food",
+                    "Photography",
+                    "Video",
+                    "Wellness",
+                  ].map((n) => (
                     <button
                       key={n}
                       onClick={() => setActiveNiche(n)}
@@ -3178,9 +3394,17 @@ function HomePage({
               </div>
               {/* Location Filter */}
               <div>
-                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Location</div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">
+                  Location
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {["All", "North Kolkata", "Park Street", "Salt Lake", "New Town"].map((loc) => (
+                  {[
+                    "All",
+                    "North Kolkata",
+                    "Park Street",
+                    "Salt Lake",
+                    "New Town",
+                  ].map((loc) => (
                     <button
                       key={loc}
                       onClick={() => setFilterLocation(loc)}
@@ -3197,9 +3421,17 @@ function HomePage({
               </div>
               {/* Budget Filter */}
               <div>
-                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Budget Range</div>
+                <div className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">
+                  Budget Range
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {["All", "Free / Barter", "Under ₹10k", "₹10k – ₹30k", "₹30k+"].map((b) => (
+                  {[
+                    "All",
+                    "Free / Barter",
+                    "Under ₹10k",
+                    "₹10k – ₹30k",
+                    "₹30k+",
+                  ].map((b) => (
                     <button
                       key={b}
                       onClick={() => setFilterBudget(b)}
@@ -3221,9 +3453,13 @@ function HomePage({
                 onClick={() => setShowFilterPanel(false)}
                 className="w-full py-3.5 rounded-2xl bg-[#3b5bdb] text-white font-black text-sm shadow-lg shadow-blue-200 active:scale-[0.98] transition cursor-pointer"
               >
-                {activeNiche === "All" && filterLocation === "All" && filterBudget === "All"
+                {activeNiche === "All" &&
+                filterLocation === "All" &&
+                filterBudget === "All"
                   ? "Show Gigs"
-                  : `Show ${filteredGigs.length} Gig${filteredGigs.length !== 1 ? "s" : ""}`}
+                  : `Show ${filteredGigs.length} Gig${
+                      filteredGigs.length !== 1 ? "s" : ""
+                    }`}
               </button>
             </div>
           </div>
@@ -3237,8 +3473,11 @@ function HomePage({
 
           const poster = resolveGigPosterDetails(
             gig,
+
             userProfile,
+
             creators,
+
             brands,
           )
 
@@ -3267,10 +3506,10 @@ function HomePage({
               {isFeat && (
                 <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center justify-between">
                   <span className="text-white text-[11px] font-bold tracking-wide">
-                     Featured Gig
+                    Featured Gig
                   </span>
                   <span className="text-[9px] font-black text-amber-300 bg-blue-900/40 px-2 py-0.5 rounded-full">
-                     FEATURED
+                    FEATURED
                   </span>
                 </div>
               )}
@@ -3279,12 +3518,13 @@ function HomePage({
                   <div
                     onClick={(e) => {
                       e.stopPropagation()
+
                       onCreatorClick(displayName)
                     }}
                     className="flex items-center gap-3 cursor-pointer hover:opacity-85"
                   >
                     <div className="relative">
-                      <img
+                      <ImageWithSkeleton
                         src={displayAvatar}
                         alt={displayName}
                         className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]"
@@ -3329,6 +3569,7 @@ function HomePage({
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
+
                       onShareGig(gig)
                     }}
                     className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:text-[#3b5bdb] hover:bg-blue-50 active:scale-90 transition cursor-pointer"
@@ -3368,7 +3609,7 @@ function HomePage({
                     </div>
                     {(gig as any).applicantSelected && !poster.isOwner ? (
                       <span className="text-[9px] font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
-                         Selected
+                        Selected
                       </span>
                     ) : userAppliedGigIds?.has(gig.id) && !poster.isOwner ? (
                       <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center gap-1 whitespace-nowrap">
@@ -3378,6 +3619,7 @@ function HomePage({
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
+
                           onApply(gig)
                         }}
                         className="bg-black text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-black/20 whitespace-nowrap"
@@ -3400,37 +3642,61 @@ function HomePage({
 
 const NICHE_OPTIONS = [
   "Fashion & Lifestyle",
+
   "Food & Travel",
+
   "Photography",
+
   "Video & Editing",
+
   "Health & Wellness",
+
   "Music & Audio",
+
   "Art & Design",
+
   "Tech & Gaming",
+
   "Education",
+
   "Other",
 ]
 
 const TAG_OPTIONS = [
   "Reel",
+
   "Story",
+
   "Feed Post",
+
   "YouTube",
+
   "Collab",
+
   "Street",
+
   "Review",
+
   "Production",
+
   "BTS",
+
   "Podcast",
 ]
 
 const LOCATION_OPTIONS = [
   "North Kolkata",
+
   "South Kolkata",
+
   "Salt Lake",
+
   "New Town",
+
   "Park Street",
+
   "Howrah",
+
   "Remote / Anywhere",
 ]
 
@@ -3492,7 +3758,6 @@ function PostGigPage({
   // Step 3
 
   const [brand, setBrand] = useState(userProfile?.name || "")
-
 
   const [minFollowers, setMinFollowers] = useState("")
 
@@ -3558,9 +3823,13 @@ function PostGigPage({
       e.deadline = "Please select an application deadline"
     } else {
       const today = new Date()
+
       today.setHours(0, 0, 0, 0)
+
       const selDate = new Date(deadline)
+
       selDate.setHours(0, 0, 0, 0)
+
       if (selDate < today) {
         e.deadline = "Deadline cannot be in the past"
       }
@@ -3575,6 +3844,7 @@ function PostGigPage({
 
       if (Object.keys(e).length) {
         setErrors(e)
+
         return
       }
 
@@ -3586,6 +3856,7 @@ function PostGigPage({
 
       if (Object.keys(e).length) {
         setErrors(e)
+
         return
       }
 
@@ -3672,21 +3943,35 @@ function PostGigPage({
       await setDoc(doc(db, "gigs", String(newGigId)), newGig)
 
       // 4. Send Push Notification for New Gig Created
+
       try {
         await addDoc(collection(db, "notifications"), {
           recipientUid: "all",
+
           recipientName: "Community",
+
           senderName: newGig.creatorName,
+
           senderUid: auth.currentUser?.uid || null,
+
           senderAvatar: newGig.avatar,
+
           title: `New Gig Posted: ${newGig.title}`,
+
           message: `${newGig.creatorName} posted a new gig "${newGig.title}" in ${newGig.niche}! Budget: ${newGig.budget}`,
+
           type: "gig",
+
           category: "activity",
+
           actionText: "View Gig",
+
           gigId: newGigId,
+
           read: false,
+
           createdAt: new Date().toISOString(),
+
           avatar: newGig.avatar,
         })
       } catch (e) {
@@ -3759,6 +4044,7 @@ function PostGigPage({
                     value={title}
                     onChange={(e) => {
                       setTitle(e.target.value)
+
                       setErrors((p) => ({ ...p, title: "" }))
                     }}
                     placeholder="e.g. Brand Collab for Ethnic Fashion Launch"
@@ -3789,6 +4075,7 @@ function PostGigPage({
                         key={val}
                         onClick={() => {
                           setGigType(val)
+
                           setErrors((p) => ({ ...p, gigType: "" }))
                         }}
                         className={`flex flex-col items-center py-3 px-2 rounded-2xl border-2 transition ${
@@ -3830,6 +4117,7 @@ function PostGigPage({
                         key={n}
                         onClick={() => {
                           setNiche(n)
+
                           setErrors((p) => ({ ...p, niche: "" }))
                         }}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
@@ -3858,6 +4146,7 @@ function PostGigPage({
                     value={description}
                     onChange={(e) => {
                       setDescription(e.target.value)
+
                       setErrors((p) => ({ ...p, description: "" }))
                     }}
                     placeholder="Describe the collaboration — what you're looking for, how it'll work, what the creator gets…"
@@ -3914,6 +4203,7 @@ function PostGigPage({
                         value={budget.startsWith("₹") ? "" : budget}
                         onChange={(e) => {
                           setBudget(e.target.value ? e.target.value : "")
+
                           setErrors((p) => ({ ...p, budget: "" }))
                         }}
                         placeholder="Enter amount e.g. 5000"
@@ -3931,6 +4221,7 @@ function PostGigPage({
                         value={budget}
                         onChange={(e) => {
                           setBudget(e.target.value)
+
                           setErrors((p) => ({ ...p, budget: "" }))
                         }}
                         placeholder={
@@ -4044,10 +4335,13 @@ function PostGigPage({
                     min={new Date().toISOString().split("T")[0]}
                     onChange={(e) => {
                       setDeadline(e.target.value)
+
                       setErrors((p) => ({ ...p, deadline: "" }))
                     }}
                     className={`w-full bg-slate-50 border ${
-                      errors.deadline ? "border-red-400 focus:border-red-400" : "border-slate-200 focus:border-[#3b5bdb]"
+                      errors.deadline
+                        ? "border-red-400 focus:border-red-400"
+                        : "border-slate-200 focus:border-[#3b5bdb]"
                     } rounded-2xl px-4 py-3 text-sm text-slate-700 outline-none transition`}
                   />
                   {errors.deadline && (
@@ -4066,6 +4360,7 @@ function PostGigPage({
                         key={l}
                         onClick={() => {
                           setLocation(l)
+
                           setErrors((p) => ({ ...p, location: "" }))
                         }}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
@@ -4084,7 +4379,6 @@ function PostGigPage({
                     </p>
                   )}
                 </div>
-
               </div>
             </div>
           </div>
@@ -4197,7 +4491,7 @@ function PostGigPage({
                     {/* Preview circle */}
                     <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {brandLogoUrl ? (
-                        <img
+                        <ImageWithSkeleton
                           src={brandLogoUrl}
                           alt="Brand logo"
                           className="w-full h-full object-cover"
@@ -4354,9 +4648,7 @@ function GigPostedSuccess({
             <path d="M22 2L15 22 11 13 2 9l20-7z" />
           </svg>
         </div>
-        <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-[#f76707] flex items-center justify-center text-white text-base shadow-lg">
-          
-        </div>
+        <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-[#f76707] flex items-center justify-center text-white text-base shadow-lg"></div>
       </div>
       <h2 className="font-display text-2xl font-black text-slate-900 mb-2">
         Gig is Live!
@@ -4373,9 +4665,7 @@ function GigPostedSuccess({
         onClick={onViewMyGigs}
         className="w-full bg-white rounded-2xl p-4 mb-3 shadow-sm border border-slate-100 hover:border-[#3b5bdb]/40 hover:bg-slate-50/80 flex items-center gap-3 active:scale-[0.99] transition cursor-pointer text-left"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#e8edff] flex items-center justify-center text-[#3b5bdb] text-lg">
-          
-        </div>
+        <div className="w-10 h-10 rounded-xl bg-[#e8edff] flex items-center justify-center text-[#3b5bdb] text-lg"></div>
         <div className="flex-1 text-left">
           <div className="text-xs font-bold text-slate-500 mb-0.5">My Gigs</div>
           <div className="text-sm text-slate-700 font-semibold">
@@ -4389,9 +4679,7 @@ function GigPostedSuccess({
         onClick={onShareInstagram}
         className="w-full bg-white rounded-2xl p-4 mb-8 shadow-sm border border-slate-100 hover:border-rose-300 hover:bg-rose-50/40 flex items-center gap-3 active:scale-[0.99] transition cursor-pointer text-left"
       >
-        <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-lg">
-          
-        </div>
+        <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-lg"></div>
         <div className="flex-1 text-left">
           <div className="text-xs font-bold text-slate-500 mb-0.5">Share</div>
           <div className="text-sm text-slate-700 font-semibold">
@@ -4417,9 +4705,15 @@ const MY_POSTED_GIGS: Gig[] = []
 
 const SAVED_GIGS_DATA: Gig[] = []
 
-const PORTFOLIO_ITEMS: Array<{ id: number; img: string; likes: string }> = []
+const PORTFOLIO_ITEMS: Array<{ id: number img: string likes: string }> = []
 
-const REVIEWS: Array<{ name: string; avatar: string; text: string; rating: number; date: string }> = []
+const REVIEWS: Array<{
+  name: string
+  avatar: string
+  text: string
+  rating: number
+  date: string
+}> = []
 
 function StarIcon({ filled }: { filled: boolean }) {
   return (
@@ -4498,28 +4792,44 @@ function ChevronRightIcon() {
 
 function MyConnectionsPage({
   onBack,
+
   connections,
+
   receivedRequests,
+
   creators,
+
   brands,
+
   handleAcceptConnectionRequest,
-  onViewProfile
+
+  onViewProfile,
 }: {
   onBack: () => void
+
   connections: Set<number>
+
   receivedRequests: Set<number>
+
   creators: Creator[]
+
   brands: Brand[]
+
   handleAcceptConnectionRequest: (id: number) => void
+
   onViewProfile: (name: string) => void
 }) {
-  const [activeTab, setActiveTab] = useState<"connections" | "requests">("connections")
+  const [activeTab, setActiveTab] = useState<"connections" | "requests">(
+    "connections",
+  )
 
   // Combine creators and brands for easy lookup
+
   const allUsers = [...creators, ...brands]
-  
-  const connectedUsers = allUsers.filter(u => connections.has(u.id))
-  const requestUsers = allUsers.filter(u => receivedRequests.has(u.id))
+
+  const connectedUsers = allUsers.filter((u) => connections.has(u.id))
+
+  const requestUsers = allUsers.filter((u) => receivedRequests.has(u.id))
 
   return (
     <div className="fixed inset-0 bg-[#f8f9fa] z-50 flex flex-col animate-slideUp">
@@ -4536,12 +4846,14 @@ function MyConnectionsPage({
           </h2>
         </div>
       </div>
-      
+
       <div className="flex bg-white px-4 border-b border-slate-100">
         <button
           onClick={() => setActiveTab("connections")}
           className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition ${
-            activeTab === "connections" ? "border-[#3b5bdb] text-[#3b5bdb]" : "border-transparent text-slate-400"
+            activeTab === "connections"
+              ? "border-[#3b5bdb] text-[#3b5bdb]"
+              : "border-transparent text-slate-400"
           }`}
         >
           Connections ({connectedUsers.length})
@@ -4549,7 +4861,9 @@ function MyConnectionsPage({
         <button
           onClick={() => setActiveTab("requests")}
           className={`flex-1 py-3 text-xs font-bold text-center border-b-2 transition ${
-            activeTab === "requests" ? "border-[#3b5bdb] text-[#3b5bdb]" : "border-transparent text-slate-400"
+            activeTab === "requests"
+              ? "border-[#3b5bdb] text-[#3b5bdb]"
+              : "border-transparent text-slate-400"
           }`}
         >
           Requests ({requestUsers.length})
@@ -4557,53 +4871,84 @@ function MyConnectionsPage({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
-        {activeTab === "connections" && (
-          connectedUsers.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <h3 className="text-sm font-bold text-slate-700 mb-1">No connections yet</h3>
-              <p className="text-xs text-slate-400 max-w-[200px]">Connect with other creators and brands to build your network.</p>
-             </div>
+        {activeTab === "connections" &&
+          (connectedUsers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <h3 className="text-sm font-bold text-slate-700 mb-1">
+                No connections yet
+              </h3>
+              <p className="text-xs text-slate-400 max-w-[200px]">
+                Connect with other creators and brands to build your network.
+              </p>
+            </div>
           ) : (
-            connectedUsers.map(u => (
-              <div key={u.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                <img 
-                  src={"avatar" in u ? (u as Creator).avatar : (u as Brand).logo} 
-                  alt={u.name} 
+            connectedUsers.map((u) => (
+              <div
+                key={u.id}
+                className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3"
+              >
+                <ImageWithSkeleton
+                  src={
+                    "avatar" in u ? (u as Creator).avatar : (u as Brand).logo
+                  }
+                  alt={u.name}
                   className="w-12 h-12 rounded-full object-cover cursor-pointer"
                   onClick={() => onViewProfile(u.name)}
                 />
-                <div className="flex-1 cursor-pointer" onClick={() => onViewProfile(u.name)}>
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => onViewProfile(u.name)}
+                >
                   <h4 className="text-sm font-bold text-slate-900">{u.name}</h4>
-                  <p className="text-xs text-slate-500 line-clamp-1">{("handle" in u ? (u as Creator).handle : (u as Brand).industry)}</p>
+                  <p className="text-xs text-slate-500 line-clamp-1">
+                    {"handle" in u
+                      ? (u as Creator).handle
+                      : (u as Brand).industry}
+                  </p>
                 </div>
                 <button className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-xl transition cursor-pointer">
                   Message
                 </button>
               </div>
             ))
-          )
-        )}
+          ))}
 
-        {activeTab === "requests" && (
-          requestUsers.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <h3 className="text-sm font-bold text-slate-700 mb-1">No pending requests</h3>
-              <p className="text-xs text-slate-400 max-w-[200px]">When someone wants to connect, it will appear here.</p>
-             </div>
+        {activeTab === "requests" &&
+          (requestUsers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <h3 className="text-sm font-bold text-slate-700 mb-1">
+                No pending requests
+              </h3>
+              <p className="text-xs text-slate-400 max-w-[200px]">
+                When someone wants to connect, it will appear here.
+              </p>
+            </div>
           ) : (
-            requestUsers.map(u => (
-              <div key={u.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                <img 
-                  src={"avatar" in u ? (u as Creator).avatar : (u as Brand).logo} 
-                  alt={u.name} 
+            requestUsers.map((u) => (
+              <div
+                key={u.id}
+                className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3"
+              >
+                <ImageWithSkeleton
+                  src={
+                    "avatar" in u ? (u as Creator).avatar : (u as Brand).logo
+                  }
+                  alt={u.name}
                   className="w-12 h-12 rounded-full object-cover cursor-pointer"
                   onClick={() => onViewProfile(u.name)}
                 />
-                <div className="flex-1 cursor-pointer" onClick={() => onViewProfile(u.name)}>
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => onViewProfile(u.name)}
+                >
                   <h4 className="text-sm font-bold text-slate-900">{u.name}</h4>
-                  <p className="text-xs text-slate-500 line-clamp-1">{("handle" in u ? (u as Creator).handle : (u as Brand).industry)}</p>
+                  <p className="text-xs text-slate-500 line-clamp-1">
+                    {"handle" in u
+                      ? (u as Creator).handle
+                      : (u as Brand).industry}
+                  </p>
                 </div>
-                <button 
+                <button
                   onClick={() => handleAcceptConnectionRequest(u.id)}
                   className="px-3 py-1.5 bg-[#3b5bdb] text-white text-[10px] font-bold rounded-xl shadow-sm hover:bg-[#2b4ef7] transition cursor-pointer"
                 >
@@ -4611,8 +4956,7 @@ function MyConnectionsPage({
                 </button>
               </div>
             ))
-          )
-        )}
+          ))}
       </div>
     </div>
   )
@@ -4622,44 +4966,62 @@ function MyConnectionsPage({
 
 function MyApplicationsPage({
   onBack,
+
   currentUser,
+
   userProfile,
+
   gigs = [],
 }: {
   onBack: () => void
+
   currentUser: any
+
   userProfile?: any
+
   gigs?: Gig[]
 }) {
   const [applications, setApplications] = useState<any[]>([])
+
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!currentUser?.uid) {
       setLoading(false)
+
       return
     }
 
     const q = query(
       collection(db, "applications"),
+
       where("applicantUid", "==", currentUser.uid),
     )
 
     const unsub = onSnapshot(
       q,
+
       (snap) => {
         const list = snap.docs
+
           .map((d) => ({ id: d.id, ...d.data() }))
+
           .sort((a: any, b: any) => {
             const ta = a.appliedAt ? new Date(a.appliedAt).getTime() : 0
+
             const tb = b.appliedAt ? new Date(b.appliedAt).getTime() : 0
+
             return tb - ta
           })
+
         setApplications(list)
+
         setLoading(false)
       },
+
       (err) => {
         console.warn("MyApplications error:", err)
+
         setLoading(false)
       },
     )
@@ -4672,28 +5034,45 @@ function MyApplicationsPage({
       case "accepted":
         return {
           label: " Accepted",
+
           bg: "bg-emerald-50",
+
           border: "border-emerald-200",
+
           text: "text-emerald-700",
+
           dot: "bg-emerald-500",
+
           desc: "Congratulations! You've been selected for this gig.",
         }
+
       case "rejected":
         return {
           label: " Not Selected",
+
           bg: "bg-red-50",
+
           border: "border-red-200",
+
           text: "text-red-600",
+
           dot: "bg-red-400",
+
           desc: "The poster selected another creator for this gig.",
         }
+
       default:
         return {
           label: " Pending Review",
+
           bg: "bg-amber-50",
+
           border: "border-amber-200",
+
           text: "text-amber-700",
+
           dot: "bg-amber-400",
+
           desc: "Your pitch is being reviewed by the gig poster.",
         }
     }
@@ -4701,16 +5080,26 @@ function MyApplicationsPage({
 
   const formatRelativeTime = (isoStr: string) => {
     if (!isoStr) return ""
+
     const diff = Date.now() - new Date(isoStr).getTime()
+
     const mins = Math.floor(diff / 60000)
+
     const hrs = Math.floor(diff / 3600000)
+
     const days = Math.floor(diff / 86400000)
+
     if (mins < 2) return "Just now"
+
     if (mins < 60) return `${mins}m ago`
+
     if (hrs < 24) return `${hrs}h ago`
+
     if (days < 7) return `${days}d ago`
+
     return new Date(isoStr).toLocaleDateString("en-IN", {
       day: "numeric",
+
       month: "short",
     })
   }
@@ -4738,9 +5127,7 @@ function MyApplicationsPage({
           </div>
         ) : applications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-            <div className="w-20 h-20 rounded-3xl bg-[#e8edff] flex items-center justify-center text-4xl shadow-sm">
-              
-            </div>
+            <div className="w-20 h-20 rounded-3xl bg-[#e8edff] flex items-center justify-center text-4xl shadow-sm"></div>
             <div>
               <h3 className="font-black text-slate-800 text-base mb-1">
                 No Applications Yet
@@ -4754,13 +5141,14 @@ function MyApplicationsPage({
               onClick={onBack}
               className="bg-[#3b5bdb] text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow-md shadow-blue-200"
             >
-              Browse Gigs 
+              Browse Gigs
             </button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {applications.map((app: any) => {
               const statusConfig = getStatusConfig(app.status)
+
               const matchedGig = gigs.find(
                 (g) => String(g.id) === String(app.gigId),
               )
@@ -4793,7 +5181,7 @@ function MyApplicationsPage({
                   <div className="p-4">
                     {/* Poster info */}
                     <div className="flex items-center gap-2.5 mb-3">
-                      <img
+                      <ImageWithSkeleton
                         src={
                           app.posterAvatar ||
                           matchedGig?.avatar ||
@@ -4866,7 +5254,7 @@ function MyApplicationsPage({
                       )}
                       {app.availability && (
                         <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
-                           {app.availability}
+                          {app.availability}
                         </span>
                       )}
                     </div>
@@ -4897,6 +5285,7 @@ function ProfilePage({
   onViewGig,
 
   onViewMyApplications,
+
   onViewMyConnections,
 }: {
   onPostGig: () => void
@@ -4923,7 +5312,10 @@ function ProfilePage({
   const [showLogoutToast, setShowLogoutToast] = useState(false)
 
   const [deletingGig, setDeletingGig] = useState<Gig | null>(null)
-  const [deleteSuccessToast, setDeleteSuccessToast] = useState<string | null>(null)
+
+  const [deleteSuccessToast, setDeleteSuccessToast] = useState<string | null>(
+    null,
+  )
 
   // Edit Gig State
 
@@ -5132,6 +5524,7 @@ function ProfilePage({
       if (portfolioFile) {
         const storageRef = ref(
           storage,
+
           `portfolio/${auth.currentUser.uid}/${Date.now()}`,
         )
 
@@ -5292,7 +5685,7 @@ function ProfilePage({
             >
               <div className="p-1 rounded-full bg-gradient-to-tr from-[#3b5bdb] via-[#7048e8] to-[#f76707] shadow-md">
                 <div className="w-24 h-24 rounded-full border-2 border-white overflow-hidden bg-slate-100 relative">
-                  <img
+                  <ImageWithSkeleton
                     src={previewUrl || avatar}
                     alt="Upload Preview Frame"
                     className="w-full h-full object-cover"
@@ -5433,11 +5826,13 @@ function ProfilePage({
                 if (selectedFile) {
                   const storageRef = ref(
                     storage,
+
                     `profile_pics/${auth.currentUser.uid}`,
                   )
 
                   const uploadResult = await uploadBytes(
                     storageRef,
+
                     selectedFile,
                   )
 
@@ -5517,8 +5912,12 @@ function ProfilePage({
             <div className="flex items-center gap-3">
               <span className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 text-lg"></span>
               <div className="text-left">
-                <h3 className="text-sm font-black text-slate-900">Delete Gig Campaign</h3>
-                <p className="text-[11px] text-slate-400 font-semibold">Are you sure you want to delete this campaign?</p>
+                <h3 className="text-sm font-black text-slate-900">
+                  Delete Gig Campaign
+                </h3>
+                <p className="text-[11px] text-slate-400 font-semibold">
+                  Are you sure you want to delete this campaign?
+                </p>
               </div>
             </div>
             <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 text-xs text-slate-600 font-medium text-left">
@@ -5535,16 +5934,30 @@ function ProfilePage({
                 onClick={async () => {
                   try {
                     await deleteDoc(doc(db, "gigs", String(deletingGig.id)))
+
                     // Also delete related applications
-                    const qApps = query(collection(db, "applications"), where("gigId", "==", deletingGig.id))
+
+                    const qApps = query(
+                      collection(db, "applications"),
+                      where("gigId", "==", deletingGig.id),
+                    )
+
                     const snapApps = await getDocs(qApps)
-                    const appDeletions = snapApps.docs.map(d => deleteDoc(d.ref))
+
+                    const appDeletions = snapApps.docs.map((d) =>
+                      deleteDoc(d.ref),
+                    )
+
                     await Promise.all(appDeletions)
-                    
+
                     const title = deletingGig.title
+
                     setDeletingGig(null)
+
                     // Show a simple success toast
+
                     setDeleteSuccessToast(title)
+
                     setTimeout(() => setDeleteSuccessToast(null), 3000)
                   } catch (err: any) {
                     alert(err.message || "Failed to delete gig campaign")
@@ -5632,13 +6045,12 @@ function ProfilePage({
                 <button
                   onClick={() => {
                     setShowMenu(false)
+
                     onViewMyApplications()
                   }}
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent border-t border-slate-100"
                 >
-                  <span className="text-[#3b5bdb] text-base leading-none">
-                    
-                  </span>{" "}
+                  <span className="text-[#3b5bdb] text-base leading-none"></span>{" "}
                   My Applications
                 </button>
               )}
@@ -5646,13 +6058,12 @@ function ProfilePage({
                 <button
                   onClick={() => {
                     setShowMenu(false)
+
                     onViewMyConnections()
                   }}
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-none bg-transparent border-t border-slate-100"
                 >
-                  <span className="text-[#3b5bdb] text-base leading-none">
-                    
-                  </span>{" "}
+                  <span className="text-[#3b5bdb] text-base leading-none"></span>{" "}
                   My Connections
                 </button>
               )}
@@ -5671,7 +6082,7 @@ function ProfilePage({
       {/* Centered Avatar */}
       <div className="flex flex-col items-center pt-2">
         <div className="relative">
-          <img
+          <ImageWithSkeleton
             src={avatar}
             alt={name}
             className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
@@ -5776,7 +6187,7 @@ function ProfilePage({
           ))}
         {igError && (
           <div className="w-full bg-red-50 border border-red-100 rounded-2xl px-3 py-2 mb-4 text-xs text-red-600 font-medium">
-             {igError}
+            {igError}
           </div>
         )}
 
@@ -5838,7 +6249,7 @@ function ProfilePage({
                   key={itemId}
                   className="relative rounded-2xl overflow-hidden aspect-[3/4] bg-slate-100 group cursor-pointer shadow-sm border border-slate-100"
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={itemImg}
                     alt="Portfolio work"
                     className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
@@ -5847,6 +6258,7 @@ function ProfilePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         handleDeletePortfolioItem(itemId)
                       }}
                       title="Remove image"
@@ -5888,34 +6300,49 @@ function ProfilePage({
               className="hidden"
               onChange={async (e) => {
                 const file = e.target.files?.[0]
+
                 if (!file || !auth.currentUser) return
+
                 setUploadingPortfolio(true)
+
                 try {
                   const storageRef = ref(
                     storage,
+
                     `portfolio/${auth.currentUser.uid}/${Date.now()}`,
                   )
+
                   const uploadResult = await uploadBytes(storageRef, file)
+
                   const finalUrl = await getDownloadURL(uploadResult.ref)
+
                   const newItem = {
                     id: Date.now(),
+
                     img: finalUrl,
+
                     likes: "",
+
                     createdAt: new Date().toISOString(),
                   }
-                  const currentList =
-                    userProfile?.portfolioItems || []
+
+                  const currentList = userProfile?.portfolioItems || []
+
                   const updatedList = [newItem, ...currentList]
+
                   const docCollection =
                     userRole === "brand" ? "brands" : "creators"
+
                   await updateDoc(
                     doc(db, docCollection, auth.currentUser.uid),
+
                     { portfolioItems: updatedList },
                   )
                 } catch (err: any) {
                   alert(err.message || "Failed to upload portfolio image")
                 } finally {
                   setUploadingPortfolio(false)
+
                   e.target.value = ""
                 }
               }}
@@ -6005,7 +6432,7 @@ function ProfilePage({
                       onClick={() => onViewGig && onViewGig(g, "applicants")}
                       className="text-xs font-bold text-white bg-[#3b5bdb] hover:bg-[#2b4ef7] px-3.5 py-1.5 rounded-xl shadow-sm shadow-blue-200 transition cursor-pointer active:scale-95 flex items-center gap-1"
                     >
-                      View ({g.applicants || 0}) 
+                      View ({g.applicants || 0})
                     </button>
                   </div>
                 </div>
@@ -6041,26 +6468,41 @@ function ProfilePage({
               <div className="bg-[#3b5bdb] rounded-2xl p-4 flex items-center gap-4 shadow-md">
                 <div className="text-center">
                   <div className="text-4xl font-black text-white leading-none">
-                    {(REVIEWS.reduce((sum, r) => sum + r.rating, 0) / REVIEWS.length).toFixed(1)}
+                    {(
+                      REVIEWS.reduce((sum, r) => sum + r.rating, 0) /
+                      REVIEWS.length
+                    ).toFixed(1)}
                   </div>
                   <div className="flex gap-0.5 justify-center mt-1">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <StarIcon key={i} filled={i <= Math.round(REVIEWS.reduce((sum, r) => sum + r.rating, 0) / REVIEWS.length)} />
+                      <StarIcon
+                        key={i}
+                        filled={
+                          i <=
+                          Math.round(
+                            REVIEWS.reduce((sum, r) => sum + r.rating, 0) /
+                              REVIEWS.length,
+                          )
+                        }
+                      />
                     ))}
                   </div>
                   <div className="text-white/60 text-[10px] font-medium mt-1">
-                    {REVIEWS.length} {REVIEWS.length === 1 ? "review" : "reviews"}
+                    {REVIEWS.length}{" "}
+                    {REVIEWS.length === 1 ? "review" : "reviews"}
                   </div>
                 </div>
                 <div className="flex-1">
                   {[5, 4, 3, 2, 1].map((star) => (
                     <div key={star} className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] text-white/60 w-2">{star}</span>
+                      <span className="text-[10px] text-white/60 w-2">
+                        {star}
+                      </span>
                       <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-white rounded-full"
                           style={{
-                            width: `${Math.round((REVIEWS.filter(r => r.rating === star).length / REVIEWS.length) * 100)}%`,
+                            width: `${Math.round((REVIEWS.filter((r) => r.rating === star).length / REVIEWS.length) * 100)}%`,
                           }}
                         />
                       </div>
@@ -6091,15 +6533,21 @@ function ProfilePage({
                       ))}
                     </div>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">{r.text}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {r.text}
+                  </p>
                 </div>
               ))}
             </>
           ) : (
             <div className="flex flex-col items-center justify-center py-14 text-center">
               <div className="text-3xl mb-3"></div>
-              <div className="text-sm font-bold text-slate-700 mb-1">No reviews yet</div>
-              <div className="text-xs text-slate-400">Reviews from brands and collaborators will appear here.</div>
+              <div className="text-sm font-bold text-slate-700 mb-1">
+                No reviews yet
+              </div>
+              <div className="text-xs text-slate-400">
+                Reviews from brands and collaborators will appear here.
+              </div>
             </div>
           )}
         </div>
@@ -6148,7 +6596,9 @@ function ProfilePage({
 
             {
               icon: "",
+
               label: "Privacy & Safety",
+
               sub: "Who can contact you",
             },
 
@@ -6156,7 +6606,9 @@ function ProfilePage({
 
             {
               icon: "",
+
               label: "Connected Accounts",
+
               sub: "Instagram, YouTube",
             },
 
@@ -6209,9 +6661,7 @@ function ProfilePage({
           {/* Centered Modal Card */}
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[85%] max-w-[340px] bg-slate-900 text-white rounded-3xl p-5 shadow-2xl z-50 border border-slate-800 flex flex-col gap-4 transition-all duration-300">
             <div className="flex flex-col items-center text-center gap-3">
-              <span className="text-3xl bg-slate-800 w-14 h-14 rounded-full flex items-center justify-center">
-                
-              </span>
+              <span className="text-3xl bg-slate-800 w-14 h-14 rounded-full flex items-center justify-center"></span>
               <div className="flex flex-col gap-1">
                 <h4 className="text-base font-bold text-slate-100">
                   Are you sure to logout?
@@ -6272,7 +6722,7 @@ function ProfilePage({
                 </div>
                 <div className="w-32 rounded-2xl overflow-hidden aspect-[3/4] bg-slate-100 relative shadow-md border-2 border-slate-100">
                   {portfolioPreviewUrl ? (
-                    <img
+                    <ImageWithSkeleton
                       src={portfolioPreviewUrl}
                       alt="Preview"
                       className="w-full h-full object-cover"
@@ -6631,6 +7081,7 @@ function ProfileSetupPage({
       try {
         const qCreators = query(
           collection(db, "creators"),
+
           where("handle", "==", queryHandle),
         )
 
@@ -6756,7 +7207,7 @@ function ProfileSetupPage({
               {/* Outer Framed Ring */}
               <div className="p-1 rounded-full bg-gradient-to-tr from-[#3b5bdb] via-[#7048e8] to-[#f76707] shadow-md shadow-blue-200">
                 <div className="w-24 h-24 rounded-full border-2 border-white overflow-hidden bg-slate-100 relative">
-                  <img
+                  <ImageWithSkeleton
                     src={previewUrl || defaultAvatar}
                     alt="Profile Avatar Frame Preview"
                     className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
@@ -6965,12 +7416,18 @@ const loadRazorpayScript = () => {
   return new Promise((resolve) => {
     if ((window as any).Razorpay) {
       resolve(true)
+
       return
     }
+
     const script = document.createElement("script")
+
     script.src = "https://checkout.razorpay.com/v1/checkout.js"
+
     script.onload = () => resolve(true)
+
     script.onerror = () => resolve(false)
+
     document.body.appendChild(script)
   })
 }
@@ -7004,9 +7461,12 @@ function ViewEventPage({
 
   const eventPriceVal = (event as any).price
     ? Number((event as any).price)
-    : (event as any).entryFee && typeof (event as any).entryFee === "string" && (event as any).entryFee.includes("₹")
+    : (event as any).entryFee &&
+        typeof (event as any).entryFee === "string" &&
+        (event as any).entryFee.includes("₹")
       ? parseInt((event as any).entryFee.replace(/[^0-9]/g, ""), 10)
       : 0
+
   const isPaidEvent = (event as any).isPaid || eventPriceVal > 0
 
   const handleShare = () => {
@@ -7030,33 +7490,52 @@ function ViewEventPage({
 
     if (isPaidEvent && eventPriceVal > 0) {
       const loaded = await loadRazorpayScript()
+
       if (!loaded) {
-        alert("Failed to load Razorpay Payment Gateway. Please check your internet connection.")
+        alert(
+          "Failed to load Razorpay Payment Gateway. Please check your internet connection.",
+        )
+
         return
       }
 
       const options = {
         key: "rzp_test_KreatorKolkataKey",
+
         amount: eventPriceVal * 100,
+
         currency: "INR",
+
         name: "Kreator Kolkata",
+
         description: `Event Registration: ${event.title}`,
-        image: "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=120&h=120&fit=crop&auto=format",
+
+        image:
+          "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=120&h=120&fit=crop&auto=format",
+
         handler: function (response: any) {
-          alert(` Payment Successful!\nPayment ID: ${response.razorpay_payment_id}\n\nYou are now registered for ${event.title}.`)
+          alert(
+            ` Payment Successful!\nPayment ID: ${response.razorpay_payment_id}\n\nYou are now registered for ${event.title}.`,
+          )
+
           toggleRsvpEvent(event.id)
         },
+
         prefill: {
           name: userProfile?.name || "Kreator Member",
+
           email: userProfile?.email || "member@kreatorkolkata.com",
+
           contact: "9876543210",
         },
+
         theme: {
           color: "#3b5bdb",
         },
       }
 
       const razorpayObj = new (window as any).Razorpay(options)
+
       razorpayObj.open()
     } else {
       toggleRsvpEvent(event.id)
@@ -7074,7 +7553,8 @@ function ViewEventPage({
     (event as any).description ||
     "Join Kolkata's premier creator networking meetup! Connect with top lifestyle, food, and tech creators, meet hiring brand managers, and participate in exclusive collab pitch sessions."
 
-  const entryFee = (event as any).entryFee || (isPaidEvent ? `₹${eventPriceVal}` : "Free RSVP")
+  const entryFee =
+    (event as any).entryFee || (isPaidEvent ? `₹${eventPriceVal}` : "Free RSVP")
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-hide bg-[#f8fafc] relative">
@@ -7104,7 +7584,7 @@ function ViewEventPage({
 
       {/* Parallax Image Background */}
       <div className="absolute top-0 left-0 right-0 h-[300px] overflow-hidden z-0 bg-slate-900">
-        <img
+        <ImageWithSkeleton
           src={(event as any).detailImage || event.image}
           alt={event.title}
           className="w-full h-full object-cover opacity-90"
@@ -7124,7 +7604,7 @@ function ViewEventPage({
             </span>
             {isFeat && (
               <span className="bg-amber-50 text-amber-600 text-[9px] font-black px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
-                 FEATURED EVENT
+                FEATURED EVENT
               </span>
             )}
           </div>
@@ -7182,90 +7662,94 @@ function ViewEventPage({
             </div>
           </div>
 
-        {/* RSVP & Attendee Counter */}
-        <div className="bg-gradient-to-r from-[#3b5bdb]/10 to-[#3b5bdb]/5 rounded-3xl p-4 border border-[#3b5bdb]/20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2 overflow-hidden">
-              <img
-                className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=60&h=60&fit=crop&auto=format"
-                alt=""
-              />
-              <img
-                className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                src="https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=60&h=60&fit=crop&auto=format"
-                alt=""
-              />
-              <img
-                className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
-                src="https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=60&h=60&fit=crop&auto=format"
-                alt=""
-              />
+          {/* RSVP & Attendee Counter */}
+          <div className="bg-gradient-to-r from-[#3b5bdb]/10 to-[#3b5bdb]/5 rounded-3xl p-4 border border-[#3b5bdb]/20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2 overflow-hidden">
+                <ImageWithSkeleton
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=60&h=60&fit=crop&auto=format"
+                  alt=""
+                />
+                <ImageWithSkeleton
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=60&h=60&fit=crop&auto=format"
+                  alt=""
+                />
+                <ImageWithSkeleton
+                  className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover"
+                  src="https://images.unsplash.com/photo-1639591903821-9b5e38f97bbd?w=60&h=60&fit=crop&auto=format"
+                  alt=""
+                />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900">
+                  {event.attendees + (isRsvp ? 1 : 0)} People Registered
+                </div>
+                <div className="text-[10px] text-slate-500 font-medium">
+                  Join top Kolkata creators
+                </div>
+              </div>
             </div>
+            <span
+              className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                isRsvp
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-blue-100 text-[#3b5bdb]"
+              }`}
+            >
+              {isRsvp ? "✓ Registered" : "Spots Available"}
+            </span>
+          </div>
+
+          {/* Organized By */}
+          <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
             <div>
+              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
+                Organized By
+              </div>
               <div className="text-xs font-bold text-slate-900">
-                {event.attendees + (isRsvp ? 1 : 0)} People Registered
-              </div>
-              <div className="text-[10px] text-slate-500 font-medium">
-                Join top Kolkata creators
+                {organizer}
               </div>
             </div>
+            <span className="text-xs font-bold text-[#3b5bdb] bg-blue-50 px-3 py-1 rounded-full">
+              {entryFee}
+            </span>
           </div>
-          <span
-            className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-              isRsvp
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-blue-100 text-[#3b5bdb]"
-            }`}
-          >
-            {isRsvp ? "✓ Registered" : "Spots Available"}
-          </span>
-        </div>
 
-        {/* Organized By */}
-        <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
-          <div>
-            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
-              Organized By
-            </div>
-            <div className="text-xs font-bold text-slate-900">{organizer}</div>
+          {/* About Event Description */}
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+            <h3 className="text-sm font-bold text-slate-900 mb-2">
+              About Event
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-normal whitespace-pre-line">
+              {description}
+            </p>
           </div>
-          <span className="text-xs font-bold text-[#3b5bdb] bg-blue-50 px-3 py-1 rounded-full">
-            {entryFee}
-          </span>
-        </div>
 
-        {/* About Event Description */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
-          <h3 className="text-sm font-bold text-slate-900 mb-2">About Event</h3>
-          <p className="text-xs text-slate-600 leading-relaxed font-normal whitespace-pre-line">
-            {description}
-          </p>
-        </div>
-
-        {/* Featured Guests / Speakers */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
-          <h3 className="text-sm font-bold text-slate-900 mb-3">
-            Featured Speakers & Hosts
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {speakers.length > 0 ? (
-              speakers.map((sp: string) => (
-                <span
-                  key={sp}
-                  className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200/80 flex items-center gap-1.5"
-                >
-                  {sp}
+          {/* Featured Guests / Speakers */}
+          <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+            <h3 className="text-sm font-bold text-slate-900 mb-3">
+              Featured Speakers & Hosts
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {speakers.length > 0 ? (
+                speakers.map((sp: string) => (
+                  <span
+                    key={sp}
+                    className="bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200/80 flex items-center gap-1.5"
+                  >
+                    {sp}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-slate-400 italic font-medium">
+                  No featured speakers specified yet
                 </span>
-              ))
-            ) : (
-              <span className="text-xs text-slate-400 italic font-medium">
-                No featured speakers specified yet
-              </span>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Sticky Bottom Bar CTA */}
@@ -7298,15 +7782,15 @@ function ViewEventPage({
         <div className="fixed inset-0 z-50 flex items-end justify-center pb-8 px-5 pointer-events-none">
           <div className="w-full max-w-[390px] bg-white rounded-3xl shadow-2xl border border-slate-100 p-5 pointer-events-auto animate-[slideUp_0.25s_ease-out]">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#3b5bdb]/10 flex items-center justify-center text-[#3b5bdb] text-xl flex-shrink-0">
-                
-              </div>
+              <div className="w-10 h-10 rounded-2xl bg-[#3b5bdb]/10 flex items-center justify-center text-[#3b5bdb] text-xl flex-shrink-0"></div>
               <div>
                 <div className="text-sm font-bold text-slate-900">
                   Confirm Registration
                 </div>
                 <div className="text-[10px] text-slate-500 font-medium mt-0.5">
-                  {isPaidEvent ? `Amount Payable: ₹${eventPriceVal}` : "This action cannot be undone"}
+                  {isPaidEvent
+                    ? `Amount Payable: ₹${eventPriceVal}`
+                    : "This action cannot be undone"}
                 </div>
               </div>
             </div>
@@ -7314,7 +7798,9 @@ function ViewEventPage({
               Are you sure you want to register for{" "}
               <span className="font-bold text-slate-900">"{event.title}"</span>
               {isPaidEvent ? ` for ₹${eventPriceVal}` : ""}?
-              {isPaidEvent ? " You will be redirected to Razorpay to complete your payment securely." : " Once registered, you cannot unregister."}
+              {isPaidEvent
+                ? " You will be redirected to Razorpay to complete your payment securely."
+                : " Once registered, you cannot unregister."}
             </p>
             <div className="flex gap-3">
               <button
@@ -7327,7 +7813,9 @@ function ViewEventPage({
                 onClick={handleConfirmRegister}
                 className="flex-1 py-3 bg-[#3b5bdb] text-white text-xs font-bold rounded-2xl shadow-lg shadow-blue-200 hover:bg-[#2b4ef7] transition cursor-pointer"
               >
-                {isPaidEvent ? `Pay ₹${eventPriceVal} & Register` : "Yes, Register Me ✓"}
+                {isPaidEvent
+                  ? `Pay ₹${eventPriceVal} & Register`
+                  : "Yes, Register Me ✓"}
               </button>
             </div>
           </div>
@@ -7347,10 +7835,15 @@ function ExplorePage({
   onApply,
 
   connections,
+
   sentRequests,
+
   receivedRequests,
+
   handleSendConnectionRequest,
+
   handleAcceptConnectionRequest,
+
   handleRemoveConnection,
 
   rsvpEvents,
@@ -7398,10 +7891,15 @@ function ExplorePage({
   onApply: (gig: Gig) => void
 
   connections: Set<number>
+
   sentRequests: Set<number>
+
   receivedRequests: Set<number>
+
   handleSendConnectionRequest: (id: number) => void
+
   handleAcceptConnectionRequest: (id: number) => void
+
   handleRemoveConnection: (id: number) => void
 
   rsvpEvents: Set<number>
@@ -7468,6 +7966,7 @@ function ExplorePage({
   )
 
   const filteredGigs = gigs
+
     .filter(
       (g) =>
         g.title.toLowerCase().includes(query) ||
@@ -7475,6 +7974,7 @@ function ExplorePage({
         g.niche.toLowerCase().includes(query) ||
         g.tags.some((t) => t.toLowerCase().includes(query)),
     )
+
     .sort((a, b) => {
       const aFeat = (a as any).isFeatured ? 1 : 0
 
@@ -7545,7 +8045,7 @@ function ExplorePage({
                   >
                     <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
                     <div className="relative mt-1 mb-2 z-10">
-                      <img
+                      <ImageWithSkeleton
                         src={creator.avatar}
                         alt={creator.name}
                         className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
@@ -7589,6 +8089,7 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         onCreatorClick(creator.name)
                       }}
                       className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[9px] font-bold py-1.5 rounded-lg transition cursor-pointer"
@@ -7610,6 +8111,7 @@ function ExplorePage({
             <div className="flex flex-col gap-3 px-5">
               {filteredBrands.map((brand) => {
                 const isConnected = connections.has(brand.id)
+
                 const isRequestSent = sentRequests.has(brand.id)
 
                 return (
@@ -7618,7 +8120,7 @@ function ExplorePage({
                     onClick={() => onBrandClick(brand)}
                     className="bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3 cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
                   >
-                    <img
+                    <ImageWithSkeleton
                       src={brand.logo}
                       alt={brand.name}
                       className="w-11 h-11 rounded-xl object-cover border border-slate-100 flex-shrink-0"
@@ -7631,6 +8133,7 @@ function ExplorePage({
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
+
                             if (isConnected) {
                               handleRemoveConnection(brand.id)
                             } else if (!isRequestSent) {
@@ -7646,7 +8149,11 @@ function ExplorePage({
                                 : "bg-[#3b5bdb] text-white shadow-sm"
                           }`}
                         >
-                          {isConnected ? "Connected" : isRequestSent ? "Pending" : "Connect"}
+                          {isConnected
+                            ? "Connected"
+                            : isRequestSent
+                              ? "Pending"
+                              : "Connect"}
                         </button>
                       </div>
                       <div className="text-[9px] text-slate-400 font-bold uppercase">
@@ -7669,8 +8176,11 @@ function ExplorePage({
               {filteredGigs.map((gig) => {
                 const poster = resolveGigPosterDetails(
                   gig,
+
                   userProfile,
+
                   creators,
+
                   brands,
                 )
 
@@ -7688,6 +8198,7 @@ function ExplorePage({
                         <span
                           onClick={(e) => {
                             e.stopPropagation()
+
                             onCreatorClick(poster.name)
                           }}
                           className="text-[10px] text-slate-500 hover:text-[#3b5bdb] hover:underline"
@@ -7707,6 +8218,7 @@ function ExplorePage({
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
+
                           onApply(gig)
                         }}
                         className="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0 ml-3 shadow-sm"
@@ -7747,6 +8259,7 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         onSelectEvent && onSelectEvent(event)
                       }}
                       className={`text-[9px] font-bold px-3 py-1.5 rounded-lg transition ${
@@ -7797,7 +8310,7 @@ function ExplorePage({
                 </span>
               )}
             </button>
-            <img
+            <ImageWithSkeleton
               src={userAvatar}
               alt="Profile"
               onClick={onProfileClick}
@@ -7875,7 +8388,7 @@ function ExplorePage({
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
               <h2 className="text-base font-bold text-slate-900">
-                Featured Creators 
+                Featured Creators
               </h2>
               <button
                 onClick={() => setActiveFilter("creators")}
@@ -7900,7 +8413,7 @@ function ExplorePage({
                   >
                     <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
                     <div className="relative mt-1 mb-2 z-10">
-                      <img
+                      <ImageWithSkeleton
                         src={creator.avatar}
                         alt={creator.name}
                         className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100"
@@ -7950,9 +8463,7 @@ function ExplorePage({
           {/* Top Brands Section */}
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
-              <h2 className="text-base font-bold text-slate-900">
-                Top Brands 
-              </h2>
+              <h2 className="text-base font-bold text-slate-900">Top Brands</h2>
               <button
                 onClick={() => setActiveFilter("brands")}
                 className="text-xs font-semibold text-[#3b5bdb]"
@@ -7963,6 +8474,7 @@ function ExplorePage({
             <div className="flex gap-4 px-5 overflow-x-auto scrollbar-hide pb-1">
               {brands.map((brand) => {
                 const isConnected = connections.has(brand.id)
+
                 const isRequestSent = sentRequests.has(brand.id)
 
                 return (
@@ -7971,7 +8483,7 @@ function ExplorePage({
                     onClick={() => onBrandClick(brand)}
                     className="min-w-[280px] w-[280px] h-[100px] bg-white rounded-3xl p-3 shadow-sm border border-slate-100 flex gap-3 flex-shrink-0 relative cursor-pointer transition-transform active:scale-[0.98] hover:border-slate-200"
                   >
-                    <img
+                    <ImageWithSkeleton
                       src={brand.logo}
                       alt={brand.name}
                       className="w-12 h-12 rounded-2xl object-cover border border-slate-100 flex-shrink-0"
@@ -8006,6 +8518,7 @@ function ExplorePage({
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
+
                               if (isConnected) {
                                 handleRemoveConnection(brand.id)
                               } else if (!isRequestSent) {
@@ -8021,7 +8534,11 @@ function ExplorePage({
                                   : "bg-[#3b5bdb] text-white shadow-sm shadow-blue-100"
                             }`}
                           >
-                            {isConnected ? "Connected" : isRequestSent ? "Pending" : "Connect"}
+                            {isConnected
+                              ? "Connected"
+                              : isRequestSent
+                                ? "Pending"
+                                : "Connect"}
                           </button>
                         </div>
                         <div className="text-[9px] text-slate-400 font-bold uppercase leading-none">
@@ -8042,7 +8559,7 @@ function ExplorePage({
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
               <h2 className="text-base font-bold text-slate-900">
-                Trending Gigs 
+                Trending Gigs
               </h2>
               <button
                 onClick={() => setActiveFilter("gigs")}
@@ -8055,8 +8572,11 @@ function ExplorePage({
               {gigs.slice(0, 2).map((gig) => {
                 const poster = resolveGigPosterDetails(
                   gig,
+
                   userProfile,
+
                   creators,
+
                   brands,
                 )
 
@@ -8070,12 +8590,13 @@ function ExplorePage({
                       <div
                         onClick={(e) => {
                           e.stopPropagation()
+
                           onCreatorClick(poster.name)
                         }}
                         className="flex items-center gap-3 cursor-pointer hover:opacity-85"
                       >
                         <div className="relative">
-                          <img
+                          <ImageWithSkeleton
                             src={poster.avatar}
                             alt={poster.name}
                             className="w-10 h-10 rounded-full object-cover border border-slate-100"
@@ -8118,6 +8639,7 @@ function ExplorePage({
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
+
                             onShareGig(gig)
                           }}
                           className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:text-[#3b5bdb] hover:bg-blue-50 transition active:scale-95 cursor-pointer"
@@ -8142,6 +8664,7 @@ function ExplorePage({
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
+
                             onApply(gig)
                           }}
                           className="bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm"
@@ -8160,7 +8683,7 @@ function ExplorePage({
           <div className="mb-6">
             <div className="flex items-center justify-between px-5 mb-3">
               <h2 className="text-base font-bold text-slate-900">
-                Featured Events 
+                Featured Events
               </h2>
               <button
                 onClick={() => setActiveFilter("events")}
@@ -8184,7 +8707,7 @@ function ExplorePage({
                     }`}
                     style={{ background: event.color }}
                   >
-                    <img
+                    <ImageWithSkeleton
                       src={event.image}
                       alt={event.title}
                       className="w-full h-[110px] object-cover opacity-30"
@@ -8197,13 +8720,14 @@ function ExplorePage({
                           </span>
                           {isFeat && (
                             <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                               FEATURED
+                              FEATURED
                             </span>
                           )}
                         </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
+
                             onSelectEvent && onSelectEvent(event)
                           }}
                           className={`text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md active:scale-95 transition ${
@@ -8260,7 +8784,7 @@ function ExplorePage({
               >
                 <div className="absolute top-0 inset-x-0 h-12 bg-gradient-to-b from-[#e8edff] to-transparent opacity-60" />
                 <div className="relative mt-2 mb-2 z-10">
-                  <img
+                  <ImageWithSkeleton
                     src={creator.avatar}
                     alt={creator.name}
                     className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md shadow-slate-100"
@@ -8306,6 +8830,7 @@ function ExplorePage({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
+
                     onCreatorClick(creator.name)
                   }}
                   className="w-full mt-auto bg-[#3b5bdb]/10 hover:bg-[#3b5bdb]/20 text-[#3b5bdb] text-[10px] font-bold py-2 rounded-xl transition cursor-pointer"
@@ -8322,6 +8847,7 @@ function ExplorePage({
         <div className="flex flex-col gap-3 px-5">
           {filteredBrands.map((brand) => {
             const isConnected = connections.has(brand.id)
+
             const isRequestSent = sentRequests.has(brand.id)
 
             return (
@@ -8330,7 +8856,7 @@ function ExplorePage({
                 onClick={() => onBrandClick(brand)}
                 className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 transition-transform active:scale-[0.99] hover:border-slate-200 flex gap-3 cursor-pointer"
               >
-                <img
+                <ImageWithSkeleton
                   src={brand.logo}
                   alt={brand.name}
                   className="w-14 h-14 rounded-2xl object-cover border border-slate-100 flex-shrink-0"
@@ -8364,6 +8890,7 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         if (isConnected) {
                           handleRemoveConnection(brand.id)
                         } else if (!isRequestSent) {
@@ -8379,7 +8906,11 @@ function ExplorePage({
                             : "bg-[#3b5bdb] text-white shadow-sm shadow-blue-100"
                       }`}
                     >
-                      {isConnected ? "Connected" : isRequestSent ? "Pending" : "Connect"}
+                      {isConnected
+                        ? "Connected"
+                        : isRequestSent
+                          ? "Pending"
+                          : "Connect"}
                     </button>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
@@ -8397,7 +8928,7 @@ function ExplorePage({
                   </p>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                       {brand.campaignsCount} active campaigns
+                      {brand.campaignsCount} active campaigns
                     </span>
                   </div>
                 </div>
@@ -8412,8 +8943,11 @@ function ExplorePage({
           {filteredGigs.map((gig, i) => {
             const poster = resolveGigPosterDetails(
               gig,
+
               userProfile,
+
               creators,
+
               brands,
             )
 
@@ -8428,7 +8962,7 @@ function ExplorePage({
                 {i === 0 && (
                   <div className="bg-[#3b5bdb] px-4 py-1.5 flex items-center gap-2">
                     <span className="text-white text-[11px] font-bold tracking-wide">
-                       Featured Gig
+                      Featured Gig
                     </span>
                   </div>
                 )}
@@ -8437,12 +8971,13 @@ function ExplorePage({
                     <div
                       onClick={(e) => {
                         e.stopPropagation()
+
                         onCreatorClick(poster.name)
                       }}
                       className="flex items-center gap-3 cursor-pointer hover:opacity-85"
                     >
                       <div className="relative">
-                        <img
+                        <ImageWithSkeleton
                           src={poster.avatar}
                           alt={poster.name}
                           className="w-11 h-11 rounded-full object-cover border-2 border-[#e8edff]"
@@ -8487,6 +9022,7 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         onShareGig(gig)
                       }}
                       className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:text-[#3b5bdb] hover:bg-blue-50 active:scale-90 transition cursor-pointer"
@@ -8527,6 +9063,7 @@ function ExplorePage({
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
+
                           onApply(gig)
                         }}
                         className="bg-black text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm shadow-black/20 whitespace-nowrap"
@@ -8553,7 +9090,7 @@ function ExplorePage({
                 onClick={() => onSelectEvent && onSelectEvent(event)}
                 className="w-full h-[180px] rounded-3xl overflow-hidden shadow-md border border-slate-100 flex flex-col relative transition-transform active:scale-[0.99] cursor-pointer hover:border-slate-200"
               >
-                <img
+                <ImageWithSkeleton
                   src={event.image}
                   alt={event.title}
                   className="absolute inset-0 w-full h-full object-cover"
@@ -8569,7 +9106,7 @@ function ExplorePage({
                       </span>
                       {(event as any).isFeatured && (
                         <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                           FEATURED
+                          FEATURED
                         </span>
                       )}
                     </div>
@@ -8577,6 +9114,7 @@ function ExplorePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         onSelectEvent && onSelectEvent(event)
                       }}
                       className={`text-[10px] font-bold px-3.5 py-1.5 rounded-full shadow-md active:scale-95 transition ${
@@ -8699,35 +9237,59 @@ function NotificationsPage({
   const combinedList = [
     ...(dbNotifications || []).map((n) => ({
       id: n.id,
+
       dbId: n.id,
+
       title: n.title,
+
       message: n.message,
+
       time: n.createdAt
         ? new Date(n.createdAt).toLocaleTimeString([], {
             hour: "2-digit",
+
             minute: "2-digit",
           })
         : "Just now",
+
       type: n.type || "system",
+
       category: n.category || "activity",
+
       actionText: n.actionText || "View",
+
       read: n.read ?? false,
+
       avatar: n.avatar || null,
+
       isDbDoc: true,
+
       raw: n,
     })),
+
     ...NOTIFICATIONS.map((n) => ({
       id: n.id,
+
       dbId: null,
+
       title: n.title,
+
       message: n.message,
+
       time: n.time,
+
       type: n.type,
+
       category: n.category,
+
       actionText: n.actionText,
+
       read: !unreadNotifications.has(n.id),
+
       avatar: n.avatar || null,
+
       isDbDoc: false,
+
       raw: n,
     })),
   ]
@@ -8796,7 +9358,7 @@ function NotificationsPage({
           const renderNotificationIcon = () => {
             if (notification.avatar) {
               return (
-                <img
+                <ImageWithSkeleton
                   src={notification.avatar}
                   alt={notification.title}
                   className="w-11 h-11 rounded-full object-cover border border-slate-100"
@@ -8816,6 +9378,7 @@ function NotificationsPage({
               key={notification.id}
               onClick={() => {
                 handleToggleRead(notification)
+
                 if (onNotificationAction) onNotificationAction(notification)
               }}
               className={`p-4 rounded-3xl bg-white border transition-all duration-200 cursor-pointer flex gap-3 relative ${
@@ -8835,10 +9398,13 @@ function NotificationsPage({
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="text-xs font-bold text-slate-800 truncate">
                     {(notification.title || "")
+
                       .replace(
                         /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
+
                         "",
                       )
+
                       .trim()}
                   </span>
                   <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">
@@ -8847,10 +9413,13 @@ function NotificationsPage({
                 </div>
                 <p className="text-[11px] text-slate-500 leading-relaxed mb-2.5">
                   {(notification.message || "")
+
                     .replace(
                       /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu,
+
                       "",
                     )
+
                     .trim()}
                 </p>
 
@@ -8858,7 +9427,9 @@ function NotificationsPage({
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
+
                       handleToggleRead(notification)
+
                       if (onNotificationAction)
                         onNotificationAction(notification)
                     }}
@@ -8870,6 +9441,7 @@ function NotificationsPage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         handleToggleRead(notification)
                       }}
                       className="text-[10px] font-medium text-slate-400 hover:text-slate-600 px-2 py-1.5 transition"
@@ -8917,81 +9489,129 @@ function NotificationsPage({
 
 function ChatPage({
   chats = [],
+
   setChats,
+
   activeChatId,
+
   setActiveChatId,
+
   handleOpenChat,
+
   userProfile,
+
   gigs = [],
+
   conversations = [],
+
   setConversations,
+
   activeConvoId,
+
   setActiveConvoId,
+
   activeMessages = [],
+
   currentUser,
+
   creators = [],
+
   brands = [],
+
   onStartCall,
 }: {
   chats: ChatThread[]
+
   setChats: React.Dispatch<React.SetStateAction<ChatThread[]>>
+
   activeChatId: number | null
+
   setActiveChatId: (id: number | null) => void
+
   handleOpenChat: (id: number) => void
+
   userProfile?: any
+
   gigs?: any[]
+
   conversations: Conversation[]
+
   setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>
+
   activeConvoId: string | null
+
   setActiveConvoId: (id: string | null) => void
+
   activeMessages: LiveMessage[]
+
   currentUser?: any
+
   creators: Creator[]
+
   brands: Brand[]
+
   onStartCall?: (type: "audio" | "video") => void
 }) {
   const [searchQuery, setSearchQuery] = useState("")
+
   const [inputText, setInputText] = useState("")
+
   const [isTyping, setIsTyping] = useState(false)
+
   const [showGigPanel, setShowGigPanel] = useState(false)
+
   const [gigPanelApps, setGigPanelApps] = useState<any[]>([])
+
   const [gigPanelLoading, setGigPanelLoading] = useState(false)
+
   const [gigPanelAction, setGigPanelAction] =
     useState<Record<number, "accepting" | "rejecting" | "accepted" | "rejected">>(
       {},
     )
+
   const [gigPanelToast, setGigPanelToast] = useState<string | null>(null)
 
   const safeConversations = conversations || []
+
   const safeChats = chats || []
+
   const safeCreators = creators || []
+
   const safeBrands = brands || []
 
   const activeConvo = safeConversations.find((c) => c.id === activeConvoId)
+
   const activeChat = safeChats.find((c) => c.id === activeChatId)
 
   const otherUid = activeConvo
     ? activeConvo.participants.find((uid) => uid !== currentUser?.uid) || ""
     : ""
+
   const chatName = activeConvo
     ? activeConvo.participantNames[otherUid] || "Kreator Member"
     : activeChat?.name || ""
+
   const chatAvatar = activeConvo
     ? activeConvo.participantAvatars[otherUid] || ""
     : activeChat?.avatar || ""
+
   const chatHandle = activeConvo
     ? activeConvo.participantHandles[otherUid] || ""
     : activeChat?.handle || ""
+
   const otherUserObj = activeConvo
     ? safeCreators.find((c: any) => c.uid === otherUid) ||
       safeBrands.find((b: any) => b.uid === otherUid)
     : null
+
   const otherLastSeen = otherUserObj?.lastSeen
+
   const chatOnline = activeConvo
     ? otherLastSeen
       ? new Date().getTime() - new Date(otherLastSeen).getTime() < 300000
       : false
     : activeChat?.online || false
+
   const chatVerified = activeConvo
     ? otherUserObj?.verified || false
     : activeChat?.verified || false
@@ -9000,32 +9620,48 @@ function ChatPage({
     ...conversations.map((convo) => {
       const oUid =
         convo.participants.find((uid) => uid !== currentUser?.uid) || ""
+
       const lastMsgText = convo.lastMessage || "No messages yet"
+
       const lastMsgTime = convo.lastMessageTime
         ? new Date(convo.lastMessageTime).toLocaleTimeString([], {
             hour: "2-digit",
+
             minute: "2-digit",
           })
         : ""
+
       const uObj =
         creators.find((c: any) => c.uid === oUid) ||
         brands.find((b: any) => b.uid === oUid)
+
       const uLastSeen = uObj?.lastSeen
+
       const uOnline = uLastSeen
         ? new Date().getTime() - new Date(uLastSeen).getTime() < 300000
         : false
+
       return {
         id: convo.id,
+
         isReal: true,
+
         name: convo.participantNames[oUid] || "Kreator Member",
+
         avatar:
           convo.participantAvatars[oUid] ||
           "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+
         handle: convo.participantHandles[oUid] || "@member",
+
         online: uOnline,
+
         verified: uObj?.verified || false,
+
         unreadCount: convo.unreadCounts?.[currentUser?.uid || ""] || 0,
+
         lastMessageText: lastMsgText,
+
         lastMessageTime: lastMsgTime,
       }
     }),
@@ -9039,6 +9675,7 @@ function ChatPage({
 
   const getAutoReplyMessage = (name: string, userMsg: string): string => {
     const text = userMsg.toLowerCase()
+
     if (name.includes("Arjun")) {
       if (
         text.includes("weekend") ||
@@ -9047,6 +9684,7 @@ function ChatPage({
       ) {
         return "Saturday afternoon works perfectly for me! Let's meet near Kumartuli around 3 PM? "
       }
+
       if (
         text.includes("hi") ||
         text.includes("hello") ||
@@ -9054,58 +9692,88 @@ function ChatPage({
       ) {
         return "Hey Priya! Glad we connected. I was just looking at some street shoots we could do. Are you free this weekend?"
       }
+
       return "That sounds like a plan! Let's catch up and lock in the shoot details. "
     }
+
     if (name.includes("Bahar"))
       return "Perfect! Our project manager will send over the agreement draft. Let us know if you have any questions about the deliverables. "
+
     if (name.includes("Tanisha"))
       return "Yay! Can't wait. Let's try that new cafe on Park Street, I heard their brews are amazing! "
+
     return "Thanks for the message! Let's coordinate and get this moving. "
   }
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return
+
     const userMessageText = inputText.trim()
+
     setInputText("")
+
     if (activeConvoId && currentUser) {
       try {
         const convoRef = doc(db, "conversations", activeConvoId)
+
         const msgRef = collection(
           db,
+
           "conversations",
+
           activeConvoId,
+
           "messages",
         )
+
         await addDoc(msgRef, {
           text: userMessageText,
+
           senderId: currentUser.uid,
+
           senderName: userProfile?.name || "Kreator Member",
+
           senderAvatar:
             userProfile?.avatar ||
             userProfile?.logo ||
             "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+
           timestamp: new Date().toISOString(),
         })
+
         const oUid =
           activeConvo?.participants.find((uid) => uid !== currentUser.uid) || ""
+
         await updateDoc(convoRef, {
           lastMessage: userMessageText,
+
           lastMessageTime: new Date().toISOString(),
+
           lastSenderId: currentUser.uid,
+
           [`unreadCounts.${oUid}`]: increment(1),
         })
+
         await addDoc(collection(db, "notifications"), {
           recipientUid: oUid,
+
           recipientName: activeConvo?.participantNames[oUid] || "Creator",
+
           senderName: userProfile?.name || "Kreator Member",
+
           senderAvatar:
             userProfile?.avatar ||
             userProfile?.logo ||
             "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format",
+
           type: "message",
+
           title: `New message from ${userProfile?.name}!`,
+
           message: userMessageText.slice(0, 60),
+
           createdAt: new Date().toISOString(),
+
           read: false,
         })
       } catch (err) {
@@ -9113,39 +9781,60 @@ function ChatPage({
       }
     } else if (activeChatId) {
       const now = new Date()
+
       const timeStr = now.toLocaleTimeString([], {
         hour: "2-digit",
+
         minute: "2-digit",
       })
+
       const currentChat = chats.find((c) => c.id === activeChatId)
+
       if (!currentChat) return
+
       const userMessage = {
         id: Date.now(),
+
         text: userMessageText,
+
         sender: "me",
+
         time: timeStr,
       }
+
       await updateDoc(doc(db, "chats", String(activeChatId)), {
         messages: [...currentChat.messages, userMessage],
       })
+
       setIsTyping(true)
+
       setTimeout(async () => {
         setIsTyping(false)
+
         const latestChat = chats.find((c) => c.id === activeChatId)
+
         if (!latestChat) return
+
         const replyText = getAutoReplyMessage(
           latestChat.name || "",
+
           userMessageText,
         )
+
         await updateDoc(doc(db, "chats", String(activeChatId)), {
           messages: [
             ...latestChat.messages,
+
             {
               id: Date.now() + 1,
+
               text: replyText,
+
               sender: "them",
+
               time: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
+
                 minute: "2-digit",
               }),
             },
@@ -9161,32 +9850,46 @@ function ChatPage({
 
   const openGigPanel = async () => {
     if (!chatName) return
+
     setShowGigPanel(true)
+
     setGigPanelLoading(true)
+
     try {
       const q = query(
         collection(db, "applications"),
+
         where("applicantName", "==", chatName),
       )
+
       const snap = await getDocs(q)
+
       const apps = snap.docs.map((d) => ({
         id: d.id,
+
         docRef: d.ref,
+
         ...d.data(),
       }))
+
       const myGigIds = new Set(
         (gigs || [])
+
           .filter(
             (g: any) =>
               g.userId === (userProfile?.uid || null) ||
               g.creatorName === userProfile?.name,
           )
+
           .map((g: any) => g.id),
       )
+
       const relevant = apps.filter((a: any) => myGigIds.has(a.gigId))
+
       setGigPanelApps(relevant)
     } catch (err) {
       console.warn("GigPanel fetch error:", err)
+
       setGigPanelApps([])
     } finally {
       setGigPanelLoading(false)
@@ -9195,60 +9898,88 @@ function ChatPage({
 
   const handleGigPanelAction = async (
     app: any,
+
     action: "accept" | "reject",
   ) => {
     setGigPanelAction((prev) => ({
       ...prev,
+
       [app.gigId]: action === "accept" ? "accepting" : "rejecting",
     }))
+
     try {
       const qGigs = query(collection(db, "gigs"), where("id", "==", app.gigId))
+
       const gigSnap = await getDocs(qGigs)
+
       if (!gigSnap.empty) {
         if (action === "accept") {
           await updateDoc(gigSnap.docs[0].ref, {
             applicantSelected: true,
+
             selectedApplicantName: app.applicantName || chatName || "Creator",
+
             selectedApplicantAvatar: app.applicantAvatar || chatAvatar || null,
+
             selectedApplicantHandle:
               app.instaHandle || app.applicantHandle || "",
+
             selectedApplicantUid: app.applicantUid || null,
+
             status: "Closed",
           })
         }
       }
+
       if (app.docRef)
         await updateDoc(app.docRef, {
           status: action === "accept" ? "accepted" : "rejected",
         })
+
       setGigPanelAction((prev) => ({
         ...prev,
+
         [app.gigId]: action === "accept" ? "accepted" : "rejected",
       }))
+
       if (action === "accept") {
         setGigPanelToast(
           ` Accepted ${app.applicantName || chatName} for "${app.gigTitle || "Gig"}"!`,
         )
+
         setTimeout(() => setGigPanelToast(null), 4000)
 
         // Send Push Notification for Application Accepted
+
         if (app.applicantUid) {
           await addDoc(collection(db, "notifications"), {
             recipientUid: app.applicantUid,
+
             recipientName: app.applicantName || chatName || "Creator",
+
             senderName: userProfile?.name || "Gig Host",
+
             senderAvatar:
               userProfile?.avatar ||
               userProfile?.logo ||
               "https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=80&h=80&fit=crop&auto=format",
+
             title: "Application Accepted!",
+
             senderUid: auth.currentUser?.uid || null,
+
             message: `Congratulations! Your application for "${app.gigTitle || "Gig"}" was accepted by ${userProfile?.name || "Gig Host"}!`,
+
             type: "application",
+
             category: "activity",
+
             actionText: "Open Chat",
+
             read: false,
+
             createdAt: new Date().toISOString(),
+
             avatar:
               userProfile?.avatar ||
               userProfile?.logo ||
@@ -9258,9 +9989,12 @@ function ChatPage({
       }
     } catch (err: any) {
       alert(err.message || "Action failed")
+
       setGigPanelAction((prev) => {
         const n = { ...prev }
+
         delete n[app.gigId]
+
         return n
       })
     }
@@ -9270,6 +10004,7 @@ function ChatPage({
     const messagesToRender = activeConvoId
       ? activeMessages
       : activeChat?.messages || []
+
     return (
       <div className="flex-1 bg-slate-50 flex flex-col h-screen relative">
         <div className="px-4 pt-12 pb-3 bg-white border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
@@ -9277,7 +10012,9 @@ function ChatPage({
             <button
               onClick={() => {
                 setActiveConvoId(null)
+
                 setActiveChatId(null)
+
                 setShowGigPanel(false)
               }}
               className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition cursor-pointer"
@@ -9285,7 +10022,7 @@ function ChatPage({
               <ArrowLeftIcon />
             </button>
             <div className="relative flex-shrink-0">
-              <img
+              <ImageWithSkeleton
                 src={chatAvatar}
                 alt={chatName}
                 className="w-10 h-10 rounded-full object-cover border border-slate-100"
@@ -9341,14 +10078,17 @@ function ChatPage({
             const isMe = activeConvoId
               ? msg.senderId === currentUser?.uid
               : msg.sender === "me"
+
             const formattedTime = activeConvoId
               ? msg.timestamp
                 ? new Date(msg.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
+
                     minute: "2-digit",
                   })
                 : ""
               : msg.time
+
             return (
               <div
                 key={msg.id}
@@ -9472,8 +10212,10 @@ function ChatPage({
                 ) : (
                   gigPanelApps.map((app: any) => {
                     const statusText = gigPanelAction[app.gigId] || app.status
+
                     const isDone =
                       statusText === "accepted" || statusText === "rejected"
+
                     return (
                       <div
                         key={app.id}
@@ -9601,7 +10343,19 @@ function ChatPage({
           </h1>
         </div>
         <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 active:scale-95 transition border border-slate-100 cursor-pointer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
         </button>
       </div>
       <div className="px-4 py-3 bg-white border-b border-slate-100 mb-2">
@@ -9621,12 +10375,14 @@ function ChatPage({
       <div className="flex-1 px-4 py-2 flex flex-col gap-2.5">
         {filteredChats.map((thread) => {
           const isUnread = thread.unreadCount > 0
+
           return (
             <div
               key={thread.id}
               onClick={() => {
                 if (thread.isReal) {
                   setActiveConvoId(String(thread.id))
+
                   setActiveChatId(null)
                 } else {
                   handleOpenChat(Number(thread.id))
@@ -9635,7 +10391,7 @@ function ChatPage({
               className="p-3.5 bg-white rounded-3xl border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer transition active:scale-[0.99]"
             >
               <div className="relative flex-shrink-0">
-                <img
+                <ImageWithSkeleton
                   src={thread.avatar}
                   alt={thread.name}
                   className="w-12 h-12 rounded-full object-cover border border-slate-100 shadow-sm"
@@ -9715,23 +10471,39 @@ function ChatPage({
 
 function PublicProfilePage({
   creator,
+
   onBack,
+
   connections,
+
   sentRequests,
+
   receivedRequests,
+
   handleSendConnectionRequest,
+
   handleAcceptConnectionRequest,
+
   handleRemoveConnection,
+
   onMessageCreator,
 }: {
   creator: Creator
+
   onBack: () => void
+
   connections: Set<number>
+
   sentRequests: Set<number>
+
   receivedRequests: Set<number>
+
   handleSendConnectionRequest: (id: number) => void
+
   handleAcceptConnectionRequest: (id: number) => void
+
   handleRemoveConnection: (id: number) => void
+
   onMessageCreator: (creator: Creator) => void
 }) {
   const [activeTab, setActiveTab] = useState<"portfolio" | "reviews">(
@@ -9739,12 +10511,16 @@ function PublicProfilePage({
   )
 
   const [copied, setCopied] = useState(false)
+
   const [showAvatarViewer, setShowAvatarViewer] = useState(false)
+
   const [activePhotoViewerIndex, setActivePhotoViewerIndex] =
     useState<number | null>(null)
 
   const isConnected = connections.has(creator.id)
+
   const isRequestSent = sentRequests.has(creator.id)
+
   const isRequestReceived = receivedRequests.has(creator.id)
 
   const handleShare = () => {
@@ -9800,7 +10576,7 @@ function PublicProfilePage({
           className="relative cursor-pointer group active:scale-95 transition duration-150"
           onClick={() => setShowAvatarViewer(true)}
         >
-          <img
+          <ImageWithSkeleton
             src={creator.avatar}
             alt={creator.name}
             className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-90"
@@ -9889,15 +10665,19 @@ function PublicProfilePage({
           {[
             {
               label: "Connections",
+
               value:
                 (creator as any).instagram?.followersFormatted ||
                 creator.followers,
+
               color: "text-rose-500",
             },
 
             {
               label: "Avg. ER",
+
               value: creator.engagement,
+
               color: "text-indigo-500",
             },
 
@@ -9954,7 +10734,7 @@ function PublicProfilePage({
                   onClick={() => setActivePhotoViewerIndex(i)}
                   className="aspect-[3/4] bg-slate-200 rounded-2xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer active:opacity-90 transition duration-150"
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={img}
                     alt="portfolio item"
                     className="w-full h-full object-cover"
@@ -9965,8 +10745,12 @@ function PublicProfilePage({
           ) : (
             <div className="flex flex-col items-center justify-center py-14 text-center px-5">
               <div className="text-3xl mb-3"></div>
-              <div className="text-sm font-bold text-slate-700 mb-1">No portfolio items</div>
-              <div className="text-xs text-slate-400">This creator hasn't uploaded any portfolio images yet.</div>
+              <div className="text-sm font-bold text-slate-700 mb-1">
+                No portfolio items
+              </div>
+              <div className="text-xs text-slate-400">
+                This creator hasn't uploaded any portfolio images yet.
+              </div>
             </div>
           )}
         </div>
@@ -9990,9 +10774,7 @@ function PublicProfilePage({
                 </div>
                 <div className="flex gap-0.5">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} className="text-amber-400 text-xs">
-                      
-                    </span>
+                    <span key={star} className="text-amber-400 text-xs"></span>
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -10003,8 +10785,12 @@ function PublicProfilePage({
           ) : (
             <div className="flex flex-col items-center justify-center py-14 text-center">
               <div className="text-3xl mb-3"></div>
-              <div className="text-sm font-bold text-slate-700 mb-1">No reviews yet</div>
-              <div className="text-xs text-slate-400">Reviews from brands and collaborators will appear here.</div>
+              <div className="text-sm font-bold text-slate-700 mb-1">
+                No reviews yet
+              </div>
+              <div className="text-xs text-slate-400">
+                Reviews from brands and collaborators will appear here.
+              </div>
             </div>
           )}
         </div>
@@ -10022,7 +10808,7 @@ function PublicProfilePage({
           >
             ✕
           </button>
-          <img
+          <ImageWithSkeleton
             src={creator.avatar}
             alt={creator.name}
             className="max-w-full max-h-[80vh] rounded-3xl object-contain shadow-2xl animate-in zoom-in-95 duration-200"
@@ -10073,7 +10859,7 @@ function PublicProfilePage({
                 {livePortfolio.map((img: string, idx: number) => (
                   <div key={idx} className="w-full flex-shrink-0 px-6">
                     <div className="w-full aspect-[3/4] max-h-[70vh] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-slate-950 flex items-center justify-center">
-                      <img
+                      <ImageWithSkeleton
                         src={img}
                         alt={`Portfolio item ${idx + 1}`}
                         className="w-full h-full object-contain"
@@ -10124,11 +10910,17 @@ function PublicBrandProfilePage({
   onBack,
 
   connections,
+
   sentRequests,
+
   receivedRequests,
+
   handleSendConnectionRequest,
+
   handleAcceptConnectionRequest,
+
   handleRemoveConnection,
+
   onMessageBrand,
 
   onApply,
@@ -10148,11 +10940,17 @@ function PublicBrandProfilePage({
   onBack: () => void
 
   connections: Set<number>
+
   sentRequests: Set<number>
+
   receivedRequests: Set<number>
+
   handleSendConnectionRequest: (id: number) => void
+
   handleAcceptConnectionRequest: (id: number) => void
+
   handleRemoveConnection: (id: number) => void
+
   onMessageBrand: (brand: Brand) => void
 
   onApply: (gig: Gig) => void
@@ -10172,7 +10970,9 @@ function PublicBrandProfilePage({
   const [copied, setCopied] = useState(false)
 
   const isConnected = connections.has(brand.id)
+
   const isRequestSent = sentRequests.has(brand.id)
+
   const isRequestReceived = receivedRequests.has(brand.id)
 
   const handleShare = () => {
@@ -10211,7 +11011,7 @@ function PublicBrandProfilePage({
       {/* Centered Avatar */}
       <div className="flex flex-col items-center pt-2">
         <div className="relative">
-          <img
+          <ImageWithSkeleton
             src={brand.logo}
             alt={brand.name}
             className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-lg"
@@ -10302,13 +11102,17 @@ function PublicBrandProfilePage({
 
             {
               label: "Active Gigs",
+
               value: brandGigs.length,
+
               color: "text-emerald-500",
             },
 
             {
               label: "Industry",
+
               value: brand.industry.split(" ")[0],
+
               color: "text-rose-500",
             },
 
@@ -10358,8 +11162,11 @@ function PublicBrandProfilePage({
           {brandGigs.map((gig) => {
             const poster = resolveGigPosterDetails(
               gig,
+
               userProfile,
+
               creators,
+
               brands,
             )
 
@@ -10404,6 +11211,7 @@ function PublicBrandProfilePage({
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
+
                         onApply(gig)
                       }}
                       className="w-full py-3 bg-black text-white font-bold rounded-xl shadow-lg shadow-black/20"
@@ -10506,13 +11314,16 @@ function SlideScreen({
     <div
       style={{
         position: "relative",
+
         height: "100%",
+
         overflow: "hidden",
+
         minHeight: "100svh",
       }}
     >
       {/* full-bleed image */}
-      <img
+      <ImageWithSkeleton
         src={slide.img}
         alt={slide.alt}
         style={{
@@ -10674,15 +11485,15 @@ function SlideScreen({
             </p>
           </>
         )}
-        {(slide as any).hideText && (
-          <div style={{ margin: "0 0 36px" }} />
-        )}
+        {(slide as any).hideText && <div style={{ margin: "0 0 36px" }} />}
 
         {/* nav row */}
         <div
           style={{
             display: "flex",
+
             alignItems: "center",
+
             justifyContent: "space-between",
           }}
         >
@@ -10778,9 +11589,13 @@ function AuthScreen({
 
   onAuthSubmit: (
     email: string,
+
     pass: string,
+
     mode: "login" | "signup",
+
     name: string,
+
     role?: "creator" | "brand" | "admin",
   ) => void
 }) {
@@ -10881,27 +11696,48 @@ function AuthScreen({
       <div
         style={{
           position: "relative",
+
           zIndex: 1,
+
           display: "flex",
+
           flexDirection: "column",
+
           height: "100%",
+
           minHeight: "100svh",
         }}
       >
         {/* header row with back button & top-right Admin capital A redirect button */}
-        <div style={{ marginTop: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div
+          style={{
+            marginTop: 56,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <button
             onClick={onBack}
             style={{
               display: "flex",
+
               alignItems: "center",
+
               gap: 6,
+
               background: "none",
+
               border: "none",
+
               cursor: "pointer",
+
               color: "#adb3cc",
+
               fontFamily: "'Instrument Sans', sans-serif",
+
               fontSize: 13,
+
               padding: 0,
             }}
           >
@@ -10920,24 +11756,39 @@ function AuthScreen({
           <button
             onClick={() => {
               setRole("admin")
+
               setMode("login")
             }}
             title="Admin Portal Login"
             style={{
               width: 34,
+
               height: 34,
+
               borderRadius: "50%",
+
               background: role === "admin" ? "#3b5bdb" : "#ffffff",
+
               color: role === "admin" ? "#ffffff" : "#3b5bdb",
+
               border: role === "admin" ? "none" : "1.5px solid #d0d7f7",
+
               fontSize: 15,
+
               fontWeight: 900,
+
               fontFamily: "'DM Serif Display', serif",
+
               cursor: "pointer",
+
               display: "flex",
+
               alignItems: "center",
+
               justifyContent: "center",
+
               boxShadow: "0 2px 8px rgba(59,91,219,0.15)",
+
               transition: "all 0.2s",
             }}
           >
@@ -11322,8 +12173,11 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 
   ctx.quadraticCurveTo(
     cardX + cardW,
+
     cardY + cardH,
+
     cardX + cardW - r,
+
     cardY + cardH,
   )
 
@@ -11465,7 +12319,9 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 
   ctx.fillText(
     poster.handle || "@kolkata.creator",
+
     avX + avSize + 40,
+
     avY + avSize / 2 + 40,
   )
 
@@ -11565,9 +12421,13 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 
   const drawRoundRect = (
     x: number,
+
     y: number,
+
     w: number,
+
     h: number,
+
     r: number,
   ) => {
     ctx.beginPath()
@@ -11673,7 +12533,9 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 
   ctx.fillText(
     "Join Kolkata’s biggest creator community",
+
     540,
+
     cardY + cardH + 110,
   )
 
@@ -11701,27 +12563,41 @@ const generateGigStoryImage = async (gig: Gig, poster: any): Promise<File> => {
 function playNotificationSound() {
   try {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+
     if (!AudioCtx) return
+
     const ctx = new AudioCtx()
 
     const playTone = (freq: number, start: number, duration: number) => {
       const osc = ctx.createOscillator()
+
       const gain = ctx.createGain()
+
       osc.type = "sine"
+
       osc.frequency.setValueAtTime(freq, ctx.currentTime + start)
+
       gain.gain.setValueAtTime(0.18, ctx.currentTime + start)
+
       gain.gain.exponentialRampToValueAtTime(
         0.001,
+
         ctx.currentTime + start + duration,
       )
+
       osc.connect(gain)
+
       gain.connect(ctx.destination)
+
       osc.start(ctx.currentTime + start)
+
       osc.stop(ctx.currentTime + start + duration)
     }
 
     playTone(523.25, 0, 0.25) // C5
+
     playTone(659.25, 0.1, 0.3) // E5
+
     playTone(783.99, 0.2, 0.45) // G5
   } catch (e) {
     console.warn("Notification sound error:", e)
@@ -11736,141 +12612,219 @@ function playCallRingtone() {
   const playRingPulse = () => {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+
       if (!AudioCtx) return
+
       const ctx = new AudioCtx()
 
       const osc1 = ctx.createOscillator()
+
       const osc2 = ctx.createOscillator()
+
       const gain = ctx.createGain()
 
       osc1.type = "sine"
+
       osc2.type = "sine"
+
       osc1.frequency.setValueAtTime(440, ctx.currentTime)
+
       osc2.frequency.setValueAtTime(480, ctx.currentTime)
 
       gain.gain.setValueAtTime(0.18, ctx.currentTime)
+
       gain.gain.setValueAtTime(0.18, ctx.currentTime + 1.2)
+
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5)
 
       osc1.connect(gain)
+
       osc2.connect(gain)
+
       gain.connect(ctx.destination)
 
       osc1.start(ctx.currentTime)
+
       osc2.start(ctx.currentTime)
+
       osc1.stop(ctx.currentTime + 1.5)
+
       osc2.stop(ctx.currentTime + 1.5)
     } catch (e) {}
   }
 
   playRingPulse()
+
   ringtoneIntervalId = setInterval(playRingPulse, 2800)
 }
 
 function stopCallRingtone() {
   if (ringtoneIntervalId) {
     clearInterval(ringtoneIntervalId)
+
     ringtoneIntervalId = null
   }
 }
 
 // --- URL routing (hash-based) -------------------------------------------
+
 // Mirrors the existing `routeState` object (previously sessionStorage-only)
+
 // into window.location.hash so every screen is a real, shareable,
+
 // bookmarkable, back-button-aware URL, e.g. #/gigs?selectedGigId=3
+
 // This does not touch any component's JSX, props, or styling.
 
 type RouteState = {
   activeTab: string
+
   selectedGigId: number | null
+
   selectedEventId: number | null
+
   selectedCreatorName: string | null
+
   selectedBrandName: string | null
+
   selectedMyGigId: number | null
+
   selectedMyGigTab: "applicants" | "edit"
+
   posting: boolean
+
   viewingNotifications: boolean
+
   activeChatId: number | null
+
   adminViewMode: "dashboard" | "platform"
+
   exploreFilter: "all" | "creators" | "brands" | "gigs" | "events"
 }
 
-const ROUTE_QUERY_KEYS: (keyof RouteState)[] = [
+const ROUTE_QUERY_KEYS: keyof RouteState[] = [
   "selectedGigId",
+
   "selectedEventId",
+
   "selectedCreatorName",
+
   "selectedBrandName",
+
   "selectedMyGigId",
+
   "selectedMyGigTab",
+
   "posting",
+
   "viewingNotifications",
+
   "activeChatId",
+
   "adminViewMode",
+
   "exploreFilter",
 ]
 
 // Changing one of these represents a real "page" change — pushes a new
+
 // history entry so the back button steps through app screens. Everything
+
 // else (filters, sub-tabs) just updates the current URL in place.
-const ROUTE_NAV_KEYS: (keyof RouteState)[] = [
+
+const ROUTE_NAV_KEYS: keyof RouteState[] = [
   "activeTab",
+
   "selectedGigId",
+
   "selectedEventId",
+
   "selectedCreatorName",
+
   "selectedBrandName",
+
   "selectedMyGigId",
+
   "posting",
+
   "viewingNotifications",
+
   "activeChatId",
 ]
 
 function routeToHash(route: RouteState): string {
   const params = new URLSearchParams()
+
   ROUTE_QUERY_KEYS.forEach((key) => {
     const value = route[key]
+
     if (value === null || value === undefined || value === false) return
+
     params.set(key, String(value))
   })
+
   const query = params.toString()
+
   return "#/" + (route.activeTab || "home") + (query ? "?" + query : "")
 }
 
 function hashToRoute(): Partial<RouteState> | null {
   const hash = window.location.hash
+
   if (!hash || hash === "#" || hash === "#/") return null
 
   const [pathPart, queryPart] = hash.slice(2).split("?")
+
   const params = new URLSearchParams(queryPart || "")
+
   const parsed: Partial<RouteState> = {}
 
   if (pathPart) parsed.activeTab = pathPart
+
   if (params.has("selectedGigId"))
     parsed.selectedGigId = Number(params.get("selectedGigId"))
+
   if (params.has("selectedEventId"))
     parsed.selectedEventId = Number(params.get("selectedEventId"))
+
   if (params.has("selectedCreatorName"))
     parsed.selectedCreatorName = params.get("selectedCreatorName")
+
   if (params.has("selectedBrandName"))
     parsed.selectedBrandName = params.get("selectedBrandName")
+
   if (params.has("selectedMyGigId"))
     parsed.selectedMyGigId = Number(params.get("selectedMyGigId"))
+
   if (params.has("selectedMyGigTab"))
-    parsed.selectedMyGigTab = params.get("selectedMyGigTab") as "applicants" | "edit"
+    parsed.selectedMyGigTab = (params.get(
+      "selectedMyGigTab",
+    ) as "applicants" | "edit")
+
   if (params.has("posting")) parsed.posting = params.get("posting") === "true"
+
   if (params.has("viewingNotifications"))
     parsed.viewingNotifications = params.get("viewingNotifications") === "true"
+
   if (params.has("activeChatId"))
     parsed.activeChatId = Number(params.get("activeChatId"))
+
   if (params.has("adminViewMode"))
-    parsed.adminViewMode = params.get("adminViewMode") as "dashboard" | "platform"
+    parsed.adminViewMode = (params.get(
+      "adminViewMode",
+    ) as "dashboard" | "platform")
+
   if (params.has("exploreFilter"))
-    parsed.exploreFilter = params.get("exploreFilter") as RouteState["exploreFilter"]
+    parsed.exploreFilter = (params.get(
+      "exploreFilter",
+    ) as RouteState["exploreFilter"])
 
   return parsed
 }
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+
   const [authLoading, setAuthLoading] = useState(true)
 
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -11878,27 +12832,34 @@ export default function App() {
   const [introPage, setIntroPage] = useState(0)
 
   // Dynamic landing slides (loaded from Firestore siteSettings/landingSlides)
+
   const [dynamicSlides, setDynamicSlides] = useState(DEFAULT_SLIDES)
 
   // Load landing slide overrides from Firestore on startup (no auth required)
+
   useEffect(() => {
     const unsubLanding = onSnapshot(
       doc(db, "siteSettings", "landingSlides"),
+
       (snap) => {
         if (snap.exists()) {
           const data = snap.data()
+
           if (data?.slides && Array.isArray(data.slides)) {
             setDynamicSlides(
               DEFAULT_SLIDES.map((def, i) => ({
                 ...def,
+
                 ...(data.slides[i] || {}),
-              }))
+              })),
             )
           }
         }
       },
+
       (err) => console.warn("Landing slides snapshot error:", err),
     )
+
     return () => unsubLanding()
   }, [])
 
@@ -11934,23 +12895,35 @@ export default function App() {
   const [generatingShareCard, setGeneratingShareCard] = useState(false)
 
   // Real-time Push Notifications state
+
   const [dbNotifications, setDbNotifications] = useState<any[]>([])
+
   const [liveToast, setLiveToast] = useState<any>(null)
 
   // WebRTC Live Calling State & Refs
+
   const [activeCall, setActiveCall] = useState<any>(null)
+
   const [incomingCall, setIncomingCall] = useState<any>(null)
+
   const [callTimer, setCallTimer] = useState<number>(0)
+
   const [isMuted, setIsMuted] = useState<boolean>(false)
+
   const [isVideoOff, setIsVideoOff] = useState<boolean>(false)
 
   const pcRef = useRef<RTCPeerConnection | null>(null)
+
   const localStreamRef = useRef<MediaStream | null>(null)
+
   const remoteStreamRef = useRef<MediaStream | null>(null)
+
   const localVideoRef = useRef<HTMLVideoElement | null>(null)
+
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null)
 
   // Route restoration & Session storage persistence
+
   const touchStartX = useRef<number | null>(null)
 
   const getInitialRouteState = () => {
@@ -11972,11 +12945,15 @@ export default function App() {
   const savedRoute = useRef(getInitialRouteState())
 
   // True for one render right after a browser/Android back-forward change,
+
   // so the sync effect doesn't push a duplicate history entry.
+
   const isPopStateUpdate = useRef(false)
 
   // Last-seen "which page am I on" signature, used to decide whether a
+
   // route change should push a new history entry or just replace the URL.
+
   const lastNavSignature = useRef<string | null>(null)
 
   const [activeTab, setActiveTab] = useState(
@@ -12025,24 +13002,31 @@ export default function App() {
   useEffect(() => {
     if (!currentUser?.uid) {
       setUserAppliedGigIds(new Set())
+
       return
     }
 
     const q = query(
       collection(db, "applications"),
+
       where("applicantUid", "==", currentUser.uid),
     )
 
     const unsubscribe = onSnapshot(
       q,
+
       (snap) => {
         const ids = new Set<number>()
+
         snap.docs.forEach((doc) => {
           const data = doc.data()
+
           if (data.gigId) ids.add(Number(data.gigId))
         })
+
         setUserAppliedGigIds(ids)
       },
+
       (err) => console.warn("User applications snapshot error:", err),
     )
 
@@ -12056,6 +13040,7 @@ export default function App() {
   )
 
   const [viewingMyApplications, setViewingMyApplications] = useState(false)
+
   const [viewingMyConnections, setViewingMyConnections] = useState(false)
 
   const [unreadNotifications, setUnreadNotifications] = useState<Set<number>>(
@@ -12069,6 +13054,7 @@ export default function App() {
   )
 
   // Real-time chat state
+
   const [conversations, setConversations] = useState<Conversation[]>([])
 
   const [activeConvoId, setActiveConvoId] = useState<string | null>(null)
@@ -12076,9 +13062,11 @@ export default function App() {
   const [activeMessages, setActiveMessages] = useState<LiveMessage[]>([])
 
   const [connections, setConnections] = useState<Set<number>>(new Set())
+
   const [sentRequests, setSentRequests] = useState<Set<number>>(new Set())
+
   const [receivedRequests, setReceivedRequests] = useState<Set<number>>(
-    new Set([2, 5]) // Pre-populate with 2 mock connection requests (e.g. Sreya, Rohan)
+    new Set([2, 5]), // Pre-populate with 2 mock connection requests (e.g. Sreya, Rohan)
   )
 
   const [exploreFilter, setExploreFilter] =
@@ -12142,38 +13130,54 @@ export default function App() {
       !("serviceWorker" in navigator) ||
       !("Notification" in window)
     ) {
-      console.warn("FCM: Notifications or service workers are not supported by this browser.")
+      console.warn(
+        "FCM: Notifications or service workers are not supported by this browser.",
+      )
+
       return
     }
+
     try {
       const permission = await Notification.requestPermission()
+
       if (permission !== "granted") {
         console.warn("FCM: Notification permission denied.")
+
         return
       }
 
       if (!messaging) {
         console.warn("FCM: Messaging service is not initialized.")
+
         return
       }
 
-      const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js")
+      const registration = await navigator.serviceWorker.register(
+        "/firebase-messaging-sw.js",
+      )
 
       const token = await getToken(messaging, {
         serviceWorkerRegistration: registration,
-        vapidKey: FCM_VAPID_KEY === "YOUR_FCM_VAPID_KEY" ? undefined : FCM_VAPID_KEY,
+
+        vapidKey:
+          FCM_VAPID_KEY === "YOUR_FCM_VAPID_KEY" ? undefined : FCM_VAPID_KEY,
       })
 
       if (token) {
         const tokenRef = doc(db, "fcmTokens", userId)
+
         await setDoc(
           tokenRef,
+
           {
             tokens: arrayUnion(token),
+
             updatedAt: new Date().toISOString(),
           },
+
           { merge: true },
         )
+
         console.log("FCM: Token registered successfully:", token)
       } else {
         console.warn("FCM: No registration token available.")
@@ -12190,92 +13194,127 @@ export default function App() {
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setIsLoggedIn(!!user)
+
       setCurrentUser(user)
+
       setAuthLoading(false)
 
       unsubs.forEach((un) => un())
+
       unsubs = []
 
       if (user) {
         setupFCM(user.uid)
+
         // Subscribe to real-time conversations
+
         const qConvos = query(
           collection(db, "conversations"),
+
           where("participants", "array-contains", user.uid),
         )
+
         const unsubConvos = onSnapshot(
           qConvos,
+
           (snap) => {
             const list = snap.docs.map(
               (d) => ({ id: d.id, ...d.data() }) as Conversation,
             )
+
             list.sort(
               (a, b) =>
                 new Date(b.lastMessageTime || b.createdAt).getTime() -
                 new Date(a.lastMessageTime || a.createdAt).getTime(),
             )
+
             setConversations(list)
           },
+
           (err) => console.warn("Conversations snapshot error:", err),
         )
+
         unsubs.push(unsubConvos)
 
         let foundProfile = false
+
         let isAdminUser = false
 
         const adminRef = doc(db, "admins", user.uid)
+
         const unsubAdmin = onSnapshot(
           adminRef,
+
           (snap) => {
             if (snap.exists()) {
               foundProfile = true
+
               isAdminUser = true
+
               const data = snap.data()
+
               if (data.isAdmin === true) {
                 setUserRole("admin")
+
                 setUserProfile(data)
               } else {
                 setUserRole("admin_pending")
+
                 setUserProfile(data)
               }
             }
           },
+
           (err) => console.warn("Admin snapshot error:", err),
         )
+
         unsubs.push(unsubAdmin)
 
         const creatorRef = doc(db, "creators", user.uid)
+
         const unsubCreator = onSnapshot(
           creatorRef,
+
           (snap) => {
             if (snap.exists() && !isAdminUser) {
               foundProfile = true
+
               setUserRole("creator")
+
               setUserProfile(snap.data())
             }
           },
+
           (err) => console.warn("Creator snapshot error:", err),
         )
+
         unsubs.push(unsubCreator)
 
         const brandRef = doc(db, "brands", user.uid)
+
         const unsubBrand = onSnapshot(
           brandRef,
+
           (snap) => {
             if (snap.exists() && !isAdminUser) {
               foundProfile = true
+
               setUserRole("brand")
+
               setUserProfile(snap.data())
             }
           },
+
           (err) => console.warn("Brand snapshot error:", err),
         )
+
         unsubs.push(unsubBrand)
 
         const timer = setTimeout(async () => {
           if (!foundProfile && !isAdminUser) {
             console.log(
               "[AUTH FALLBACK] Auto-initializing profile doc for UID:",
+
               user.uid,
             )
 
@@ -12339,6 +13378,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribeGigs = onSnapshot(
       collection(db, "gigs"),
+
       (snapshot) => {
         if (snapshot.empty) {
           GIGS.forEach(async (g) => {
@@ -12352,11 +13392,13 @@ export default function App() {
           setGigs(list)
         }
       },
+
       (err) => console.warn("Gigs snapshot error:", err),
     )
 
     const unsubscribeCreators = onSnapshot(
       collection(db, "creators"),
+
       (snapshot) => {
         if (snapshot.empty) {
           CREATORS.forEach(async (c) => {
@@ -12372,11 +13414,13 @@ export default function App() {
           setCreators(list)
         }
       },
+
       (err) => console.warn("Creators snapshot error:", err),
     )
 
     const unsubscribeBrands = onSnapshot(
       collection(db, "brands"),
+
       (snapshot) => {
         if (snapshot.empty) {
           BRANDS.forEach(async (b) => {
@@ -12392,11 +13436,13 @@ export default function App() {
           setBrands(list)
         }
       },
+
       (err) => console.warn("Brands snapshot error:", err),
     )
 
     const unsubscribeEvents = onSnapshot(
       collection(db, "events"),
+
       (snapshot) => {
         if (snapshot.empty) {
           EVENTS.forEach(async (e) => {
@@ -12410,16 +13456,21 @@ export default function App() {
           setEvents(list)
         }
       },
+
       (err) => console.warn("Events snapshot error:", err),
     )
 
     const unsubscribeChats = onSnapshot(
       collection(db, "chats"),
+
       (snapshot) => {
         const list = snapshot.docs.map((doc) => doc.data() as ChatThread)
+
         list.sort((a, b) => b.id - a.id)
+
         setChats(list)
       },
+
       (err) => console.warn("Chats snapshot error:", err),
     )
 
@@ -12437,14 +13488,17 @@ export default function App() {
   }, [])
 
   // Real-time messages subcollection fetcher for the active conversation
+
   useEffect(() => {
     if (!activeConvoId) {
       setActiveMessages([])
+
       return
     }
 
     if (currentUser) {
       const convoRef = doc(db, "conversations", activeConvoId)
+
       updateDoc(convoRef, {
         [`unreadCounts.${currentUser.uid}`]: 0,
       }).catch((e) => console.warn("Error marking read:", e))
@@ -12452,17 +13506,21 @@ export default function App() {
 
     const qMsgs = query(
       collection(db, "conversations", activeConvoId, "messages"),
+
       orderBy("timestamp", "asc"),
     )
 
     const unsubscribe = onSnapshot(
       qMsgs,
+
       (snap) => {
         const list = snap.docs.map(
           (d) => ({ id: d.id, ...d.data() }) as LiveMessage,
         )
+
         setActiveMessages(list)
       },
+
       (err) => console.warn("Messages fetch error:", err),
     )
 
@@ -12470,8 +13528,10 @@ export default function App() {
   }, [activeConvoId, currentUser])
 
   // Presence / lastSeen Updater
+
   useEffect(() => {
     if (!currentUser || !userRole) return
+
     const collectionName =
       userRole === "admin" || userRole === "admin_pending"
         ? "admins"
@@ -12490,38 +13550,51 @@ export default function App() {
     }
 
     updatePresence()
+
     const interval = setInterval(updatePresence, 60000)
+
     return () => clearInterval(interval)
   }, [currentUser, userRole])
 
   // ── WebRTC Signaling & Live Calling Hooks ─────────────────────────────────
 
   // 1. Listen for Incoming Calls
+
   useEffect(() => {
     if (!currentUser) return
+
     const qCalls = query(
       collection(db, "calls"),
+
       where("calleeUid", "==", currentUser.uid),
+
       where("status", "==", "calling"),
     )
+
     const unsubscribe = onSnapshot(qCalls, (snap) => {
       if (!snap.empty) {
         const d = snap.docs[0]
+
         setIncomingCall({ id: d.id, ...d.data() })
       } else {
         setIncomingCall(null)
       }
     })
+
     return () => unsubscribe()
   }, [currentUser])
 
   // 2. Listen for Active Call Updates
+
   useEffect(() => {
     if (!activeCall) return
+
     const callRef = doc(db, "calls", activeCall.id)
+
     const unsubscribe = onSnapshot(callRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data()
+
         if (data?.status === "ended" || data?.status === "rejected") {
           handleCleanupCall()
         }
@@ -12529,91 +13602,118 @@ export default function App() {
         handleCleanupCall()
       }
     })
+
     return () => unsubscribe()
   }, [activeCall?.id])
 
   // 3. Call Duration Timer
+
   useEffect(() => {
     let interval: any
+
     if (activeCall && activeCall.status === "accepted") {
       interval = setInterval(() => setCallTimer((t) => t + 1), 1000)
     } else {
       setCallTimer(0)
     }
+
     return () => clearInterval(interval)
   }, [activeCall?.status])
 
   // 4. Call Ringtone Controller Hook
+
   useEffect(() => {
     if (incomingCall || (activeCall && activeCall.status === "calling")) {
       playCallRingtone()
     } else {
       stopCallRingtone()
     }
+
     return () => stopCallRingtone()
   }, [incomingCall?.id, activeCall?.status])
 
   const handleCleanupCall = () => {
     stopCallRingtone()
+
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop())
+
       localStreamRef.current = null
     }
+
     if (pcRef.current) {
       pcRef.current.close()
+
       pcRef.current = null
     }
+
     setActiveCall(null)
+
     setIncomingCall(null)
+
     setCallTimer(0)
+
     setIsMuted(false)
+
     setIsVideoOff(false)
   }
 
   const startCall = async (type: "audio" | "video") => {
     if (!currentUser) {
       alert("Please log in to start a call.")
+
       return
     }
 
     let calleeUid = ""
+
     let calleeName = "Kreator Member"
+
     let calleeAvatar =
       "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format"
 
     if (activeConvoId) {
       const convo = conversations.find((c) => c.id === activeConvoId)
+
       if (convo) {
         calleeUid =
           convo.participants.find((uid) => uid !== currentUser.uid) || ""
+
         calleeName = convo.participantNames[calleeUid] || "Kreator Member"
+
         calleeAvatar = convo.participantAvatars[calleeUid] || calleeAvatar
       }
     }
 
     if (!calleeUid) {
       alert("Real-time calls are available between registered members.")
+
       return
     }
 
     try {
       const callId = getConvoId(currentUser.uid, calleeUid)
+
       const callRef = doc(db, "calls", callId)
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
+
         video: type === "video",
       })
+
       localStreamRef.current = stream
 
       const pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       })
+
       pcRef.current = pc
 
       stream.getTracks().forEach((track) => pc.addTrack(track, stream))
 
       const callerCandidatesCol = collection(callRef, "callerCandidates")
+
       pc.onicecandidate = (e) => {
         if (e.candidate) addDoc(callerCandidatesCol, e.candidate.toJSON())
       }
@@ -12621,40 +13721,56 @@ export default function App() {
       pc.ontrack = (e) => {
         if (e.streams && e.streams[0]) {
           remoteStreamRef.current = e.streams[0]
+
           if (remoteVideoRef.current)
             remoteVideoRef.current.srcObject = e.streams[0]
         }
       }
 
       const offer = await pc.createOffer()
+
       await pc.setLocalDescription(offer)
 
       const newCallData = {
         id: callId,
+
         callerUid: currentUser.uid,
+
         callerName: userProfile?.name || "Kreator Member",
+
         callerAvatar: userProfile?.avatar || userProfile?.logo || calleeAvatar,
+
         calleeUid,
+
         calleeName,
+
         calleeAvatar,
+
         type,
+
         status: "calling",
+
         offer: { type: offer.type, sdp: offer.sdp },
+
         createdAt: new Date().toISOString(),
       }
 
       await setDoc(callRef, newCallData)
+
       setActiveCall(newCallData)
 
       onSnapshot(callRef, async (snap) => {
         const d = snap.data()
+
         if (d && d.answer && !pc.currentRemoteDescription) {
           await pc.setRemoteDescription(new RTCSessionDescription(d.answer))
+
           setActiveCall((prev: any) => ({ ...prev, status: "accepted" }))
         }
       })
 
       const calleeCandidatesCol = collection(callRef, "calleeCandidates")
+
       onSnapshot(calleeCandidatesCol, (snap) => {
         snap.docChanges().forEach(async (change) => {
           if (change.type === "added") {
@@ -12664,6 +13780,7 @@ export default function App() {
       })
     } catch (err: any) {
       console.error("Failed to start call:", err)
+
       alert(
         "Microphone / Camera access required for calling: " +
           (err.message || err),
@@ -12673,26 +13790,34 @@ export default function App() {
 
   const answerCall = async () => {
     if (!incomingCall || !currentUser) return
+
     try {
       const callRef = doc(db, "calls", incomingCall.id)
+
       const callSnap = await getDoc(callRef)
+
       if (!callSnap.exists()) return
 
       const callData = callSnap.data()
+
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
+
         video: callData.type === "video",
       })
+
       localStreamRef.current = stream
 
       const pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       })
+
       pcRef.current = pc
 
       stream.getTracks().forEach((track) => pc.addTrack(track, stream))
 
       const calleeCandidatesCol = collection(callRef, "calleeCandidates")
+
       pc.onicecandidate = (e) => {
         if (e.candidate) addDoc(calleeCandidatesCol, e.candidate.toJSON())
       }
@@ -12700,24 +13825,30 @@ export default function App() {
       pc.ontrack = (e) => {
         if (e.streams && e.streams[0]) {
           remoteStreamRef.current = e.streams[0]
+
           if (remoteVideoRef.current)
             remoteVideoRef.current.srcObject = e.streams[0]
         }
       }
 
       await pc.setRemoteDescription(new RTCSessionDescription(callData.offer))
+
       const answer = await pc.createAnswer()
+
       await pc.setLocalDescription(answer)
 
       await updateDoc(callRef, {
         answer: { type: answer.type, sdp: answer.sdp },
+
         status: "accepted",
       })
 
       setActiveCall({ ...incomingCall, status: "accepted" })
+
       setIncomingCall(null)
 
       const callerCandidatesCol = collection(callRef, "callerCandidates")
+
       onSnapshot(callerCandidatesCol, (snap) => {
         snap.docChanges().forEach(async (change) => {
           if (change.type === "added") {
@@ -12727,15 +13858,18 @@ export default function App() {
       })
     } catch (err: any) {
       console.error("Answer call error:", err)
+
       alert("Call connection failed: " + err.message)
     }
   }
 
   const declineCall = async () => {
     if (!incomingCall) return
+
     try {
       await updateDoc(doc(db, "calls", incomingCall.id), { status: "rejected" })
     } catch (e) {}
+
     setIncomingCall(null)
   }
 
@@ -12745,6 +13879,7 @@ export default function App() {
         await updateDoc(doc(db, "calls", activeCall.id), { status: "ended" })
       } catch (e) {}
     }
+
     handleCleanupCall()
   }
 
@@ -12753,6 +13888,7 @@ export default function App() {
       localStreamRef.current.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled
       })
+
       setIsMuted((prev) => !prev)
     }
   }
@@ -12762,47 +13898,62 @@ export default function App() {
       localStreamRef.current.getVideoTracks().forEach((track) => {
         track.enabled = !track.enabled
       })
+
       setIsVideoOff((prev) => !prev)
     }
   }
 
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60)
+
     const s = sec % 60
+
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
   }
 
   // Real-time Firestore Notifications Listener & Desktop Push
+
   useEffect(() => {
     if (!currentUser) return
 
     // Run two separate queries (avoids composite index requirement for in+orderBy)
+
     const q1 = query(
       collection(db, "notifications"),
+
       where("recipientUid", "==", currentUser.uid),
     )
+
     const q2 = query(
       collection(db, "notifications"),
+
       where("recipientUid", "==", "all"),
     )
 
     let snap1Docs: any[] = []
+
     let snap2Docs: any[] = []
 
     const merge = () => {
       const seen = new Set<string>()
+
       const merged: any[] = []
       ;[...snap1Docs, ...snap2Docs].forEach((d) => {
         if (!seen.has(d.id)) {
           seen.add(d.id)
+
           merged.push(d)
         }
       })
+
       merged.sort((a, b) => {
         const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0
+
         const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0
+
         return tb - ta
       })
+
       setDbNotifications(merged)
     }
 
@@ -12810,12 +13961,16 @@ export default function App() {
       changes.forEach((change) => {
         if (change.type === "added") {
           const data = change.doc.data()
+
           const createdTime = new Date(data.createdAt || Date.now()).getTime()
+
           const isRecent = Date.now() - createdTime < 15000
 
           if (!data.read && isRecent) {
             setLiveToast(data)
+
             playNotificationSound()
+
             setTimeout(() => setLiveToast(null), 6000)
 
             if (
@@ -12825,6 +13980,7 @@ export default function App() {
               try {
                 new Notification(data.title || "Kreator Kolkata", {
                   body: data.message,
+
                   icon: data.avatar || "/favicon.ico",
                 })
               } catch (e) {}
@@ -12836,21 +13992,29 @@ export default function App() {
 
     const unsub1 = onSnapshot(
       q1,
+
       (snap) => {
         snap1Docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+
         merge()
+
         handleChanges(snap.docChanges())
       },
+
       (err) => console.warn("Notifications listener (user) error:", err),
     )
 
     const unsub2 = onSnapshot(
       q2,
+
       (snap) => {
         snap2Docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+
         merge()
+
         handleChanges(snap.docChanges())
       },
+
       (err) => console.warn("Notifications listener (all) error:", err),
     )
 
@@ -12860,6 +14024,7 @@ export default function App() {
 
     return () => {
       unsub1()
+
       unsub2()
     }
   }, [currentUser])
@@ -13011,15 +14176,21 @@ export default function App() {
     } catch (e) {}
 
     const hash = routeToHash(routeState)
-    const navSignature = ROUTE_NAV_KEYS.map((key) => String(routeState[key])).join(
+
+    const navSignature = ROUTE_NAV_KEYS.map((key) =>
+      String(routeState[key]),
+    ).join(
       "|",
     )
 
     try {
       if (isPopStateUpdate.current) {
         // This change came from the back/forward button — the history
+
         // entry already exists, just keep the URL text in sync.
+
         isPopStateUpdate.current = false
+
         lastNavSignature.current = navSignature
 
         if (window.location.hash !== hash) {
@@ -13027,33 +14198,49 @@ export default function App() {
         }
       } else if (lastNavSignature.current === null) {
         // First render — establish the base history entry without
+
         // pushing (avoids an extra back-button stop on app load).
+
         lastNavSignature.current = navSignature
 
         window.history.replaceState(null, "", hash)
       } else if (navSignature !== lastNavSignature.current) {
         // A real page changed (tab, opened gig/chat/profile, etc.) —
+
         // push so the back button can return to the previous screen.
+
         lastNavSignature.current = navSignature
 
         window.history.pushState(null, "", hash)
       } else if (window.location.hash !== hash) {
         // Only filters/sub-tabs changed — update the URL in place.
+
         window.history.replaceState(null, "", hash)
       }
     } catch (e) {}
   }, [
     activeTab,
+
     selectedGigId,
+
     selectedEventId,
+
     selectedCreatorName,
+
     selectedBrandName,
+
     selectedMyGigId,
+
     selectedMyGigTab,
+
     posting,
+
     viewingNotifications,
+
     activeChatId,
+
     adminViewMode,
+
     exploreFilter,
   ])
 
@@ -13068,16 +14255,27 @@ export default function App() {
       isPopStateUpdate.current = true
 
       if (parsed.activeTab !== undefined) setActiveTab(parsed.activeTab)
+
       setSelectedGigId(parsed.selectedGigId ?? null)
+
       setSelectedEventId(parsed.selectedEventId ?? null)
+
       setSelectedCreatorName(parsed.selectedCreatorName ?? null)
+
       setSelectedBrandName(parsed.selectedBrandName ?? null)
+
       setSelectedMyGigId(parsed.selectedMyGigId ?? null)
+
       if (parsed.selectedMyGigTab) setSelectedMyGigTab(parsed.selectedMyGigTab)
+
       setPosting(parsed.posting ?? false)
+
       setViewingNotifications(parsed.viewingNotifications ?? false)
+
       setActiveChatId(parsed.activeChatId ?? null)
+
       if (parsed.adminViewMode) setAdminViewMode(parsed.adminViewMode)
+
       if (parsed.exploreFilter) setExploreFilter(parsed.exploreFilter)
     }
 
@@ -13109,8 +14307,6 @@ export default function App() {
       return next
     })
   }
-
-
 
   const toggleRsvpEvent = async (id: number) => {
     const isCurrentlyRsvp = rsvpEvents.has(id)
@@ -13149,18 +14345,25 @@ export default function App() {
   const handleSendConnectionRequest = (id: number) => {
     setSentRequests((prev) => {
       const next = new Set(prev)
+
       if (next.has(id)) {
         next.delete(id)
       } else {
         next.add(id)
+
         // Trigger visual notification
+
         setLiveToast({
           title: "Connection Request Sent",
+
           message: "They will be notified of your request.",
+
           senderName: "System",
         })
+
         setTimeout(() => setLiveToast(null), 4000)
       }
+
       return next
     })
   }
@@ -13168,28 +14371,39 @@ export default function App() {
   const handleAcceptConnectionRequest = (id: number) => {
     setReceivedRequests((prev) => {
       const next = new Set(prev)
+
       next.delete(id)
+
       return next
     })
+
     setConnections((prev) => {
       const next = new Set(prev)
+
       next.add(id)
+
       return next
     })
-    
+
     // Trigger visual notification
+
     setLiveToast({
       title: "Connection Accepted",
+
       message: "You are now connected!",
+
       senderName: "System",
     })
+
     setTimeout(() => setLiveToast(null), 4000)
   }
 
   const handleRemoveConnection = (id: number) => {
     setConnections((prev) => {
       const next = new Set(prev)
+
       next.delete(id)
+
       return next
     })
   }
@@ -13206,58 +14420,81 @@ export default function App() {
 
   const handleMessageCreator = async (creator: Creator) => {
     const otherUid = (creator as any).uid
+
     const isRealUser = currentUser && otherUid && otherUid.length > 10
 
     if (isRealUser) {
       const convoId = getConvoId(currentUser.uid, otherUid)
+
       try {
         const convoRef = doc(db, "conversations", convoId)
+
         const snap = await getDoc(convoRef)
+
         if (!snap.exists()) {
           await setDoc(
             convoRef,
+
             {
               id: convoId,
+
               participants: [currentUser.uid, otherUid],
+
               participantNames: {
                 [currentUser.uid]: userProfile?.name || "Kreator Member",
+
                 [otherUid]: creator.name || "Kreator Creator",
               },
+
               participantAvatars: {
                 [currentUser.uid]:
                   userProfile?.avatar ||
                   userProfile?.logo ||
                   "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
+
                 [otherUid]:
                   creator.avatar ||
                   "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
               },
+
               participantHandles: {
                 [currentUser.uid]: userProfile?.handle || "@member",
+
                 [otherUid]: creator.handle || "@creator",
               },
+
               lastMessage: "",
+
               lastMessageTime: new Date().toISOString(),
+
               lastSenderId: "",
+
               unreadCounts: {
                 [currentUser.uid]: 0,
+
                 [otherUid]: 0,
               },
+
               createdAt: new Date().toISOString(),
             },
+
             { merge: true },
           )
         }
 
         setActiveConvoId(convoId)
+
         setActiveChatId(null)
+
         await updateDoc(convoRef, {
           [`unreadCounts.${currentUser.uid}`]: 0,
         })
       } catch (err) {
         console.warn("Error creating conversation:", err)
       }
+
       setSelectedCreatorName(null)
+
       setActiveTab("chat")
     } else {
       const existingThread = chats.find(
@@ -13287,10 +14524,14 @@ export default function App() {
           messages: [
             {
               id: Date.now(),
+
               text: `Hi ${creator.name}! I saw your profile and would love to collaborate.`,
+
               sender: "me",
+
               time: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
+
                 minute: "2-digit",
               }),
             },
@@ -13310,58 +14551,81 @@ export default function App() {
 
   const handleMessageBrand = async (brand: Brand) => {
     const otherUid = (brand as any).uid
+
     const isRealUser = currentUser && otherUid && otherUid.length > 10
 
     if (isRealUser) {
       const convoId = getConvoId(currentUser.uid, otherUid)
+
       try {
         const convoRef = doc(db, "conversations", convoId)
+
         const snap = await getDoc(convoRef)
+
         if (!snap.exists()) {
           await setDoc(
             convoRef,
+
             {
               id: convoId,
+
               participants: [currentUser.uid, otherUid],
+
               participantNames: {
                 [currentUser.uid]: userProfile?.name || "Kreator Member",
+
                 [otherUid]: brand.name || "Kreator Brand",
               },
+
               participantAvatars: {
                 [currentUser.uid]:
                   userProfile?.avatar ||
                   userProfile?.logo ||
                   "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
+
                 [otherUid]:
                   brand.logo ||
                   "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=160&h=160&fit=crop&auto=format",
               },
+
               participantHandles: {
                 [currentUser.uid]: userProfile?.handle || "@member",
+
                 [otherUid]: "Brand Account",
               },
+
               lastMessage: "",
+
               lastMessageTime: new Date().toISOString(),
+
               lastSenderId: "",
+
               unreadCounts: {
                 [currentUser.uid]: 0,
+
                 [otherUid]: 0,
               },
+
               createdAt: new Date().toISOString(),
             },
+
             { merge: true },
           )
         }
 
         setActiveConvoId(convoId)
+
         setActiveChatId(null)
+
         await updateDoc(convoRef, {
           [`unreadCounts.${currentUser.uid}`]: 0,
         })
       } catch (err) {
         console.warn("Error creating conversation:", err)
       }
+
       setSelectedBrandName(null)
+
       setActiveTab("chat")
     } else {
       const existingThread = chats.find(
@@ -13391,10 +14655,14 @@ export default function App() {
           messages: [
             {
               id: Date.now(),
+
               text: `Hi ${brand.name}! I saw your brand profile and would love to collaborate on your campaigns.`,
+
               sender: "me",
+
               time: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
+
                 minute: "2-digit",
               }),
             },
@@ -13414,6 +14682,7 @@ export default function App() {
 
   const handleOpenChat = (id: number) => {
     setActiveChatId(id)
+
     setActiveConvoId(null)
 
     setChats((prev) =>
@@ -13495,9 +14764,13 @@ export default function App() {
 
   const handleAuthSubmit = async (
     email: string,
+
     pass: string,
+
     mode: "login" | "signup",
+
     name: string,
+
     role?: "creator" | "brand" | "admin",
   ) => {
     let formattedEmail = email.trim()
@@ -13513,7 +14786,9 @@ export default function App() {
         try {
           const credential = await createUserWithEmailAndPassword(
             auth,
+
             formattedEmail,
+
             pass,
           )
 
@@ -13522,7 +14797,9 @@ export default function App() {
           if (authErr.code === "auth/email-already-in-use") {
             const cred = await signInWithEmailAndPassword(
               auth,
+
               formattedEmail,
+
               pass,
             )
 
@@ -13553,6 +14830,7 @@ export default function App() {
 
           console.log(
             "[ADMIN REGISTRATION] Writing admin document to Firestore:",
+
             newAdmin,
           )
 
@@ -13561,6 +14839,7 @@ export default function App() {
 
             console.log(
               "[ADMIN REGISTRATION SUCCESS] Successfully created doc in admins/",
+
               userUid,
             )
           } catch (docErr: any) {
@@ -13694,6 +14973,7 @@ export default function App() {
                 (c) => c.name.toLowerCase() === name.toLowerCase(),
               ) ||
               CREATORS.find((c) => c.name.toLowerCase() === name.toLowerCase())
+
             if (matched) {
               setSelectedCreatorName(matched.name)
             }
@@ -13706,20 +14986,29 @@ export default function App() {
               CREATORS.find(
                 (c) => c.name.toLowerCase() === applicantName.toLowerCase(),
               )
+
             if (matched) {
               handleMessageCreator(matched)
             } else {
               handleMessageCreator({
                 id: Date.now(),
+
                 name: applicantName,
+
                 avatar: avatar,
+
                 handle: `@${applicantName.toLowerCase().replace(/\s+/g, "")}`,
+
                 niche: "Creator",
+
                 followers: "10K",
+
                 verified: true,
+
                 bio: "",
               } as any)
             }
+
             setSelectedMyGigId(null)
           }}
         />
@@ -13731,11 +15020,14 @@ export default function App() {
 
     const handleNotificationAction = (notification: any) => {
       setViewingNotifications(false)
+
       const raw = notification.raw || notification
+
       const action = notification.actionText
 
       if (raw?.link || raw?.actionUrl) {
         const link = (raw.link || raw.actionUrl).toLowerCase()
+
         if (link.includes("explore")) setActiveTab("explore")
         else if (link.includes("gig") || link.includes("browse"))
           setActiveTab("home")
@@ -13744,6 +15036,7 @@ export default function App() {
           setActiveTab("chat")
         else if (link.includes("profile")) setActiveTab("profile")
         else setActiveTab("home")
+
         return
       }
 
@@ -13754,13 +15047,19 @@ export default function App() {
         (action === "View" && notification.type === "message")
       ) {
         // Open the specific chat/convo with the sender
+
         setActiveTab("chat")
+
         if (raw?.senderUid && currentUser?.uid) {
           const convoId = getConvoId(currentUser.uid, raw.senderUid)
+
           setActiveConvoId(convoId)
+
           setActiveChatId(null)
+
           try {
             const convoRef = doc(db, "conversations", convoId)
+
             updateDoc(convoRef, {
               [`unreadCounts.${currentUser.uid}`]: 0,
             }).catch(() => {})
@@ -13774,13 +15073,17 @@ export default function App() {
         }
       } else if (action === "Review Pitch") {
         // Open profile > My Gig > Applicants tab for that gig
+
         if (raw?.gigId) {
           setSelectedMyGigId(Number(raw.gigId))
+
           setSelectedMyGigTab("applicants")
         }
+
         setActiveTab("profile")
       } else if (action === "View Status") {
         setActiveTab("profile")
+
         setViewingMyApplications(true)
       } else if (raw?.gigId) {
         setSelectedGigId(Number(raw.gigId))
@@ -13795,16 +15098,21 @@ export default function App() {
           onBack={handleBack}
           onViewMyGigs={() => {
             setGigPosted(false)
+
             setPosting(false)
+
             setActiveTab("profile")
           }}
           onShareInstagram={() => {
             const latestGig = gigs[0] || GIGS[0]
+
             if (latestGig) {
               handleShareGigCard(latestGig)
             } else {
               const shareUrl = `${window.location.origin}`
+
               navigator.clipboard.writeText(shareUrl)
+
               alert(
                 "Gig link copied! You can now paste and share on Instagram!",
               )
@@ -13822,6 +15130,7 @@ export default function App() {
           onBack={handleBack}
           onPosted={() => {
             setPosting(false)
+
             setGigPosted(true)
           }}
         />
@@ -13895,7 +15204,6 @@ export default function App() {
       )
     }
 
-
     if (selectedEvent) {
       return (
         <ViewEventPage
@@ -13921,6 +15229,7 @@ export default function App() {
           gigs={gigs}
           onViewGig={(gig, tab) => {
             setSelectedMyGigId(gig.id)
+
             setSelectedMyGigTab(tab || "applicants")
           }}
           onViewMyApplications={() => setViewingMyApplications(true)}
@@ -14019,9 +15328,7 @@ export default function App() {
         {/* Instagram Connection Overlay */}
         {isIgConnecting && (
           <div className="absolute inset-0 bg-white/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl shadow-xl mb-4 animate-bounce">
-              
-            </div>
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl shadow-xl mb-4 animate-bounce"></div>
             <div className="w-8 h-8 rounded-full border-3 border-slate-200 border-t-[#e4405f] animate-spin mb-4" />
             <h3 className="text-base font-display font-black text-slate-900 mb-1">
               Authenticating with Meta
@@ -14104,7 +15411,7 @@ export default function App() {
                 onClick={handleLogout}
                 className="text-xs font-bold text-slate-500 hover:text-slate-800 underline transition cursor-pointer"
               >
-                Stuck loading? Sign Out 
+                Stuck loading? Sign Out
               </button>
             </div>
           ) : userProfile.setupComplete === false ? (
@@ -14167,13 +15474,21 @@ export default function App() {
                             if (tab.id === "explore") setExploreFilter("all")
 
                             // Reset sub-pages/views when switching bottom tabs
+
                             setViewingNotifications(false)
+
                             setViewingMyApplications(false)
+
                             setViewingMyConnections(false)
+
                             setSelectedGigId(null)
+
                             setSelectedMyGigId(null)
+
                             setSelectedCreatorName(null)
+
                             setSelectedBrandName(null)
+
                             setSelectedEventId(null)
                           }}
                           className={`flex flex-col items-center gap-1 ${
@@ -14261,7 +15576,7 @@ export default function App() {
             <div className="flex flex-col items-center gap-6">
               <div className="relative">
                 <div className="absolute -inset-4 rounded-full bg-[#3b5bdb]/30 animate-ping" />
-                <img
+                <ImageWithSkeleton
                   src={incomingCall.callerAvatar}
                   alt={incomingCall.callerName}
                   className="w-28 h-28 rounded-full object-cover border-4 border-[#3b5bdb] shadow-2xl relative z-10"
@@ -14332,12 +15647,13 @@ export default function App() {
               </div>
             ) : (
               /* Audio Mode Screen */
+
               <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 p-6 relative">
                 <div className="relative mb-6">
                   {activeCall.status === "accepted" && (
                     <div className="absolute -inset-6 rounded-full bg-[#3b5bdb]/20 animate-ping" />
                   )}
-                  <img
+                  <ImageWithSkeleton
                     src={
                       activeCall.callerUid === currentUser?.uid
                         ? activeCall.calleeAvatar
@@ -14402,7 +15718,7 @@ export default function App() {
         {/* Live Notification Banner Toast */}
         {liveToast && (
           <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-[400px] bg-slate-900/95 text-white backdrop-blur-xl p-4 rounded-3xl shadow-2xl border border-slate-700/60 flex items-center gap-3 animate-in slide-in-from-top duration-300">
-            <img
+            <ImageWithSkeleton
               src={
                 liveToast.avatar ||
                 "https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"

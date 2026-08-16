@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import ImageWithSkeleton from "../components/ImageWithSkeleton"
 import {
   collection,
   doc,
@@ -37,9 +38,10 @@ export function AdminDashboardPage({
   brands: Brand[]
   onLogout: () => void
 }) {
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "events" | "gigs" | "admins" | "users" | "notifications" | "landing"
-  >("overview")
+  const [activeTab, setActiveTab] =
+    useState<"overview" | "events" | "gigs" | "admins" | "users" | "notifications" | "landing">(
+      "overview",
+    )
 
   const [notifTitle, setNotifTitle] = useState(
     "View what Priya Sengupta posted 🌟",
@@ -51,9 +53,8 @@ export function AdminDashboardPage({
 
   const [notifLink, setNotifLink] = useState("/explore")
 
-  const [targetType, setTargetType] = useState<
-    "all" | "creators" | "brands" | "selected"
-  >("all")
+  const [targetType, setTargetType] =
+    useState<"all" | "creators" | "brands" | "selected">("all")
 
   const [selectedUserUids, setSelectedUserUids] = useState<string[]>([])
 
@@ -171,7 +172,9 @@ export function AdminDashboardPage({
   const [detailPanY, setDetailPanY] = useState(0)
   const [isDetailDragging, setIsDetailDragging] = useState(false)
   const [detailDragStart, setDetailDragStart] = useState({ x: 0, y: 0 })
-  const [originalDetailImage, setOriginalDetailImage] = useState<string | null>(null)
+  const [originalDetailImage, setOriginalDetailImage] = useState<string | null>(
+    null,
+  )
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
@@ -214,10 +217,14 @@ export function AdminDashboardPage({
         ctx.drawImage(img, -img.width / 2, -img.height / 2)
         ctx.restore()
 
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob)
-          else reject(new Error("Canvas toBlob failed"))
-        }, "image/jpeg", 0.85)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error("Canvas toBlob failed"))
+          },
+          "image/jpeg",
+          0.85,
+        )
       }
       img.onerror = (err) => reject(err)
     })
@@ -264,10 +271,14 @@ export function AdminDashboardPage({
         ctx.drawImage(img, -img.width / 2, -img.height / 2)
         ctx.restore()
 
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob)
-          else reject(new Error("Canvas toBlob failed"))
-        }, "image/jpeg", 0.85)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error("Canvas toBlob failed"))
+          },
+          "image/jpeg",
+          0.85,
+        )
       }
       img.onerror = (err) => reject(err)
     })
@@ -297,7 +308,7 @@ export function AdminDashboardPage({
               DEFAULT_SLIDES.map((def, i) => ({
                 ...def,
                 ...(data.slides[i] || {}),
-              }))
+              })),
             )
           }
         }
@@ -311,11 +322,14 @@ export function AdminDashboardPage({
   const handleLandingImageUpload = async (slideIndex: number, file: File) => {
     setLandingUploading(slideIndex)
     try {
-      const storageRef = ref(storage, `siteSettings/landing_slide_${slideIndex + 1}_${Date.now()}.jpg`)
+      const storageRef = ref(
+        storage,
+        `siteSettings/landing_slide_${slideIndex + 1}_${Date.now()}.jpg`,
+      )
       await uploadBytes(storageRef, file)
       const url = await getDownloadURL(storageRef)
       setLandingSlides((prev) =>
-        prev.map((s, i) => (i === slideIndex ? { ...s, img: url } : s))
+        prev.map((s, i) => (i === slideIndex ? { ...s, img: url } : s)),
       )
     } catch (err: any) {
       alert("Image upload failed: " + (err.message || err))
@@ -326,7 +340,9 @@ export function AdminDashboardPage({
 
   const handleToggleLandingText = (slideIndex: number) => {
     setLandingSlides((prev) =>
-      prev.map((s, i) => (i === slideIndex ? { ...s, hideText: !s.hideText } : s))
+      prev.map((s, i) =>
+        i === slideIndex ? { ...s, hideText: !s.hideText } : s,
+      ),
     )
   }
 
@@ -334,10 +350,15 @@ export function AdminDashboardPage({
     setLandingLoading(true)
     try {
       await setDoc(doc(db, "siteSettings", "landingSlides"), {
-        slides: landingSlides.map((s) => ({ img: s.img, hideText: s.hideText })),
+        slides: landingSlides.map((s) => ({
+          img: s.img,
+          hideText: s.hideText,
+        })),
         updatedAt: new Date().toISOString(),
       })
-      setLandingToast("✅ Landing pages saved! Changes are now live for all users.")
+      setLandingToast(
+        "✅ Landing pages saved! Changes are now live for all users.",
+      )
       setTimeout(() => setLandingToast(null), 5000)
     } catch (err: any) {
       alert("Save failed: " + (err.message || err))
@@ -350,9 +371,13 @@ export function AdminDashboardPage({
     setLandingSlides((prev) =>
       prev.map((s, i) =>
         i === slideIndex
-          ? { ...DEFAULT_SLIDES[i], img: DEFAULT_SLIDES[i].img, hideText: false }
-          : s
-      )
+          ? {
+              ...DEFAULT_SLIDES[i],
+              img: DEFAULT_SLIDES[i].img,
+              hideText: false,
+            }
+          : s,
+      ),
     )
   }
 
@@ -548,7 +573,10 @@ export function AdminDashboardPage({
           await uploadBytes(storageRef, blob)
           finalDetailImageUrl = await getDownloadURL(storageRef)
         } catch (cropErr) {
-          console.warn("Detail cropper upload error, fallback to raw file:", cropErr)
+          console.warn(
+            "Detail cropper upload error, fallback to raw file:",
+            cropErr,
+          )
           if (eventDetailFile) {
             const storageRef = ref(
               storage,
@@ -609,11 +637,9 @@ export function AdminDashboardPage({
         organizer: eventOrganizer.trim() || "Kreator Kolkata Community",
         entryFee: eventIsPaid ? `₹${eventPrice}` : "Free RSVP",
         isPaid: eventIsPaid,
-        price: eventIsPaid ? (Number(eventPrice) || 499) : 0,
+        price: eventIsPaid ? Number(eventPrice) || 499 : 0,
         speakers:
-          parsedSpeakers.length > 0
-            ? parsedSpeakers
-            : ["Kreator Kolkata Team"],
+          parsedSpeakers.length > 0 ? parsedSpeakers : ["Kreator Kolkata Team"],
         isFeatured: true,
         createdBy: auth.currentUser?.uid || "admin",
         createdAt: new Date().toISOString(),
@@ -660,7 +686,8 @@ export function AdminDashboardPage({
               Confirm Delete
             </div>
             <div className="text-xs text-slate-500">
-              Are you sure you want to delete this {confirmDelete.type}? This action cannot be undone.
+              Are you sure you want to delete this {confirmDelete.type}? This
+              action cannot be undone.
             </div>
           </div>
           <div className="flex gap-3">
@@ -698,7 +725,7 @@ export function AdminDashboardPage({
           <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <img
+                <ImageWithSkeleton
                   src={gig.avatar}
                   alt=""
                   className="w-12 h-12 rounded-2xl object-cover border border-slate-200"
@@ -792,7 +819,7 @@ export function AdminDashboardPage({
         </div>
         <div className="p-5 flex flex-col gap-4 pb-24">
           <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-4">
-            <img
+            <ImageWithSkeleton
               src={ev.image}
               alt=""
               className="w-full h-40 object-cover rounded-2xl border border-slate-100"
@@ -887,13 +914,15 @@ export function AdminDashboardPage({
         </div>
         <div className="p-5 flex flex-col gap-4 pb-24">
           <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
-            <img
+            <ImageWithSkeleton
               src={avatar}
               alt=""
               className="w-16 h-16 rounded-2xl object-cover border border-slate-200"
             />
             <div>
-              <h3 className="text-base font-bold text-slate-900">{user.name}</h3>
+              <h3 className="text-base font-bold text-slate-900">
+                {user.name}
+              </h3>
               <div className="text-xs text-slate-500 mt-0.5">
                 {isCreator ? user.handle : user.industry}
               </div>
@@ -978,23 +1007,21 @@ export function AdminDashboardPage({
 
         {/* Tab Pills */}
         <div className="flex gap-1.5 bg-slate-100 p-1 rounded-2xl overflow-x-auto scrollbar-hide">
-          {(
-            [
-              { id: "overview", label: "Overview" },
-              { id: "gigs", label: "Gigs" },
-              { id: "events", label: "Events" },
-              { id: "users", label: "Users" },
-              {
-                id: "admins",
-                label:
-                  pendingAdmins.length > 0
-                    ? `Admins (${pendingAdmins.length})`
-                    : "Admins",
-              },
-              { id: "notifications", label: "Push Notifs" },
-              { id: "landing", label: "🖼️ Landing" },
-            ] as const
-          ).map(({ id, label }) => (
+          {([
+            { id: "overview", label: "Overview" },
+            { id: "gigs", label: "Gigs" },
+            { id: "events", label: "Events" },
+            { id: "users", label: "Users" },
+            {
+              id: "admins",
+              label:
+                pendingAdmins.length > 0
+                  ? `Admins (${pendingAdmins.length})`
+                  : "Admins",
+            },
+            { id: "notifications", label: "Push Notifs" },
+            { id: "landing", label: "🖼️ Landing" },
+          ] as const).map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
@@ -1042,7 +1069,7 @@ export function AdminDashboardPage({
                   className="bg-slate-50 rounded-2xl p-3 border border-slate-100 flex items-center gap-3 cursor-pointer hover:border-slate-300 transition"
                   onClick={() => setSelectedAdminGig(gig)}
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={gig.avatar}
                     alt=""
                     className="w-9 h-9 rounded-xl object-cover border border-slate-200 flex-shrink-0"
@@ -1083,7 +1110,7 @@ export function AdminDashboardPage({
                   className="bg-slate-50 rounded-2xl p-3 border border-slate-100 flex items-center gap-3 cursor-pointer hover:border-slate-300 transition"
                   onClick={() => setSelectedAdminEvent(ev)}
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={ev.image}
                     alt=""
                     className="w-9 h-9 rounded-xl object-cover border border-slate-200 flex-shrink-0"
@@ -1131,7 +1158,7 @@ export function AdminDashboardPage({
                   onClick={() => setSelectedAdminGig(gig)}
                 >
                   <div className="flex gap-3 items-start">
-                    <img
+                    <ImageWithSkeleton
                       src={gig.avatar}
                       alt=""
                       className="w-12 h-12 rounded-2xl object-cover border border-slate-200 flex-shrink-0"
@@ -1174,7 +1201,7 @@ export function AdminDashboardPage({
                   className="bg-white rounded-3xl p-4 border border-slate-100 hover:border-slate-300 shadow-sm transition cursor-pointer flex gap-3 items-center"
                   onClick={() => setSelectedAdminEvent(ev)}
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={ev.image}
                     alt=""
                     className="w-12 h-12 rounded-2xl object-cover border border-slate-200 flex-shrink-0"
@@ -1216,7 +1243,7 @@ export function AdminDashboardPage({
                     className="bg-white rounded-2xl p-3 border border-slate-100 hover:border-slate-300 shadow-sm transition flex items-center gap-3 cursor-pointer"
                     onClick={() => setSelectedAdminUser({ user, role })}
                   >
-                    <img
+                    <ImageWithSkeleton
                       src={avatar}
                       alt={user.name}
                       className="w-12 h-12 rounded-2xl object-cover border border-slate-200 flex-shrink-0"
@@ -1417,7 +1444,9 @@ export function AdminDashboardPage({
                             type="button"
                             onClick={() =>
                               setSelectedUserUids(
-                                allUsers.map((u) => u.user.uid || String(u.user.id)),
+                                allUsers.map(
+                                  (u) => u.user.uid || String(u.user.id),
+                                ),
                               )
                             }
                             className="text-[10px] font-bold text-[#3b5bdb] hover:underline"
@@ -1451,7 +1480,8 @@ export function AdminDashboardPage({
                           .map(({ user, role }) => {
                             const uid = user.uid || String(user.id)
                             const isSelected = selectedUserUids.includes(uid)
-                            const avatar = role === "creator" ? user.avatar : user.logo
+                            const avatar =
+                              role === "creator" ? user.avatar : user.logo
                             return (
                               <div
                                 key={`${role}-${uid}`}
@@ -1461,7 +1491,10 @@ export function AdminDashboardPage({
                                       prev.filter((id) => id !== uid),
                                     )
                                   } else {
-                                    setSelectedUserUids((prev) => [...prev, uid])
+                                    setSelectedUserUids((prev) => [
+                                      ...prev,
+                                      uid,
+                                    ])
                                   }
                                 }}
                                 className={`p-2 rounded-xl border flex items-center justify-between cursor-pointer transition ${
@@ -1477,7 +1510,7 @@ export function AdminDashboardPage({
                                     onChange={() => {}}
                                     className="rounded border-slate-300 text-[#3b5bdb]"
                                   />
-                                  <img
+                                  <ImageWithSkeleton
                                     src={avatar}
                                     alt={user.name}
                                     className="w-7 h-7 rounded-full object-cover border border-slate-200 flex-shrink-0"
@@ -1535,7 +1568,9 @@ export function AdminDashboardPage({
                         }
 
                         if (recipientList.length === 0) {
-                          alert("No recipient users found for selected audience!")
+                          alert(
+                            "No recipient users found for selected audience!",
+                          )
                           setSendingNotif(false)
                           return
                         }
@@ -1617,7 +1652,7 @@ export function AdminDashboardPage({
                       <span>Now</span>
                     </div>
                     <div className="flex gap-3 items-start">
-                      <img
+                      <ImageWithSkeleton
                         src="https://images.unsplash.com/photo-1624610261655-777af2f586d7?w=80&h=80&fit=crop&auto=format"
                         alt="Logo"
                         className="w-10 h-10 rounded-xl object-cover border border-slate-700 flex-shrink-0"
@@ -1659,8 +1694,12 @@ export function AdminDashboardPage({
 
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Landing Pages</h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">Customize background images & text for the 4 intro slides</p>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                  Landing Pages
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Customize background images & text for the 4 intro slides
+                </p>
               </div>
               <button
                 onClick={handleSaveLandingSlides}
@@ -1690,16 +1729,24 @@ export function AdminDashboardPage({
                 >
                   {/* Slide preview */}
                   <div className="relative w-full h-44 bg-slate-900 overflow-hidden">
-                    <img
+                    <ImageWithSkeleton
                       src={slide.img}
                       alt={slide.tag}
                       className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
                     />
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 40%, rgba(10,14,30,0.85) 100%)" }} />
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 40%, rgba(10,14,30,0.85) 100%)",
+                      }}
+                    />
                     {/* Upload overlay button */}
                     <label className="absolute inset-0 flex items-center justify-center cursor-pointer group">
                       <input
-                        ref={(el) => { landingFileRefs.current[i] = el }}
+                        ref={(el) => {
+                          landingFileRefs.current[i] = el
+                        }}
                         type="file"
                         accept="image/*"
                         className="hidden"
@@ -1712,12 +1759,16 @@ export function AdminDashboardPage({
                       {landingUploading === i ? (
                         <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-5 py-3 flex items-center gap-2">
                           <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                          <span className="text-white text-xs font-bold">Uploading…</span>
+                          <span className="text-white text-xs font-bold">
+                            Uploading…
+                          </span>
                         </div>
                       ) : (
                         <div className="opacity-0 group-hover:opacity-100 transition bg-black/60 backdrop-blur-sm rounded-2xl px-5 py-3 flex items-center gap-2">
                           <span className="text-white text-lg">📷</span>
-                          <span className="text-white text-xs font-bold">Change Background Image</span>
+                          <span className="text-white text-xs font-bold">
+                            Change Background Image
+                          </span>
                         </div>
                       )}
                     </label>
@@ -1729,9 +1780,14 @@ export function AdminDashboardPage({
                     {!slide.hideText && (
                       <div className="absolute bottom-3 left-4 right-4">
                         <div className="text-white font-black text-lg leading-tight drop-shadow-lg">
-                          {slide.headline} <span className="text-[#7fa3ff]">{slide.headlineAccent}</span>
+                          {slide.headline}{" "}
+                          <span className="text-[#7fa3ff]">
+                            {slide.headlineAccent}
+                          </span>
                         </div>
-                        <div className="text-white/60 text-[10px] mt-0.5 line-clamp-1">{slide.sub}</div>
+                        <div className="text-white/60 text-[10px] mt-0.5 line-clamp-1">
+                          {slide.sub}
+                        </div>
                       </div>
                     )}
                     {slide.hideText && (
@@ -1747,8 +1803,14 @@ export function AdminDashboardPage({
                   <div className="p-4 flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-xs font-bold text-slate-800">Slide {i + 1}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]">{slide.img.startsWith("https://images.unsplash") ? "Default Unsplash image" : "Custom uploaded image ✓"}</div>
+                        <div className="text-xs font-bold text-slate-800">
+                          Slide {i + 1}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]">
+                          {slide.img.startsWith("https://images.unsplash")
+                            ? "Default Unsplash image"
+                            : "Custom uploaded image ✓"}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -1778,7 +1840,9 @@ export function AdminDashboardPage({
                     {/* Text toggle */}
                     <div className="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
                       <div>
-                        <div className="text-xs font-bold text-slate-700">Overlay Text</div>
+                        <div className="text-xs font-bold text-slate-700">
+                          Overlay Text
+                        </div>
                         <div className="text-[10px] text-slate-400 mt-0.5">
                           {slide.hideText
                             ? "Hidden — clean background only"
@@ -1801,13 +1865,17 @@ export function AdminDashboardPage({
 
                     {/* Image URL input */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Or paste image URL</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        Or paste image URL
+                      </label>
                       <input
                         type="text"
                         value={slide.img}
                         onChange={(e) =>
                           setLandingSlides((prev) =>
-                            prev.map((s, idx) => idx === i ? { ...s, img: e.target.value } : s)
+                            prev.map((s, idx) =>
+                              idx === i ? { ...s, img: e.target.value } : s,
+                            ),
                           )
                         }
                         placeholder="https://..."
@@ -1851,7 +1919,9 @@ export function AdminDashboardPage({
             >
               ✕ Close
             </button>
-            <span className="text-xs font-bold text-slate-800">Create Event</span>
+            <span className="text-xs font-bold text-slate-800">
+              Create Event
+            </span>
             <div className="w-6" />
           </div>
           <form
@@ -1992,7 +2062,7 @@ export function AdminDashboardPage({
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={originalImage}
                     alt=""
                     draggable={false}
@@ -2005,7 +2075,9 @@ export function AdminDashboardPage({
                   />
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 font-bold">Zoom:</span>
+                  <span className="text-xs text-slate-500 font-bold">
+                    Zoom:
+                  </span>
                   <input
                     type="range"
                     min="0.5"
@@ -2043,7 +2115,7 @@ export function AdminDashboardPage({
                   onMouseUp={handleDetailMouseUp}
                   onMouseLeave={handleDetailMouseUp}
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={originalDetailImage}
                     alt=""
                     draggable={false}
@@ -2056,7 +2128,9 @@ export function AdminDashboardPage({
                   />
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 font-bold">Zoom:</span>
+                  <span className="text-xs text-slate-500 font-bold">
+                    Zoom:
+                  </span>
                   <input
                     type="range"
                     min="0.5"
