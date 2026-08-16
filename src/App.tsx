@@ -2975,8 +2975,8 @@ function HomePage({
             onClick={() => setShowFilterPanel(true)}
             className={`relative w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md transition active:scale-95 ${
               activeFilterCount > 0
-                ? "bg-[#f76707] shadow-orange-200"
-                : "bg-[#3b5bdb] shadow-blue-200"
+                ? "bg-black shadow-black/20"
+                : "bg-black shadow-black/20"
             }`}
           >
             <FilterIcon />
