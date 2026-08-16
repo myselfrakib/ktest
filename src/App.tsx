@@ -3097,7 +3097,7 @@ function HomePage({
               onClick={() => setActiveFilter(f)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                 activeFilter === f
-                  ? "bg-black text-white shadow-md shadow-black/20"
+                  ? "bg-black text-white shadow-[-2px_2px_3px_rgba(0,0,0,0.3)]"
                   : "bg-white text-slate-500 border border-slate-200"
               }`}
             >
